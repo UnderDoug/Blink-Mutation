@@ -18,7 +18,7 @@ public class UD_Blink : BaseMutation
 
     public Guid BlinkActivatedAbilityID = Guid.Empty;
 
-    public Guid ColdSteelToggleAbilityID = Guid.Empty;
+    public Guid ColdSteelActivatedAbilityID = Guid.Empty;
 
     private bool MutationColor = Options.MutationColor;
 
@@ -217,7 +217,7 @@ public class UD_Blink : BaseMutation
                                     Class: "Physical Mutations",
                                     Description: "[Blink Ability Description Method]",
                                     Icon: "&amp;C~");
-        ColdSteelToggleAbilityID = 
+        ColdSteelActivatedAbilityID = 
             AddMyActivatedAbility(  Name: "{{m|Cold Steel}}", 
                                     Command: "Command_UD_ColdSteel", 
                                     Class: "Physical Mutations",
