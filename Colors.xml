@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<colors>
+  <shaders>
+    <shader Name="coldsteel" Type="sequence" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
+    <shader Name="nothinpersonnel" Type="alternation" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
+  </shaders>
+</colors>
