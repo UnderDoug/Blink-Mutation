@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<activatedabilities>
+  <ability Command="Command_UD_ColdSteel">
+    <description>
+      <p>You were turend to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
+      <br />
+			<p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and makes a free attack.</p>
+      <br />
+      <p>Hitting with this attack deals an additional {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
+      <br />
+      <p>Killing an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y"  State="ToggleOn" />
+  </ability>
+  <ability Command="Command_UD_Blink">
+    <description>
+      <p><stat Name="BornWith" /> a {{m|special power}}: You are stronger than all those around you.</p>
+      <br />
+			<p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
+      <br />
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <br />
+      <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
+      <br />
+      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and makes a free attack, dealing additional {{m|unblockable}} damage</p>
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y"  State="ToggleOn" />
+  </ability>
+</activatedabilities>

@@ -11,6 +11,9 @@ using UD_Blink_Mutation;
 using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
+using ConsoleLib.Console;
+using System.Threading;
+using System.IO;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -34,10 +37,11 @@ namespace XRL.World.Parts.Mutation
 
         public static Dictionary<int, FindPath> PathCache = new();
 
-        public static readonly int ICON_COLOR_PRIORITY = 75;
+        public static readonly int ICON_COLOR_PRIORITY = 82;
         public static readonly string ICON_COLOR = "&m";
 
-        public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_phaseCannon_fire";
+        public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
+        public static readonly string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
 
         public static readonly string COMMAND_UD_BLINK = "Command_UD_Blink";
         public static readonly string COMMAND_UD_COLDSTEEL = "Command_UD_ColdSteel";
@@ -47,7 +51,7 @@ namespace XRL.World.Parts.Mutation
 
         private bool MutationColor = UI.Options.MutationColor;
 
-        public bool IsNothingPersonnelKid 
+        public bool IsNothinPersonnelKid 
         { 
             get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID);
             set 
@@ -132,7 +136,7 @@ namespace XRL.World.Parts.Mutation
                 SB.Append(WhilstPlaying);
 
             SB.Append(" a ").AppendColored("m","special power").Append(": You are stronger than all those around you.");
-            SB.AppendLine().Append("Possessed of great speed, you can move faster than perceptible.");
+            SB.AppendLine().Append("Possessed of great speed, you can ").AppendRule("move faster than perceptible").Append(".");
 
             return Event.FinalizeString(SB);
         }
@@ -147,14 +151,14 @@ namespace XRL.World.Parts.Mutation
         public override string GetLevelText(int Level)
         {
             StringBuilder SB = Event.NewStringBuilder();
-            SB.Append("You may blink up to ").AppendColored("rules", $"{GetBlinkRange(Level)} tiles").Append(" in a direction of your choosing.");
+            SB.Append("You may blink up to ").AppendRule($"{GetBlinkRange(Level)} tiles").Append(" in a direction of your choosing.");
             SB.AppendLine();
-            SB.Append("With ").AppendColored("coldsteel", "Cold Steel").Append(" active, blinking through a hostile creature causes you to attack them from behind dealing ");
-            SB.AppendColored("rules", $"{GetColdSteelDamage(Level)} ").AppendColored("m", "unblockable").AppendColored("rules", " damage");
+            SB.Append("With ").AppendColdSteel("Cold Steel").Append(" active, blinking through a hostile creature teleports you behind them making a free attack, and dealing an additional ");
+            SB.AppendRule($"{GetColdSteelDamage(Level)} ").AppendColored("m", "unblockable").AppendRule(" damage.");
             SB.AppendLine();
-            SB.Append("Cooldown: ").AppendColored("rules", GetCooldownTurns(Level).Things("turn"));
+            SB.Append("Cooldown: ").AppendRule(GetCooldownTurns(Level).Things("turn"));
             SB.AppendLine();
-            SB.Append("Power Use: ").AppendColored("rules", "less than 1%");
+            SB.Append("Power Use: ").AppendRule("less than 1%");
 
             return Event.FinalizeString(SB);
         }
@@ -168,13 +172,13 @@ namespace XRL.World.Parts.Mutation
                         Name: "Blink",
                         Command: COMMAND_UD_BLINK,
                         Class: "Physical Mutations",
-                        Description: "[Blink Ability Description Method]",
+                        Description: null,
                         Icon: "~",
                         DisabledMessage: null,
                         Toggleable: false,
                         DefaultToggleState: false,
                         ActiveToggle: false,
-                        IsAttack: IsNothingPersonnelKid,
+                        IsAttack: IsNothinPersonnelKid,
                         IsRealityDistortionBased: false,
                         IsWorldMapUsable: false,
                         Silent: Silent,
@@ -205,7 +209,7 @@ namespace XRL.World.Parts.Mutation
                         Name: "{{coldsteel|Cold Steel}}",
                         Command: COMMAND_UD_COLDSTEEL,
                         Class: "Physical Mutations",
-                        Description: "[Cold Steel Ability Description Method]",
+                        Description: null,
                         Icon: "\\",
                         DisabledMessage: null,
                         Toggleable: true,
@@ -246,11 +250,12 @@ namespace XRL.World.Parts.Mutation
             return base.Unmutate(GO);
         }
 
-        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, bool IsNothingPersonnel = false)
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out FindPath Path, bool IsNothinPersonnel = false)
         {
             Destination = null;
             Kid = null;
             KidDestination = null;
+            Path = null;
             Cell origin = Blinker.CurrentCell;
 
             Debug.Entry(4,
@@ -267,8 +272,8 @@ namespace XRL.World.Parts.Mutation
             Debug.LoopItem(4, $"{nameof(Range)}", $"{Range}",
                 Good: Range > 0, Indent: 1, Toggle: getDoDebug());
 
-            Debug.LoopItem(4, $"{nameof(IsNothingPersonnel)}", $"{IsNothingPersonnel}",
-                Good: IsNothingPersonnel, Indent: 1, Toggle: getDoDebug());
+            Debug.LoopItem(4, $"{nameof(IsNothinPersonnel)}", $"{IsNothinPersonnel}",
+                Good: IsNothinPersonnel, Indent: 1, Toggle: getDoDebug());
 
             Debug.Entry(4, $"Getting initial values if any are null/default...", Indent: 1, Toggle: getDoDebug());
 
@@ -333,14 +338,21 @@ namespace XRL.World.Parts.Mutation
                 Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
                 Debug.LoopItem(4, $"{nameof(iteration)}: {iteration} [{thisCell}]", Indent: 2, Toggle: getDoDebug());
 
+                Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
+                FindPath path = new(StartCell: origin, EndCell: thisCell, PathGlobal: true, Looker: Blinker, MaxWeight: 25);
+                PathCache.TryAdd(iterationCounter, path);
+                Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
+                    Good: path.Steps.Count <= Range, Indent: 4, Toggle: getDoDebug());
+
                 Debug.LoopItem(4, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: 3, Toggle: getDoDebug());
-                if (Destination != null && (!IsNothingPersonnel || Kid != null))
+                if (Destination != null && (!IsNothinPersonnel || Kid != null))
                 {
                     Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination.Location}]", Indent: 4, Toggle: getDoDebug());
                     Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 4, Toggle: getDoDebug());
-                    if (IsNothingPersonnel)
+                    if (IsNothinPersonnel)
                     {
                         KidDestination ??= thisCell;
+                        Path = path;
                     }
                     Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 4, Toggle: getDoDebug());
                     break;
@@ -352,20 +364,15 @@ namespace XRL.World.Parts.Mutation
                     Debug.LoopItem(4, $"{nameof(Kid)}", $"[{Kid?.DebugName ?? NULL}]",
                         Good: Kid != null, Indent: 4, Toggle: getDoDebug());
                 }
-
-                Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
-                FindPath path = new(StartCell: origin, EndCell: thisCell, PathGlobal: true, Looker: Blinker, MaxWeight: 25);
-                PathCache.TryAdd(iterationCounter, path);
-                Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
-                    Good: path.Steps.Count <= Range, Indent: 4, Toggle: getDoDebug());
                 
                 Debug.LoopItem(4, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
-                if ((Kid = FindKid(Blinker, thisCell)) != null)
+                if (IsNothinPersonnel && (Kid = FindKid(Blinker, thisCell)) != null)
                 {
                     Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 4, Toggle: getDoDebug());
                     if (previousCellIsValid)
                     {
                         KidDestination = previousCell;
+                        Path = PathCache[i - 1];
                         Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 4, Toggle: getDoDebug());
                     }
                     else
@@ -382,6 +389,7 @@ namespace XRL.World.Parts.Mutation
                 if (previousCellIsValid = IsValidDestinationCell(Blinker, thisCell, Range, path.Steps.Count))
                 {
                     Destination ??= thisCell;
+                    Path ??= path;
                 }
                 Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
                     Good: Destination != null, Indent: 4, Toggle: getDoDebug());
@@ -481,7 +489,7 @@ namespace XRL.World.Parts.Mutation
             return blinkPath;
         }
 
-        public static bool Blink(GameObject Blinker, string Direction, Cell Destination, bool IsNothingPersonnelKid = false, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, Cell Destination, bool IsNothinPersonnelKid = false, bool Silent = false)
         {
             if (Blinker == null)
                 return false;
@@ -518,9 +526,11 @@ namespace XRL.World.Parts.Mutation
 
             Direction ??= origin.GetDirectionFromCell(Blinker.PickDirection("Blink in which direction?"), NullIfSame: true);
 
+            FindPath Path = null;
+
             if (Destination == null)
             {
-                if (Blinker.IsPlayer() && !TryGetBlinkDestination(Blinker, Direction, 0, out Destination, out Kid, out KidDestination, IsNothingPersonnelKid))
+                if (Blinker.IsPlayer() && !TryGetBlinkDestination(Blinker, Direction, 0, out Destination, out Kid, out KidDestination, out Path, IsNothinPersonnelKid))
                 {
                     return false;
                 }
@@ -531,29 +541,29 @@ namespace XRL.World.Parts.Mutation
             }
 
             bool isNani = false;
-            bool doNothingPersonnel = false;
-            if (IsNothingPersonnelKid && Kid != null && KidDestination != null)
+            bool doNothinPersonnel = false;
+            if (IsNothinPersonnelKid && Kid != null && KidDestination != null)
             {
                 Destination = KidDestination;
                 isNani = Kid.CurrentCell.GetDirectionFromCell(KidDestination) != Direction;
-                doNothingPersonnel = true;
+                doNothinPersonnel = true;
             }
 
             Blinker?.PlayWorldSound(BLINK_SOUND);
-            PlayAnimation(Blinker, Destination);
+            PlayAnimation(Blinker, Destination, Path);
 
             Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
             Blinker.Gravitate();
             Arrive(origin, Destination);
 
-            if (doNothingPersonnel)
+            if (doNothinPersonnel)
             {
                 string didVerb = "teleport behind";
                 string didExtra = "";
                 string didEndMark = "!";
                 string didColor = "m";
 
-                string message = "heh, nothin' personnel, kid.";
+                string message = "psssh...nothin personnel...kid...";
                 string messageColor = "m";
                 float floatLength = 8.0f;
 
@@ -608,11 +618,10 @@ namespace XRL.World.Parts.Mutation
                     Color: "m"
                     );
             }
-            blink.IsSteelCold = false;
             return Blinker.CurrentCell == Destination;
         }
 
-        public static void PlayAnimation(GameObject Blinker, Cell Destination)
+        public static void PlayAnimation(GameObject Blinker, Cell Destination, FindPath Path)
         {
             if (Blinker == null || Destination == null)
                 return;
@@ -657,6 +666,52 @@ namespace XRL.World.Parts.Mutation
                 Interruptible: false
                 );
 
+            int pathStepsCount = 0;
+            if (Path != null && !Path.Steps.IsNullOrEmpty())
+            {
+                pathStepsCount = Path.Steps.Count;
+            }
+            if (pathStepsCount > 0)
+            {
+                if (Blinker.InActiveZone())
+                {
+                    List<string> particles = new()
+                    {
+                        ".",
+                        "o",
+                        "~",
+                        "'",
+                        "+",
+                        "*",
+                    };
+                    List<string> colors = new()
+                    {
+                        "&K",
+                        "&m",
+                        "&y",
+                        "&c",
+                        "&C",
+                    };
+                    ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
+                    for (int i = 0; i <= pathStepsCount + 5; i++)
+                    {
+                        scrapBuffer.RenderBase();
+                        foreach (Cell step in Path.Steps)
+                        {
+                            string color = colors.GetRandomElement();
+                            string particle = particles.GetRandomElement();
+                            if (2.in10())
+                            {
+                                break;
+                            }
+                            scrapBuffer.Goto(step.X, step.Y);
+                            scrapBuffer.Write($"{color}{particle}");
+                        }
+                        scrapBuffer.Draw();
+                        Thread.Sleep(10);
+                    }
+                }
+            }
             if (doLastAnim)
             {
                 CombatJuice.playPrefabAnimation(
@@ -713,8 +768,8 @@ namespace XRL.World.Parts.Mutation
                 SB.Append(VANDR).Append("(").AppendColored("g", $"{GetBlinkRange()}").Append($"){HONLY}Blink Range").AppendLine();
                 SB.Append(TANDR).Append("(").AppendColored("m", $"{GetColdSteelDamage()}").Append($"){HONLY}Cold Steel Damage").AppendLine();
                 SB.AppendColored("W", $"State").AppendLine();
-                SB.Append(VANDR).Append($"[{IsNothingPersonnelKid.YehNah()}]{HONLY}IsNothingPersonnelKid: ").AppendColored("B", $"{IsNothingPersonnelKid}").AppendLine();
-                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}WeGoAgain: ").AppendColored("B", $"{WeGoAgain}").AppendLine();
+                SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}").AppendLine();
+                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}").AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
             }
@@ -765,8 +820,8 @@ namespace XRL.World.Parts.Mutation
                     Amount: amount,
                     Message: "from %t {{coldsteel|Cold Steel}}!",
                     Attributes: "Umbral",
-                    DeathReason: "nothing personnel",
-                    ThirdPersonDeathReason: "nothing personnel",
+                    DeathReason: "nothin personnel",
+                    ThirdPersonDeathReason: "nothin personnel",
                     Owner: null,
                     Attacker: blinker
                     );
@@ -782,8 +837,9 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(KilledEvent E)
         {
-            if (E.Reason == "nothing personnel")
+            if (E.Reason == "nothin personnel")
             {
+                SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
                 WeGoAgain = true;
             }
             return base.HandleEvent(E);
@@ -792,16 +848,17 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.ID == COMMAND_UD_COLDSTEEL)
             {
-                IsNothingPersonnelKid = !IsNothingPersonnelKid;
+                IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
             if (E.ID == COMMAND_UD_BLINK)
             {
-                if (Blink(ParentObject, null, null, IsNothingPersonnelKid))
+                if (Blink(ParentObject, null, null, IsNothinPersonnelKid))
                 {
                     int energyCost = 1000;
                     if (WeGoAgain)
                     {
                         WeGoAgain = false;
+                        ParentObject?.PlayWorldSound(WE_GO_AGAIN_SOUND);
 
                         Arrive(ParentObject.CurrentCell, ParentObject.CurrentCell, Life: 16, Color1: "C", Symbol1: "\u203C", Color2: "Y", Symbol2: "\u221E");
 
@@ -812,78 +869,8 @@ namespace XRL.World.Parts.Mutation
                         CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(Level));
                     }
 
-                        UseEnergy(energyCost, "Physical Mutation Blink");
+                    UseEnergy(energyCost, "Physical Mutation Blink");
                 }
-                /*
-                string directionFromCell = ParentObject.CurrentCell.GetDirectionFromCell(cell);
-                List<Cell> list = new List<Cell>();
-                List<Cell> list2 = new List<Cell>();
-                Cell targetCell = null;
-                Cell cellFromDirection = ParentObject.Physics.CurrentCell;
-                int num = 0;
-                int range = GetBlinkRange(Level);
-
-                for (int i = 0; i < range; i++)
-                {
-                    cellFromDirection = cellFromDirection.GetCellFromDirection(directionFromCell);
-                    list2.Add(cellFromDirection);
-                    if (cellFromDirection == null)
-                    {
-                        break;
-                    }
-                    if (cellFromDirection.IsEmpty())
-                    {
-                        targetCell = cellFromDirection;
-                        num = i;
-                        list.AddRange(list2);
-                        list2.Clear();
-                    }
-                }
-                if (num > 0)
-                {
-                    if (ParentObject.InActiveZone())
-                    {
-                        ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
-                        for (int j = 0; j <= num + 5; j++)
-                        {
-                            scrapBuffer.RenderBase();
-                            for (int num2 = j; num2 > j - 5; num2--)
-                            {
-                                if (num2 > 0 && num2 < list.Count)
-                                {
-                                    string text = (num2 - j) switch
-                                    {
-                                        0 => "&K.",
-                                        -1 => "&wo",
-                                        -2 => "&wO",
-                                        -3 => "&yo",
-                                        -4 => "&K.",
-                                        _ => null
-                                    };
-                                    if (text != null)
-                                    {
-                                        scrapBuffer.Goto(list[num2].X, list[num2].Y);
-                                        scrapBuffer.Write(text);
-                                    }
-                                }
-                            }
-                            scrapBuffer.Draw();
-                            Thread.Sleep(10);
-                        }
-                    }
-                    string damage = GetColdSteelDamage(base.Level);
-                    foreach (Cell item in list)
-                    {
-                        foreach (GameObject objectsViaEvent in item.GetObjectsViaEventList())
-                        {
-                            if (objectsViaEvent != ParentObject)
-                            {
-                                objectsViaEvent.TakeDamage(damage.RollCached(), "{{m|Cold Steel}} Damage!", "Umbral", null, null, null, ParentObject, null, null, null, Accidental: false, Environmental: false, Indirect: false, ShowUninvolved: true);
-                            }
-                        }
-                    }
-                    ParentObject.DirectMoveTo(targetCell);
-                }*/
             }
             return base.FireEvent(E);
         }
