@@ -37,6 +37,8 @@ namespace UD_Blink_Mutation
 
         private static bool IncludeInMessage => Options.DebugIncludeInMessage;
 
+        public static int LastIndent = 0;
+
         private static void Message(string Text)
         {
             XRL.Messages.MessageQueue.AddPlayerMessage("{{Y|" + Text + "}}");
@@ -76,6 +78,7 @@ namespace UD_Blink_Mutation
             {
                 indent += space;
             }
+            LastIndent = Spaces;
             string output = indent + Text;
             Log(output);
             if (IncludeInMessage)

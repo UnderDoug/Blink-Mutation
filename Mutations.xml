@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <mutations>
   <category Name="Physical" Load="Merge">
-    <mutation Name="Blink" Cost="4" MaxSelected="1" Class="UD_Blink" Exclusions="" BearerDescription="those who are are more powerful than those around them" BiomeEpithet="fast" Tile="Mutations/teleportation.bmp" />
+    <mutation Name="Blink" Cost="4" MaxSelected="1" Class="UD_Blink" Exclusions="" BearerDescription="those who are are more powerful than those around them" BiomeEpithet="fast" Tile="Mutations/UD_BlinkMutation.png" Foreground="m" Detail="y" />
   </category>
 </mutations>

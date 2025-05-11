@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using ConsoleLib.Console;
+
 using Genkit;
 using UnityEngine;
+
+using XRL.UI;
 using XRL.Core;
 using XRL.Rules;
 using XRL.Wish;
 using XRL.World.AI.Pathfinding;
+
 using UD_Blink_Mutation;
 using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
-using ConsoleLib.Console;
-using System.Threading;
-using System.IO;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -330,13 +333,14 @@ namespace XRL.World.Parts.Mutation
             int iterationCounter = 1;
             int padding = $"{cellCount}".Length;
             PathCache = new();
+            FindPath previousPath = null;
             Debug.Entry(4, $"Validating blinkPath and acquiring destinations and target...", Indent: 1, Toggle: getDoDebug());
             for (int i = cellCount - 1; i >= 0; --i)
             {
                 thisCell = blinkPath[i];
                 string iteration = $"{iterationCounter}".PadLeft(padding, ' ');
                 Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
-                Debug.LoopItem(4, $"{nameof(iteration)}: {iteration} [{thisCell}]", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"{iteration}: (i:{i}) [{thisCell?.Location}]", Indent: 2, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
                 FindPath path = new(StartCell: origin, EndCell: thisCell, PathGlobal: true, Looker: Blinker, MaxWeight: 25);
@@ -361,7 +365,7 @@ namespace XRL.World.Parts.Mutation
                 {
                     Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
                         Good: Destination != null, Indent: 4, Toggle: getDoDebug());
-                    Debug.LoopItem(4, $"{nameof(Kid)}", $"[{Kid?.DebugName ?? NULL}]",
+                    Debug.LoopItem(4, $"{nameof(Kid)}", $"{Kid?.DebugName ?? NULL}",
                         Good: Kid != null, Indent: 4, Toggle: getDoDebug());
                 }
                 
@@ -371,8 +375,8 @@ namespace XRL.World.Parts.Mutation
                     Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 4, Toggle: getDoDebug());
                     if (previousCellIsValid)
                     {
-                        KidDestination = previousCell;
-                        Path = PathCache[i - 1];
+                        KidDestination ??= previousCell;
+                        Path ??= previousPath;
                         Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 4, Toggle: getDoDebug());
                     }
                     else
@@ -395,6 +399,7 @@ namespace XRL.World.Parts.Mutation
                     Good: Destination != null, Indent: 4, Toggle: getDoDebug());
 
                 previousCell = thisCell;
+                previousPath = path;
                 iterationCounter++;
             }
             Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
@@ -491,52 +496,90 @@ namespace XRL.World.Parts.Mutation
 
         public static bool Blink(GameObject Blinker, string Direction, Cell Destination, bool IsNothinPersonnelKid = false, bool Silent = false)
         {
-            if (Blinker == null)
-                return false;
+            Debug.Entry(4,
+                $"{nameof(UD_Blink)}." +
+                $"{nameof(Blink)}(GameObject Blinker, string Direction, Cell Destination, bool IsNothinPersonnelKid = false, bool Silent = false)",
+                Indent: 0, Toggle: getDoDebug());
 
+            Debug.Entry(4, $"Checking for {nameof(Blinker)}...", Indent: 1, Toggle: getDoDebug());
+
+            if (Blinker == null)
+            {
+                Debug.CheckNah(4, $"{nameof(Blinker)} is null", Indent: 1, Toggle: getDoDebug());
+                return false;
+            }
+            
             string verb = "blink";
+
+            Debug.Entry(4, $"Checking for being on the world map...", Indent: 1, Toggle: getDoDebug());
             if (Blinker.OnWorldMap())
             {
                 Blinker.Fail($"You cannot {verb} on the world map.");
                 return false;
             }
+            Debug.Entry(4, $"Checking for currently flying...", Indent: 1, Toggle: getDoDebug());
             if (Blinker.IsFlying)
             {
                 Blinker.Fail($"You cannot {verb} while flying.");
                 return false;
             }
+            Debug.Entry(4, $"Checking can change movement mode...", Indent: 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
                 return false;
             }
+            Debug.Entry(4, $"Checking can change body position...", Indent: 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeBodyPosition("Blinking", ShowMessage: !Silent))
             {
                 return false;
             }
+            Debug.Entry(4, $"Checking blinker has {nameof(UD_Blink)}...", Indent: 1, Toggle: getDoDebug());
             if (!Blinker.TryGetPart(out UD_Blink blink))
             {
                 return false;
             }
 
+            Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
 
+            Debug.Entry(4, $"Initializing origin, Kid, KidDestination, and Direction...", Indent: 1, Toggle: getDoDebug());
             Cell origin = Blinker.CurrentCell;
             GameObject Kid = null;
             Cell KidDestination = null;
 
-            Direction ??= origin.GetDirectionFromCell(Blinker.PickDirection("Blink in which direction?"), NullIfSame: true);
-
+            if (Blinker.IsPlayer())
+            {
+                Debug.Entry(4, $"Getting direction from player...", Indent: 2, Toggle: getDoDebug());
+                Direction ??= origin.GetDirectionFromCell(Blinker.PickDirection("Blink in which direction?"), NullIfSame: true);
+            }
+            Debug.Entry(4, $"Initializing Path...", Indent: 1, Toggle: getDoDebug());
             FindPath Path = null;
 
+            Debug.Entry(4, $"Checking {nameof(Destination)} for a value...", Indent: 1, Toggle: getDoDebug());
             if (Destination == null)
             {
                 if (Blinker.IsPlayer() && !TryGetBlinkDestination(Blinker, Direction, 0, out Destination, out Kid, out KidDestination, out Path, IsNothinPersonnelKid))
                 {
+                    if (!Silent)
+                    {
+                        Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
+                    }
                     return false;
                 }
                 else
                 {
                     // Do some AI Oriented destination getting.
+                }
+            }
+            if (Blinker.CurrentCell.GetAdjacentCells().Contains(Destination))
+            {
+                if (Blinker.IsPlayer())
+                {
+                    if (!Silent)
+                    {
+                        Popup.ShowFail("You don't have room to build momentum!");
+                    }
+                    return false;
                 }
             }
 
@@ -548,6 +591,7 @@ namespace XRL.World.Parts.Mutation
                 isNani = Kid.CurrentCell.GetDirectionFromCell(KidDestination) != Direction;
                 doNothinPersonnel = true;
             }
+
 
             Blinker?.PlayWorldSound(BLINK_SOUND);
             PlayAnimation(Blinker, Destination, Path);
@@ -569,7 +613,14 @@ namespace XRL.World.Parts.Mutation
 
                 if (!isNani)
                 {
-                    bool attacked = blink.IsSteelCold = Combat.PerformMeleeAttack(Blinker, Kid, EnergyCost: 0, HitModifier: 5);
+
+                    bool attacked = blink.IsSteelCold = 
+                        Combat.PerformMeleeAttack(
+                            Attacker: Blinker, 
+                            Defender: Kid, 
+                            HitModifier: 5, 
+                            Properties: "ColdSteel"
+                            );
 
                     if (!attacked)
                     {
@@ -677,8 +728,12 @@ namespace XRL.World.Parts.Mutation
                 {
                     List<string> particles = new()
                     {
-                        ".",
-                        "o",
+                        "\u25CB", // ○
+                        "\u2219", // ∙
+                        "\u00BA", // º
+                        "\u263C", // ☼
+                        "\u2248", // ≈
+                        "\u221E", // ∞
                         "~",
                         "'",
                         "+",
@@ -687,8 +742,13 @@ namespace XRL.World.Parts.Mutation
                     List<string> colors = new()
                     {
                         "&K",
+                        "&K",
+                        "&m",
+                        "&m",
                         "&m",
                         "&y",
+                        "&y",
+                        "&c",
                         "&c",
                         "&C",
                     };
@@ -700,9 +760,9 @@ namespace XRL.World.Parts.Mutation
                         {
                             string color = colors.GetRandomElement();
                             string particle = particles.GetRandomElement();
-                            if (2.in10())
+                            if (5.in10())
                             {
-                                break;
+                                continue;
                             }
                             scrapBuffer.Goto(step.X, step.Y);
                             scrapBuffer.Write($"{color}{particle}");
@@ -810,7 +870,7 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(GetAttackerMeleePenetrationEvent E)
         {
-            if (IsSteelCold)
+            if (IsSteelCold && E.Properties.Contains("ColdSteel"))
             {
                 GameObject blinker = E.Attacker;
                 GameObject kid = E.Defender;
@@ -819,10 +879,10 @@ namespace XRL.World.Parts.Mutation
                 IsSteelCold = !kid.TakeDamage(
                     Amount: amount,
                     Message: "from %t {{coldsteel|Cold Steel}}!",
-                    Attributes: "Umbral",
+                    Attributes: "Cold Steel",
                     DeathReason: "nothin personnel",
                     ThirdPersonDeathReason: "nothin personnel",
-                    Owner: null,
+                    Owner: blinker,
                     Attacker: blinker
                     );
 
@@ -830,13 +890,18 @@ namespace XRL.World.Parts.Mutation
                 {
                     kid.ParticleBlip("&m\u203C", 10, 0L);
                     kid.Icesplatter();
-
                 }
             }
-            return base.HandleEvent(E);
+            else
+            {
+                IsSteelCold = false;
+            }
+                return base.HandleEvent(E);
         }
         public override bool HandleEvent(KilledEvent E)
         {
+            Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
+            Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
             if (E.Reason == "nothin personnel")
             {
                 SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
