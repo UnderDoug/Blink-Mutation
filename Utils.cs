@@ -412,6 +412,11 @@ namespace UD_Blink_Mutation
         {
             return Rumble((float)Cause, DurationFactor, DurationMax, Async);
         }
-    } //!-- public static class Utils
 
+        public static bool IsMaxDistance(int Distance)
+        {
+            return Distance >= MAX_DIST;
+        }
+
+    } //!-- public static class Utils
 }

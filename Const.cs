@@ -32,5 +32,7 @@ namespace UD_Blink_Mutation
         public const string DIST = SPACE + SPACE + SPACE + SPACE; // "    "
         public const string NACE = NBSP + NBSP + NBSP + NBSP;     // "    " (NBSP)
 
+        public const int MAX_DIST = 9999999;
+
     } //!-- public static class Const
 }

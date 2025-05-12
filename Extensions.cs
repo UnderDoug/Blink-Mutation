@@ -1832,5 +1832,54 @@ namespace UD_Blink_Mutation
             return output;
         }
 
-    } //!-- Extensions
+        public static string PickDirectionS(this GameObject who, string Label = null, bool NullIfSame = false)
+        {
+            return who.CurrentCell.GetDirectionFromCell(who.Physics.PickDirection(Label, who), NullIfSame);
+        }
+
+        public static bool IsIn45DegreeMultipleWith(this Cell OriginCell, Cell TargetCell)
+        {
+            return OriginCell != null && TargetCell != null 
+                && (OriginCell.X == TargetCell.X 
+                    || OriginCell.Y == TargetCell.Y 
+                    || Math.Abs(OriginCell.X - TargetCell.X) == Math.Abs(OriginCell.Y - TargetCell.Y));
+        }
+        public static bool IsIn45DegreeMultipleWith(this GameObject Origin, GameObject Target)
+        {
+            Cell OriginCell = Origin.CurrentCell;
+            Cell TargetCell = Target.CurrentCell;
+            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+        }
+        public static bool IsIn45DegreeMultipleWith(this Cell OriginCell, GameObject Target)
+        {
+            Cell TargetCell = Target.CurrentCell;
+            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+        }
+        public static bool IsIn45DegreeMultipleWith(this GameObject Origin, Cell TargetCell)
+        {
+            Cell OriginCell = Origin.CurrentCell;
+            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+        }
+
+        public static int CosmeticDistanceTo(this Cell Origin, Cell Target)
+        {
+            if (Origin.ParentZone != Target.ParentZone)
+                return 0;
+            return Origin.CosmeticDistanceTo(Target.X, Target.Y);
+        }
+        public static int CosmeticDistanceTo(this GameObject Origin, GameObject Target)
+        {
+            if (!GameObject.Validate(Origin) || !GameObject.Validate(Target))
+                return 0;
+
+            Cell OriginCell = Origin.CurrentCell;
+            Cell TargetCell = Target.CurrentCell;
+
+            if (OriginCell.ParentZone != TargetCell.ParentZone)
+                return 0;
+
+            return OriginCell.CosmeticDistanceTo(TargetCell);
+        }
+
+    } //!-- public static class Extensions
 }

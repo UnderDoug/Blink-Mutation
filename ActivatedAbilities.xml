@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <activatedabilities>
-  <ability Command="Command_UD_ColdSteel">
+  <ability Command="Command_UD_ColdSteel_Ability">
     <description>
       <p>You were turend to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
       <br />
@@ -14,7 +14,7 @@
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y"  State="ToggleOn" />
   </ability>
-  <ability Command="Command_UD_Blink">
+  <ability Command="Command_UD_Blink_Ability">
     <description>
       <p><stat Name="BornWith" /> a {{m|special power}}: You are stronger than all those around you.</p>
       <br />
