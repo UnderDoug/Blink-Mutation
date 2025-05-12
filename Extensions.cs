@@ -21,6 +21,8 @@ using XRL.World.Parts.Skill;
 
 using static UD_Blink_Mutation.Utils;
 using static UD_Blink_Mutation.Const;
+using XRL.CharacterBuilds;
+using XRL.CharacterBuilds.Qud;
 
 namespace UD_Blink_Mutation
 {
@@ -1879,6 +1881,86 @@ namespace UD_Blink_Mutation
                 return 0;
 
             return OriginCell.CosmeticDistanceTo(TargetCell);
+        }
+
+        public static List<MutationEntry> GetStartingMutationEntries(this GameObject Mutant)
+        {
+            List<MutationEntry> list = new();
+            if (Mutant != null)
+            {
+                foreach ((string mutation, GamePartBlueprint _) in Mutant.GetBlueprint().Mutations)
+                {
+                    MutationEntry entry = MutationFactory.GetMutationEntryByName(mutation);
+                    if (!list.Contains(entry))
+                    {
+                        list.Add(entry);
+                    }
+                }
+                if (Mutant.IsOriginalPlayerBody())
+                {
+                    foreach (AbstractEmbarkBuilderModule activeModule in EmbarkBuilderConfiguration.activeModules)
+                    {
+                        if (activeModule.type == "QudMutationsModule")
+                        {
+                            QudMutationsModule mutationModule = activeModule as QudMutationsModule;
+                            foreach (QudMutationModuleDataRow selection in mutationModule.data.selections)
+                            {
+                                if (!list.Contains(selection.Entry))
+                                {
+                                    list.Add(selection.Entry);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            return list;
+        }
+        public static List<BaseMutation> GetStartingBaseMutations(this GameObject Mutant)
+        {
+            List<BaseMutation> list = new();
+            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            {
+                if (!list.Contains(entry.Mutation))
+                {
+                    list.Add(entry.Mutation);
+                }
+            }
+            return list;
+        }
+        public static List<string> GetStartingMutations(this GameObject Mutant)
+        {
+            List<string> list = new();
+            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            {
+                if (!list.Contains(entry.DisplayName))
+                {
+                    list.Add(entry.DisplayName);
+                }
+            }
+            return list;
+        }
+        public static List<string> GetStartingMutationClasses(this GameObject Mutant)
+        {
+            List<string> list = new();
+            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            {
+                if (!list.Contains(entry.Class))
+                {
+                    list.Add(entry.Class);
+                }
+            }
+            return list;
+        }
+
+        public static GameObject Think(this GameObject Thinker, string Hrm)
+        {
+            if (GameObject.Validate(Thinker) && Thinker.Brain != null && !Thinker.IsPlayerControlled())
+            {
+                Thinker.Brain.Think(Hrm);
+            }
+            return Thinker;
         }
 
     } //!-- public static class Extensions

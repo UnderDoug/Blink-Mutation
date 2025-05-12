@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using ConsoleLib.Console;
 
+using Qud.API;
 using Genkit;
 using UnityEngine;
 
@@ -16,10 +17,11 @@ using XRL.World.AI.Pathfinding;
 
 using UD_Blink_Mutation;
 using Debug = UD_Blink_Mutation.Debug;
-using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
+using static UD_Blink_Mutation.Const;
+using static UD_Blink_Mutation.Utils;
+using XRL.CharacterBuilds;
 using static XRL.World.Capabilities.Mental;
-using static UnityEngine.UI.Image;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -36,7 +38,13 @@ namespace XRL.World.Parts.Mutation
             return doDebug;
         }
 
-        private static int BlinkParticleSkipChance = 50;
+        private static int BlinkParticleSkipChance = 85;
+
+        public bool BornThisWay => IsBornThisWay(ParentObject);
+        public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
+
+        public static string MutationDescription_CharacterCreation => "You were born with";
+        public static string MutationDescription_WhilstPlaying => "You have manifested";
 
         public static Dictionary<int, FindPath> PathCache = new();
 
@@ -75,6 +83,17 @@ namespace XRL.World.Parts.Mutation
             Type = "Physical";
         }
 
+        public static bool IsBornThisWay(GameObject Blinker)
+        {
+            if (Blinker == null)
+                return true;
+
+            if (Blinker.TryGetPart(out UD_Blink blink) && Blinker.GetStartingMutationClasses().Contains(nameof(UD_Blink)))
+            {
+                return true;
+            }
+            return false;
+        }
         public static int GetBlinkRange(int Level)
         {
             return 3 + (int)Math.Min(9, Math.Floor(Level / 2.0));
@@ -130,17 +149,9 @@ namespace XRL.World.Parts.Mutation
 
         public override string GetDescription()
         {
-            string CharacterCreation = "You were born with";
-            string WhilstPlaying = "You have manifested";
-
             StringBuilder SB = Event.NewStringBuilder();
 
-            if (ParentObject == null || ParentObject.GetBlueprint().Mutations.ContainsKey(DisplayName))
-                SB.Append(CharacterCreation);
-            else
-                SB.Append(WhilstPlaying);
-
-            SB.Append(" a ").AppendColored("m","special power").Append(": You are stronger than all those around you.");
+            SB.Append(BornWith);
             SB.AppendLine().Append("Possessed of great speed, you can ").AppendRule("move faster than perceptible").Append(".");
 
             return Event.FinalizeString(SB);
@@ -148,9 +159,10 @@ namespace XRL.World.Parts.Mutation
 
         public override void CollectStats(Templates.StatCollector stats, int Level)
         {
-            stats.Set("Range", GetBlinkRange(Level));
-            stats.Set("Damage", GetColdSteelDamage(Level));
-            stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID), GetCooldownTurns(Level));
+            stats.Set("BornWith", BornWith, changes: false);
+            stats.Set("BlinkRange", GetBlinkRange(Level));
+            stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
+            stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
         }
 
         public override string GetLevelText(int Level)
@@ -224,6 +236,7 @@ namespace XRL.World.Parts.Mutation
                         IsRealityDistortionBased: false,
                         IsWorldMapUsable: true,
                         Silent: Silent,
+                        AffectedByWillpower: false,
                         who: GO
                         );
             }
@@ -431,67 +444,84 @@ namespace XRL.World.Parts.Mutation
                 thisCell = blinkPath[i];
                 string iteration = $"{iterationCounter}".PadLeft(padding, ' ');
                 Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
-                Debug.LoopItem(4, $"{iteration}: (i:{i}) [{thisCell?.Location}]", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"{iteration}: (i:{i}) [{thisCell?.Location}]", Indent: 1, Toggle: getDoDebug());
 
-                Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
-                FindPath path = new(StartCell: origin, EndCell: thisCell, PathGlobal: true, Looker: Blinker, MaxWeight: 25);
+                Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 2, Toggle: getDoDebug());
+
+                FindPath path = new(
+                    StartCell: origin, 
+                    EndCell: thisCell, 
+                    PathGlobal: true, 
+                    Looker: Blinker, 
+                    MaxWeight: 25,
+                    IgnoreCreatures: true);
+
+                path.Steps.RemoveAt(0);
+
                 PathCache.TryAdd(iterationCounter, path);
                 Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
-                    Good: path.Steps.Count <= Range, Indent: 4, Toggle: getDoDebug());
+                    Good: path.Steps.Count <= Range, Indent: 3, Toggle: getDoDebug());
 
-                Debug.LoopItem(4, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: 3, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: 1, Toggle: getDoDebug());
                 if (Destination != null && (!IsNothinPersonnelKid || Kid != null))
                 {
-                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination.Location}]", Indent: 4, Toggle: getDoDebug());
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 4, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination.Location}]", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
                     if (IsNothinPersonnelKid)
                     {
                         KidDestination ??= thisCell;
                         Path = path;
+                        Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: 4, Toggle: getDoDebug());
                     }
-                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 4, Toggle: getDoDebug());
+                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
                     break;
                 }
                 else
                 {
                     Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                        Good: Destination != null, Indent: 4, Toggle: getDoDebug());
+                        Good: Destination != null, Indent: 3, Toggle: getDoDebug());
                     Debug.LoopItem(4, $"{nameof(Kid)}", $"{Kid?.DebugName ?? NULL}",
-                        Good: Kid != null, Indent: 4, Toggle: getDoDebug());
+                        Good: Kid != null, Indent: 3, Toggle: getDoDebug());
                 }
                 
-                Debug.LoopItem(4, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: 3, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: 2, Toggle: getDoDebug());
                 if (IsNothinPersonnelKid && (Kid = FindKidInCell(Blinker, thisCell)) != null)
                 {
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 4, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
                     if (previousCellIsValid)
                     {
                         KidDestination ??= previousCell;
-                        Path ??= previousPath;
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 4, Toggle: getDoDebug());
+                        Path = previousPath;
+                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
                     }
                     else
                     {
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"previousCell invalid", Indent: 4, Toggle: getDoDebug());
+                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"previousCell invalid", Indent: 3, Toggle: getDoDebug());
                     }
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"{nameof(Kid)}", $"{NULL}", Indent: 4, Toggle: getDoDebug());
+                    Debug.CheckNah(4, $"{nameof(Kid)}", $"{NULL}", Indent: 3, Toggle: getDoDebug());
                 }
 
-                Debug.LoopItem(4, $"Checking validity of this cell...", Indent: 3, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"Checking validity of this cell...", Indent: 2, Toggle: getDoDebug());
                 if (previousCellIsValid = IsValidDestinationCell(Blinker, thisCell, Range, path.Steps.Count))
                 {
                     Destination ??= thisCell;
                     Path ??= path;
+                    if (Path == path)
+                    {
+                        Debug.LoopItem(4, $"Path is soft set to PathCache[{iterationCounter}]", Indent: 3, Toggle: getDoDebug());
+                    }
                 }
                 Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                    Good: Destination != null, Indent: 4, Toggle: getDoDebug());
+                    Good: Destination != null, Indent: 3, Toggle: getDoDebug());
 
                 previousCell = thisCell;
                 previousPath = path;
                 iterationCounter++;
+
+                Debug.LoopItem(4, $"End {iteration}: (i:{i}) ////", Indent: 1, Toggle: getDoDebug());
             }
             Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
 
@@ -526,39 +556,41 @@ namespace XRL.World.Parts.Mutation
         }
         public static bool IsValidDestinationCell(GameObject Blinker, Cell Destination, int Range, int Steps)
         {
+            int indent = Debug.LastIndent + 1;
+
             if (Blinker == null)
             {
-                Debug.CheckNah(4, $"{nameof(Blinker)} is null", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Blinker)} is null", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
             if (Destination == null)
             {
-                Debug.CheckNah(4, $"{nameof(Destination)} is null", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Destination)} is null", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
             if (Range < 1)
             {
-                Debug.CheckNah(4, $"{nameof(Range)} is 0 or less", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Range)} is 0 or less", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
             if (Steps < 1)
             {
-                Debug.CheckNah(4, $"{nameof(Steps)} is less than 1", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Steps)} is less than 1", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
             if (Range < Steps)
             {
-                Debug.CheckNah(4, $"{nameof(Range)} is less than {nameof(Steps)}", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Range)} is less than {nameof(Steps)}", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
             if (Destination.IsSolidFor(Blinker))
             {
-                Debug.CheckNah(4, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
@@ -574,7 +606,7 @@ namespace XRL.World.Parts.Mutation
             Cell origin = Blinker.CurrentCell;
             Cell cell = origin;
 
-            for (int i = 0; i <= Range; i++)
+            for (int i = 1; i <= Range; i++)
             {
                 cell = cell.GetCellFromDirection(Direction, BuiltOnly: false);
                 if (cell != null && !blinkPath.Contains(cell))
@@ -636,10 +668,10 @@ namespace XRL.World.Parts.Mutation
             SoundManager.PreloadClipSet(BLINK_SOUND);
 
             Cell origin = Blinker.CurrentCell;
-            Cell KidDestination = null;
+            Cell KidDestination = Destination;
             Debug.Entry(4, $"Initialized {nameof(origin)} and {nameof(KidDestination)}...", Indent: 1, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"Getting {nameof(Direction)} if null...", Indent: 2, Toggle: getDoDebug());
+            Debug.Entry(4, $"Getting {nameof(Direction)} if null...", Indent: 1, Toggle: getDoDebug());
             Direction ??= GetBlinkDirection(Blinker, BlinkRange, IsNothinPersonnelKid, Kid, IsRetreat);
 
             if (Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
@@ -652,7 +684,7 @@ namespace XRL.World.Parts.Mutation
             FindPath Path = null;
 
             Debug.Entry(4, $"Checking {nameof(Destination)} for a value...", Indent: 1, Toggle: getDoDebug());
-            if (Destination == null)
+            if (Destination == null || (IsNothinPersonnelKid && KidDestination != null))
             {
                 if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out Path, IsNothinPersonnelKid))
                 {
@@ -664,8 +696,11 @@ namespace XRL.World.Parts.Mutation
                     return false;
                 }
             }
+
+            Debug.Entry(4, $"Checking {nameof(Destination)} adjacency to {nameof(Blinker)}...", Indent: 1, Toggle: getDoDebug());
             if (Blinker.CurrentCell.GetAdjacentCells().Contains(Destination))
             {
+                Debug.CheckNah(4, $"{nameof(Destination)} is adjacent to {nameof(Blinker)}", Indent: 2, Toggle: getDoDebug());
                 if (Blinker.IsPlayer())
                 {
                     if (!Silent)
@@ -678,23 +713,49 @@ namespace XRL.World.Parts.Mutation
 
             bool isNani = false;
             bool doNothinPersonnel = false;
+            Debug.Entry(4, $"Initialized {nameof(isNani)} ({isNani}) and {nameof(doNothinPersonnel)} ({doNothinPersonnel})...", 
+                Indent: 1, Toggle: getDoDebug());
+
+            Debug.Entry(4, $"Checking if IsNothinPersonnelKid and have both Kid and KidDestination...", Indent: 1, Toggle: getDoDebug());
             if (IsNothinPersonnelKid && Kid != null && KidDestination != null)
             {
+                Debug.CheckYeh(4, $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid}", Indent: 2, Toggle: getDoDebug());
                 Destination = KidDestination;
                 isNani = Kid.CurrentCell.GetDirectionFromCell(KidDestination) != Direction;
                 doNothinPersonnel = true;
+                Debug.LoopItem(4, $"{nameof(doNothinPersonnel)}: {doNothinPersonnel}", 
+                    Good: doNothinPersonnel, Indent: 2, Toggle: getDoDebug());
+            }
+            else
+            {
+                Debug.LoopItem(4, $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid}", 
+                    Good: IsNothinPersonnelKid, Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"{nameof(Kid)}: {Kid?.DebugName ?? NULL}", 
+                    Good: Kid != null, Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"{nameof(KidDestination)}: [{KidDestination?.Location}]", 
+                    Good: KidDestination != null, Indent: 2, Toggle: getDoDebug());
             }
 
 
+            Debug.Entry(4, $"Playing world sound {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             Blinker?.PlayWorldSound(BLINK_SOUND);
+
+            Debug.Entry(4, $"Playing Animation...", Indent: 1, Toggle: getDoDebug());
             PlayAnimation(Blinker, Destination, Path);
 
+            Debug.Entry(4, $"Direct Moving To [{Destination?.Location}]...", Indent: 1, Toggle: getDoDebug());
             Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
+
+            Debug.Entry(4, $"Gravitating...", Indent: 1, Toggle: getDoDebug());
             Blinker.Gravitate();
+
+            Debug.Entry(4, $"Arriving...", Indent: 1, Toggle: getDoDebug());
             Arrive(origin, Destination);
 
+            Debug.Entry(4, $"Checking {nameof(doNothinPersonnel)}...", Indent: 1, Toggle: getDoDebug());
             if (doNothinPersonnel)
             {
+                Debug.CheckYeh(4, $"{nameof(doNothinPersonnel)}", $"{doNothinPersonnel}", Indent: 2, Toggle: getDoDebug());
                 string didVerb = "teleport behind";
                 string didExtra = "";
                 string didEndMark = "!";
@@ -704,18 +765,15 @@ namespace XRL.World.Parts.Mutation
                 string messageColor = "m";
                 float floatLength = 8.0f;
 
+
+                Debug.Entry(4, $"Checking if not Nani...", Indent: 2, Toggle: getDoDebug());
                 if (!isNani)
                 {
-                    /*
-                    bool attacked = blink.IsSteelCold = 
-                        Combat.PerformMeleeAttack(
-                            Attacker: Blinker, 
-                            Defender: Kid, 
-                            HitModifier: 5, 
-                            Properties: "ColdSteel"
-                            );
-                    */
+                    Debug.CheckYeh(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
 
+
+
+                    Debug.Entry(4, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: 2, Toggle: getDoDebug());
                     bool attacked = 
                         hasBlink
                         ? PerformNothinPersonnel(Blinker, Kid)
@@ -725,6 +783,7 @@ namespace XRL.World.Parts.Mutation
                             HitModifier: 5)
                         ;
 
+                    Debug.Entry(4, $"Checking {nameof(attacked)}...", Indent: 2, Toggle: getDoDebug());
                     if (!attacked)
                     {
                         message = "nani!?";
@@ -734,9 +793,12 @@ namespace XRL.World.Parts.Mutation
                     {
                         blink.WeGoAgain = true;
                     }
+                    Debug.LoopItem(4, $"{nameof(attacked)}", $"{attacked}", 
+                        Good: attacked, Indent: 3, Toggle: getDoDebug());
                 }
                 else
                 {
+                    Debug.CheckNah(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
                     message = "nani!?";
                     messageColor = "r";
 
@@ -745,16 +807,9 @@ namespace XRL.World.Parts.Mutation
                     didColor = "r";
                 }
 
-                Blinker.ParticleText(
-                    Text: message,
-                    Color: messageColor[0],
-                    IgnoreVisibility: true,
-                    juiceDuration: 1.5f,
-                    floatLength: floatLength
-                    );
 
-                Blinker.EmitMessage(message, null, messageColor);
-
+                Debug.Entry(4, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
+                    Indent: 2, Toggle: getDoDebug());
                 blink.DidXToY(
                     Verb: didVerb, 
                     Object: Kid,
@@ -765,17 +820,37 @@ namespace XRL.World.Parts.Mutation
                     ColorAsGoodFor: isNani ? Kid : Blinker, 
                     ColorAsBadFor: isNani ? Blinker : Kid
                     );
+
+                Debug.Entry(4, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
+                    Indent: 2, Toggle: getDoDebug());
+                Blinker.EmitMessage(message, null, messageColor);
+
+                Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...", 
+                    Indent: 2, Toggle: getDoDebug());
+                Blinker.ParticleText(
+                    Text: message,
+                    Color: messageColor[0],
+                    IgnoreVisibility: true,
+                    juiceDuration: 1.5f,
+                    floatLength: floatLength
+                    );
             }
             else
             {
+                Debug.Entry(4, $"DiX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
+                    Indent: 2, Toggle: getDoDebug());
                 blink.DidX(
-                    Verb: "move",
+                    Verb: "blunk",
                     Extra: "to a new location faster than perceptable",
                     EndMark: "!",
                     SubjectOverride: null,
                     Color: "m"
                     );
             }
+            Debug.Entry(4,
+                $"{nameof(UD_Blink)}." +
+                $"{nameof(Blink)}() [{TICK}] Blunk",
+                Indent: 0, Toggle: getDoDebug());
             return Blinker.CurrentCell == Destination;
         }
         public static bool Blink(GameObject Blinker, string Direction, bool IsNothinPersonnelKid = false, bool Silent = false)
@@ -850,7 +925,7 @@ namespace XRL.World.Parts.Mutation
                 CombatJuice.punch(
                     AttackerCellLocation: attackerLocation,
                     DefenderCellLocation: defenderLocation,
-                    Time: 0.15f,
+                    Time: 0.1f,
                     Ease: Easing.Functions.SineEaseInOut,
                     FromXOffset: 0f,
                     FromYOffset: 0f,
@@ -874,31 +949,31 @@ namespace XRL.World.Parts.Mutation
             {
                 if (Blinker.InActiveZone())
                 {
-                    List<string> particles = new()
+                    Dictionary<string, int> particles = new()
                     {
-                        "\u25CB", // ○
-                        "\u2219", // ∙
-                        "\u00BA", // º
-                        "\u263C", // ☼
-                        "\u2248", // ≈
-                        "\u221E", // ∞
-                        "~",
-                        "'",
-                        "+",
-                        "*",
+                        //{ "\u25CB", 2 },  // ○
+                        //{ "\u2219", 2 },  // ∙
+                        //{ "\u00BA", 2 },  // º
+                        //{ "\u263C", 2 },  // ☼
+                        //{ "\u2248", 2 },  // ≈
+                        //{ "\u221E", 2 },  // ∞
+                        { "~", 5 },
+                        { "'", 2 },
+                        { "+", 3 },
+                        { "*", 5 },
+                        { ".", 2 },
+                        { "`", 2 },
+                        { "!", 4 },
+                        { "-", 1 },
+                        { "|", 1 },
                     };
-                    List<string> colors = new()
+                    Dictionary<string, int> colors = new()
                     {
-                        "&K",
-                        "&K",
-                        "&m",
-                        "&m",
-                        "&m",
-                        "&y",
-                        "&y",
-                        "&c",
-                        "&c",
-                        "&C",
+                        { "&K", 2 },
+                        { "&m", 4 },
+                        { "&y", 3 },
+                        { "&c", 2 },
+                        { "&C", 1 },
                     };
                     ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
                     for (int i = 0; i <= pathStepsCount + 5; i++)
@@ -906,8 +981,8 @@ namespace XRL.World.Parts.Mutation
                         scrapBuffer.RenderBase();
                         foreach (Cell step in Path.Steps)
                         {
-                            string color = colors.GetRandomElement();
-                            string particle = particles.GetRandomElement();
+                            string color = colors.Sample();
+                            string particle = particles.Sample();
                             if (BlinkParticleSkipChance.in100())
                             {
                                 continue;
@@ -986,11 +1061,14 @@ namespace XRL.World.Parts.Mutation
         {
             return base.WantEvent(ID, cascade)
                 || (DebugBlinkDescriptions && ID == GetShortDescriptionEvent.ID)
+                || ID == BeforeAbilityManagerOpenEvent.ID
                 || ID == CommandEvent.ID
+                || ID == GetItemElementsEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
-                || ID == GetAttackerMeleePenetrationEvent.ID
                 || ID == AIGetRetreatAbilityListEvent.ID
                 || ID == AIGetMovementAbilityListEvent.ID
+                || ID == GetMovementCapabilitiesEvent.ID
+                || ID == GetAttackerMeleePenetrationEvent.ID
                 || ID == KilledEvent.ID;
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
@@ -1011,16 +1089,43 @@ namespace XRL.World.Parts.Mutation
             }
             return base.HandleEvent(E);
         }
+        public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
+        {
+            DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectStats, ParentObject);
+            DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectStats, ParentObject);
+            return base.HandleEvent(E);
+        }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_BLINK_ABILITY && ParentObject == E.Actor)
+            if (E.Command == COMMAND_UD_BLINK && ParentObject == E.Actor)
             {
                 if (GameObject.Validate(E.Actor))
                 {
                     int blinkRange = GetBlinkRange();
-                    bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing();
+                    bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                    bool isMovement = !isRetreat && E.TargetCell != null;
 
-                    string Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
+                    string Direction = null;
+                    string blinkThink = "hurr durr, i blinking";
+                    if (!E.Actor.IsPlayerControlled())
+                    {
+                        Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
+
+                        if (isRetreat)
+                        {
+                            blinkThink = $"I am going to try and blink away from {E?.Target?.ShortDisplayNameStripped ?? NULL}";
+                        }
+                        else if (isMovement)
+                        {
+                            blinkThink = $"I don't think you have any idea how fast I really am";
+                        }
+                        else
+                        {
+                            blinkThink = $"psssh...nothin personnel...{E.Target?.ShortDisplayNameStripped ?? NULL}";
+                        }
+
+                        E.Actor.Think(blinkThink);
+                    }
 
                     bool blunk = Blink(
                         Blinker: E.Actor,
@@ -1035,6 +1140,7 @@ namespace XRL.World.Parts.Mutation
 
                     if (blunk)
                     {
+                        blinkThink = $"I blunk and ";
                         int energyCost = 1000;
                         if (WeGoAgain)
                         {
@@ -1042,26 +1148,53 @@ namespace XRL.World.Parts.Mutation
 
                             Arrive(ParentObject.CurrentCell.GetCellFromDirection(Direction), ParentObject.CurrentCell, Life: 8, Color1: "C", Symbol1: "\u203C", Color2: "Y", Symbol2: "\u221E");
 
-                            energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
+                            blinkThink += $"We Go Again";
                         }
                         else
                         {
                             CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(Level));
+                            blinkThink += $"I am knackered";
                         }
 
                         UseEnergy(energyCost, "Physical Mutation Blink");
+                    }
+                    else
+                    {
+                        blinkThink = "I blunked out :(";
+                    }
+                    if (!E.Actor.IsPlayerControlled())
+                    {
+                        E.Actor.Think(blinkThink);
                     }
                 }
             }
             return base.HandleEvent(E);
         }
+        public override bool HandleEvent(GetItemElementsEvent E)
+        {
+            if (E.IsRelevantCreature(ParentObject))
+            {
+                E.Add("travel", 3);
+            }
+            return base.HandleEvent(E);
+        }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
-            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
+            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 25.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
             {
+                E.Actor.Think($"I want to attack {E.Target.ShortDisplayNameStripped}");
                 string Direction = GetAggressiveBlinkDirection(E.Actor, GetBlinkRange(), IsNothinPersonnelKid, E.Target);
+                if (!Direction.IsNullOrEmpty())
+                {
+                    E.Actor.Think($"{E?.Target?.ShortDisplayNameStripped ?? NULL} is {Direction ?? NULL} of me");
+                }
+                else
+                {
+                    E.Actor.Think($"I can't blink to {E?.Target?.ShortDisplayNameStripped ?? NULL}");
+                }
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
+                    E.Actor.Think($"I might teleport behind {E?.Target?.ShortDisplayNameStripped ?? NULL}, it's nothin personnel");
                     E.Add(COMMAND_UD_BLINK, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
@@ -1069,12 +1202,22 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(AIGetRetreatAbilityListEvent E)
         {
-            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
+            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 100.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
             {
+                E.Actor.Think($"I want to retreat from {E.Target.ShortDisplayNameStripped}");
                 string Direction = GetRetreatingBlinkDirection(E.Actor, GetBlinkRange(), E.Target);
+                if (!Direction.IsNullOrEmpty())
+                {
+                    E.Actor.Think($"Away from {E.Target.ShortDisplayNameStripped} is {Direction} of me");
+                }
+                else
+                {
+                    E.Actor.Brain.Think($"I can't blink away from {E.Target.ShortDisplayNameStripped}");
+                }
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
-                    E.Add(COMMAND_UD_BLINK, TargetCellOverride: Destination);
+                    E.Actor.Brain.Think($"I might blink away from {E.Target.ShortDisplayNameStripped}");
+                    E.Add(COMMAND_UD_BLINK, Priority: 3, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1083,12 +1226,27 @@ namespace XRL.World.Parts.Mutation
         {
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 25.in100() && !E.Actor.OnWorldMap())
             {
+                E.Actor.Think($"I gotta go fast");
                 string Direction = GetMovementBlinkDirection(E.Actor, GetBlinkRange(), E.TargetCell);
+                if (!Direction.IsNullOrEmpty())
+                {
+                    E.Actor.Think($"{Direction} of me would be fast");
+                }
+                else
+                {
+                    E.Actor.Think($"My style is pretty cramped here");
+                }
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
+                    E.Actor.Think($"I might blink to the {Direction}");
                     E.Add(COMMAND_UD_BLINK, TargetCellOverride: Destination);
                 }
             }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(GetMovementCapabilitiesEvent E)
+        {
+            E.Add("Blink a short distance", COMMAND_UD_BLINK_ABILITY, 5500, MyActivatedAbility(BlinkActivatedAbilityID));
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetAttackerMeleePenetrationEvent E)
@@ -1125,7 +1283,7 @@ namespace XRL.World.Parts.Mutation
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.ID == COMMAND_UD_BLINK)
+            if (E.ID == COMMAND_UD_BLINK_ABILITY)
             {
                 GameObject Blinker = ParentObject;
                 
@@ -1150,6 +1308,28 @@ namespace XRL.World.Parts.Mutation
         public static void OutputBlinkWish()
         {
             Debug.Entry($"{nameof(BlinkParticleSkipChance)}: {BlinkParticleSkipChance}");
+        }
+        [WishCommand(Command = "gimme blinker")]
+        public static void GimmeBlinkerWish()
+        {
+            UD_Blink playerBlink = The.Player.GetPart<UD_Blink>();
+            int blinkerLevel = 10;
+            if (playerBlink != null)
+            {
+                blinkerLevel = playerBlink.Level;
+            }
+            int blinkerRapid = blinkerLevel > 10 ? blinkerLevel - 10 : 0;
+            blinkerLevel = Math.Min(blinkerLevel, 10);
+            GameObject Blinker = EncountersAPI.GetCreatureAroundPlayerLevel();
+            Blinker.SetIntProperty("RapidLevel_UD_Blink", blinkerRapid, true);
+            Mutations mutations = Blinker.RequirePart<Mutations>();
+            mutations.AddMutation(nameof(UD_Blink), blinkerLevel);
+            Cell pickedCell = PickTarget.ShowPicker(PickTarget.PickStyle.EmptyCell, Locked: false, StartX: The.PlayerCell.X, StartY: The.PlayerCell.Y, Label: "put!");
+            if (pickedCell == null)
+            {
+                pickedCell = The.PlayerCell.getClosestEmptyCell();
+            }
+            pickedCell.AddObject(Blinker);
         }
     }
 }

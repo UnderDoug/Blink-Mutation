@@ -382,7 +382,7 @@ namespace UD_Blink_Mutation
         }
         public static string Quote(string @string)
         {
-            return $"\"{@string}\"";
+            return $"\"{@string ?? "null"}\"";
         }
 
         public static BookInfo GetBook(string BookName)
@@ -416,6 +416,30 @@ namespace UD_Blink_Mutation
         public static bool IsMaxDistance(int Distance)
         {
             return Distance >= MAX_DIST;
+        }
+
+        public static string GetBoolString(List<string> list, bool @bool)
+        {
+            string trueString = null;
+            string falseString = null;
+            string output = "";
+
+            foreach(string @string in list)
+            {
+                if (@string.StartsWith("true;;"))
+                {
+                    trueString = @string.Replace("true;;", "");
+                }
+                else if (@string.StartsWith("false;;"))
+                {
+                    falseString = @string.Replace("false;;", "");
+                }
+                else
+                {
+                    output += @string;
+                }
+            }
+            return output.Replace("%s", @bool ? trueString : falseString);
         }
 
     } //!-- public static class Utils

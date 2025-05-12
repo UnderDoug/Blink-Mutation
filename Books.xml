@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<books>
+
+  <!-- 
+        Add ExcludeFromCorpusGeneration="true" to a <books > element to exclude it from the corpus.
+  -->
+
+  <!-- 
+        Text Buckets for different locations in the game.
+  -->
+
+  <!-- Localisation Strings -->
+  <book ID="UD_Blink_Mutation:BornThisWay" Title="UD_Blink_Mutation:BornThisWay">
+    <page>true;;You were born with</page>
+    <page>false;;You have manifested</page>
+    <page>%s a {{m|special power}}: You are stronger than all those around you.</page>
+  </book>
+</books>
