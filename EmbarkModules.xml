@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<embarkmodules>
+  <module Class="XRL.CharacterBuilds.Qud.QudPregenModule">
+    <pregens>
+      <!-- Foreground is black pixels, Detail is white pixels -->
+      <pregen Name="Cold Steel" Genotype="Mutated Human" Tile="Presets/UD_BlinkMutation_ColdSteel_Preset.png" Foreground="y" Detail="m" Background="k">
+        <code>H4sIAAAAAAAACs1V32vbMBB+L/R/EGaPbkhK1q2FPLjZj25rIW1CNxh9kO3DFpElI502Qsj/3pOSNnbKlnZ0IYFg6767+z6d7uT54QFjUcEr+AXGCq2iMxYdd7qd4+5pp38SxQFPnZB5w6FHDt0VVuncSbBk/unXjM2Xj0doMqvBB/24uewMS254hmDOfUbbuXa5/38GpZHcrkJAzBJroUrl7Gg4poA6ZrdL7sFaWcyGTqIzMFDg0HAZs5FLpci+wWyip6AGykm51BjE5Bw5yXhUR6Y3+FJpHyjJE3lrEsr54O/TXjnkCDm7cBVXLa8ntXzAFsuXRfzPtRy7dE9L2VK2vZIrd580MZlW3OGuahgOjnLbPazihrbtdaxqythtWixIyEKO9dQuf/Pmgq06eFXkcynUtJk5eNxyI7hCcvDb20SH2gWs17Qv4udSXoAoSgRFM3TtRDZVYO1uFRCtlDvmnEBVa2og9skVDnbLHQ5ZqIJNRPYqzOvF3R+Ht/eqw5sgGpE6hH2c3k1x28d3pIVCO3ImK7mFvM3pr0k0oAosCXjfOpIoKYQUOCPgtA1MtCvKMEtn7F0b+qIQpBQFqMxv5W0b/U7DUOvfYAg6aUMfC+0VrG3Nnot4Pa4hdMdRv98GbqDiQlHLbd5SKW038XdXO+I/XvvDUmsLY+QGSc+lzsJY7GEX/U3oMz6sG3Ge7Kuua/6yz6t/3B0eLO4BhLmDGUMKAAA=</code>
+        <description>
+&amp;c&#249;&amp;y Born with a {{coldsteel|special power}}
+&amp;c&#249;&amp;y Turned to the {{K|darkness}}
+&amp;c&#249;&amp;y Likes: hurtin people, bein badass, skulls, 
+&amp;c&#249;&amp;y Dislikes: niceness, sunshine, my dad
+        </description>
+      </pregen>
+    </pregens>
+  </module>
+</embarkmodules>

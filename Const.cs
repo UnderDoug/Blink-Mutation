@@ -34,6 +34,8 @@ namespace UD_Blink_Mutation
 
         public const int MAX_DIST = 9999999;
 
+        public const string UDBM_NO_TILE_COLOR = "UD_Blink_NoTileColorChange";
+
         public const string UDBM_BORNTHISWAY_BOOK = "UD_Blink_Mutation:BornThisWay";
 
     } //!-- public static class Const

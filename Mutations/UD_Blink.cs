@@ -29,6 +29,7 @@ namespace XRL.World.Parts.Mutation
     [Serializable]
     public class UD_Blink : BaseMutation
     {
+        // Debug stuff
         private static bool doDebug = true;
         private static bool getDoDebug(string flag = "")
         {
@@ -40,17 +41,10 @@ namespace XRL.World.Parts.Mutation
 
         private static int BlinkParticleSkipChance = 85;
 
-        public bool BornThisWay => IsBornThisWay(ParentObject);
-        public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
+        // Options 
+        private static bool MutationColor => UI.Options.MutationColor;
 
-        public static string MutationDescription_CharacterCreation => "You were born with";
-        public static string MutationDescription_WhilstPlaying => "You have manifested";
-
-        public static Dictionary<int, FindPath> PathCache = new();
-
-        public static readonly int ICON_COLOR_PRIORITY = 82;
-        public static readonly string ICON_COLOR = "&m";
-
+        // Constants
         public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
         public static readonly string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
 
@@ -58,10 +52,15 @@ namespace XRL.World.Parts.Mutation
         public static readonly string COMMAND_UD_BLINK = "Command_UD_Blink";
         public static readonly string COMMAND_UD_COLDSTEEL_ABILITY = "Command_UD_ColdSteel_Ability";
 
-        public Guid BlinkActivatedAbilityID = Guid.Empty;
-        public Guid ColdSteelActivatedAbilityID = Guid.Empty;
+        public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
+        public static readonly string BASE_TILE_COLOR = "&m";
 
-        private bool MutationColor = UI.Options.MutationColor;
+
+        // Flags
+        public bool BornThisWay => IsBornThisWay(ParentObject);
+        public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
+
+        public static Dictionary<int, FindPath> PathCache = new();
 
         public bool IsNothinPersonnelKid 
         { 
@@ -77,10 +76,25 @@ namespace XRL.World.Parts.Mutation
 
         public bool IsSteelCold = false;
 
+        // Containers
+        public Guid BlinkActivatedAbilityID = Guid.Empty;
+        public Guid ColdSteelActivatedAbilityID = Guid.Empty;
+
+        // Part Parameters
+        public bool Shouts;
+
+        public bool ColorChange;
+        public int TileColorPriority;
+        public string TileColor;
+
         public UD_Blink()
         {
             DisplayName = "Blink";
             Type = "Physical";
+            Shouts = true;
+            ColorChange = true;
+            TileColor = string.Empty;
+            TileColorPriority = 0;
         }
 
         public static bool IsBornThisWay(GameObject Blinker)
@@ -269,21 +283,35 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool Render(RenderEvent E)
         {
-            bool flag = true;
-            if (ParentObject.IsPlayerControlled())
+            bool flag = ColorChange && !ParentObject.HasTagOrProperty(UDBM_NO_TILE_COLOR);
+            if (flag && ParentObject.IsPlayerControlled())
             {
-                if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L)
-                {
-                    MutationColor = UI.Options.MutationColor;
-                }
-                if (!MutationColor)
+                if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L && !MutationColor)
                 {
                     flag = false;
                 }
             }
             if (flag)
             {
-                E.ApplyColors(ICON_COLOR, ICON_COLOR_PRIORITY);
+                string tileColor =
+                    !TileColor.IsNullOrEmpty()
+                    ? TileColor
+                    : BASE_TILE_COLOR
+                    ;
+
+                int tileColorPriority =
+                    (TileColorPriority < 0)
+                    ? 0
+                    : (TileColorPriority > 0)
+                        ? TileColorPriority
+                        : BASE_TILE_COLOR_PRIORITY
+                    ;
+
+                if (!tileColor.StartsWith("&"))
+                {
+                    tileColor = $"&{tileColor[0]}";
+                }
+                E.ApplyColors(tileColor, tileColorPriority);
             }
             return base.Render(E);
         }
@@ -1062,6 +1090,7 @@ namespace XRL.World.Parts.Mutation
             return base.WantEvent(ID, cascade)
                 || (DebugBlinkDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == BeforeAbilityManagerOpenEvent.ID
+                || ID == GetExtraPhysicalFeaturesEvent.ID
                 || ID == CommandEvent.ID
                 || ID == GetItemElementsEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
@@ -1093,6 +1122,23 @@ namespace XRL.World.Parts.Mutation
         {
             DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectStats, ParentObject);
             DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectStats, ParentObject);
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(GetExtraPhysicalFeaturesEvent E)
+        {
+            if (ParentObject != null)
+            {
+                if (ParentObject.Body.HasPart("Face", EvenIfDismembered: false))
+                {
+                    E.Features.Add("a part missing from one ear");
+                }
+                if (ParentObject.Body.HasPart("Leg", EvenIfDismembered: false) 
+                    || ParentObject.Body.HasPart("Feet", EvenIfDismembered: false) 
+                    || ParentObject.Body.HasPart("Foot", EvenIfDismembered: false))
+                {
+                    E.Features.Add("a pair of {{y|jinco jeans}}");
+                }
+            }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(CommandEvent E)

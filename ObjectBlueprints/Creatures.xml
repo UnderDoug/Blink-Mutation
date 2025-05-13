@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects>
+  
+  <!-- 
+      Give select creatures UD_Blink or AIBlinker.
+      Specific creatures will need to have the color change turned off.
+   -->
+  <object Name="Troll King 3" Load="Merge">
+    <mutation Name="UD_Blink" Level="10" ColorChange="false" />
+    <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
+  </object>
+  
+  <!-- 
+      Prickle-Pigs
+   -->
+  <object Name="PricklePigBase" Inherits="BaseAnimal">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="[PricklePig]"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
+    <mutation Name="Blink" Level="8" Shouts="false" />
+    <mutation Name="Quills" Level="5" />
+    <mutation Name="Heightened Quickness" Level="2" />
+    <part Name="Body" Anatomy="TailedBiped" />
+    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
+    <stat Name="Level" Value="14" />
+    <stat Name="Speed" Value="125" />
+    <part Name="Swarmer" />
+    <skill Name="Acrobatics" />
+    <skill Name="Acrobatics_Dodge" />
+    <skill Name="Acrobatics_Jump" />
+    <skill Name="Tactics" />
+    <skill Name="Tactics_Hurdle" />
+    <skill Name="ShortBlades_Expertise" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="customMeleeOrder" Value="abilities,defensiveAbilities,items,defensiveItems,missile" />
+    <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
+    <inventoryobject Blueprint="Plastifer Gloves" Number="1" />
+  </object>
+  <object Name="PricklePig_Bite" Inherits="Bite">
+    <part Name="MeleeWeapon" BaseDamage="1d3+1" />
+  </object>
+  
+  <object Name="PricklePig" Inherits="PricklePigBase">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
+    <mutation Name="Blink" Level="8" TileColor="B" />
+    <inventoryobject Blueprint="Red Plastifer Runners" Number="1" />
+  </object>
+  
+  <object Name="BurrowingPricklePig" Inherits="PricklePigBase">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="burrowing prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;R" DetailColor="Y" />
+    <mutation Name="Blink" Level="8" TileColor="R" />
+    <mutation Name="Burrowing Claws" Level="8" />
+    <stat Name="Level" Value="16" />
+    <stat Name="Speed" Value="110" />
+    <inventoryobject Blueprint="Magnetic Boots" Number="1" />
+    <inventoryobject Blueprint="Spiked Gauntlets" Number="1" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+  </object>
+  
+  <object Name="ShadowPricklePig" Inherits="PricklePigBase">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="shadow prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;K" DetailColor="r" />
+    <mutation Name="Blink" Level="10" TileColor="K" Shouts="true" />
+    <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <stat Name="Level" Value="30" />
+    <stat Name="Speed" Value="135" />
+    <inventoryobject Blueprint="Rocket Runners" Number="1" />
+  </object>
+
+  <!-- 
+      Vanilla Fixes
+   -->
+  <object Name="Scorpiock_Claws" Load="Merge">
+    <!-- this object is both a plural and has DisplayName="claws" resulting in "clawss" -->
+    <part Name="Render" DisplayName="claw" Tile="Creatures/natural-weapon-claw.bmp" ColorString="&amp;w" />
+  </object>
+</objects>
