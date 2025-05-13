@@ -21,6 +21,7 @@ using static UD_Blink_Mutation.Const;
 using Debug = UD_Blink_Mutation.Debug;
 using Options = UD_Blink_Mutation.Options;
 using XRL.World.AI.Pathfinding;
+using System.IO;
 
 namespace UD_Blink_Mutation
 {
@@ -387,7 +388,7 @@ namespace UD_Blink_Mutation
                 @object.RemovePart(highlighter);
             }
         }
-        public static Cell HighlightColor(this Cell Cell, string TileColor, string DetailColor, string BackgroundColor = "^k", int Priority = 0)
+        public static Cell HighlightColor(this Cell Cell, string TileColor, string DetailColor, string BackgroundColor = "k", int Priority = 0, bool Solid = false)
         {
             if (!The.Game.HasBooleanGameState(DEBUG_HIGHLIGHT_CELLS))
                 The.Game.SetBooleanGameState(DEBUG_HIGHLIGHT_CELLS, Options.DebugVerbosity > 3);
@@ -406,37 +407,36 @@ namespace UD_Blink_Mutation
             if (Priority >= highlighter.HighlightPriority)
             {
                 highlighter.HighlightPriority = Priority;
-                highlighter.TileColor = TileColor;
-                highlighter.DetailColor = DetailColor;
-                highlighter.BackgroundColor = BackgroundColor;
+                highlighter.TileColor = $"&{(!Solid ? TileColor : DetailColor)}";
+                highlighter.DetailColor = $"{(!Solid ? DetailColor : BackgroundColor)}";
+                highlighter.BackgroundColor = $"^{(!Solid ? BackgroundColor : TileColor)}";
             }
             return Cell;
         }
-        public static Cell HighlightRed(this Cell Cell, int Priority = 0)
+        public static Cell HighlightRed(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&r", DetailColor: "R", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "r", DetailColor: "R", BackgroundColor: "k", Priority, Solid);
         }
-        public static Cell HighlightGreen(this Cell Cell, int Priority = 0)
+        public static Cell HighlightGreen(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&g", DetailColor: "G", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "g", DetailColor: "G", BackgroundColor: "k", Priority, Solid);
         }
-        public static Cell HighlightYellow(this Cell Cell, int Priority = 0)
+        public static Cell HighlightYellow(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&w", DetailColor: "W", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "w", DetailColor: "W", BackgroundColor: "k", Priority, Solid);
         }
-        public static Cell HighlightPurple(this Cell Cell, int Priority = 0)
+        public static Cell HighlightPurple(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&m", DetailColor: "M", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "m", DetailColor: "M", BackgroundColor: "k", Priority, Solid);
         }
-        public static Cell HighlightBlue(this Cell Cell, int Priority = 0)
+        public static Cell HighlightBlue(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&b", DetailColor: "B", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "b", DetailColor: "B", BackgroundColor: "k", Priority, Solid);
         }
-        public static Cell HighlightCyan(this Cell Cell, int Priority = 0)
+        public static Cell HighlightCyan(this Cell Cell, int Priority = 0, bool Solid = false)
         {
-            return Cell.HighlightColor(TileColor: "&c", DetailColor: "C", BackgroundColor: "^k", Priority);
+            return Cell.HighlightColor(TileColor: "c", DetailColor: "C", BackgroundColor: "k", Priority, Solid);
         }
-
 
         [WishCommand(Command = "debug blink path")]
         public static void DebugBlinkPathWish(string Iteration)
@@ -446,34 +446,59 @@ namespace UD_Blink_Mutation
             {
                 return;
             }
-
-            FindPath path = null;
+            UD_Blink.BlinkPath blinkPath = null;
             if (Iteration.ToLower() == "last")
             {
-                path = UD_Blink.PathCache[UD_Blink.PathCache.Count];
+                blinkPath = UD_Blink.PathCache[UD_Blink.PathCache.Count];
                 
             }
             else if (Iteration.ToLower() == "first")
             {
-                path = UD_Blink.PathCache[1];
+                blinkPath = UD_Blink.PathCache[1];
+            }
+            else if (Iteration.ToLower() == "selected")
+            {
+                foreach ((int _, UD_Blink.BlinkPath cachedBlinkPath) in UD_Blink.PathCache)
+                {
+                    if (cachedBlinkPath != null && cachedBlinkPath.Selected)
+                    {
+                        blinkPath = cachedBlinkPath;
+                        break;
+                    }
+                }
             }
             else
             {
-                path = UD_Blink.PathCache[iteration];
+                blinkPath = UD_Blink.PathCache[iteration];
             }
-
-            foreach (Cell step in path.Steps)
+            if (blinkPath == null || blinkPath.Steps.IsNullOrEmpty())
             {
-                if (step == path.Steps[^1])
+                return;
+            }
+            foreach (Cell step in blinkPath.Steps)
+            {
+                if (step == blinkPath.Steps[^1])
                 {
-                    step.HighlightCyan(3);
+                    step.HighlightCyan(5, true);
+                    continue;
                 }
-                int rangeStep = Math.Min(The.Player.GetPart<UD_Blink>().GetBlinkRange() - 1, path.Steps.Count - 1);
-                if (step == path.Steps[rangeStep])
+                int rangeStep = Math.Min(The.Player.GetPart<UD_Blink>().GetBlinkRange() - 1, blinkPath.Steps.Count - 1);
+                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep])
                 {
-                    step.HighlightRed(2);
+                    step.HighlightGreen(4, true);
+                    continue;
                 }
-                step.HighlightGreen(1);
+                if (step == blinkPath.KidCell)
+                {
+                    step.HighlightRed(3, true);
+                    continue;
+                }
+                if (step == blinkPath.KidCell)
+                {
+                    step.HighlightPurple(3, true);
+                    continue;
+                }
+                step.HighlightBlue(1, true);
             }
         }
 

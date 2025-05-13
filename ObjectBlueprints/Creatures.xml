@@ -6,7 +6,7 @@
       Specific creatures will need to have the color change turned off.
    -->
   <object Name="Troll King 3" Load="Merge">
-    <mutation Name="UD_Blink" Level="10" ColorChange="false" />
+    <mutation Name="UD_Blink" Level="10" ColorChange="false" PhysicalFeatures="false" />
     <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
   </object>
   
@@ -14,11 +14,11 @@
       Prickle-Pigs
    -->
   <object Name="PricklePigBase" Inherits="BaseAnimal">
-    <!-- TileColor is black pixels, DetailColor is white pixels -->
-    <part Name="Render" DisplayName="[PricklePig]"
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="[Prickle Pig]"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
-    <mutation Name="Blink" Level="8" Shouts="false" />
+    <mutation Name="UD_Blink" Level="8" Shouts="false" PhysicalFeatures="false" />
     <mutation Name="Quills" Level="5" />
     <mutation Name="Heightened Quickness" Level="2" />
     <part Name="Body" Anatomy="TailedBiped" />
@@ -37,39 +37,39 @@
     <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
     <inventoryobject Blueprint="Plastifer Gloves" Number="1" />
   </object>
-  <object Name="PricklePig_Bite" Inherits="Bite">
+  <object Name="Prickle_Pig_Bite" Inherits="Bite">
     <part Name="MeleeWeapon" BaseDamage="1d3+1" />
   </object>
   
-  <object Name="PricklePig" Inherits="PricklePigBase">
-    <!-- TileColor is black pixels, DetailColor is white pixels -->
+  <object Name="Prickle Pig" Inherits="PricklePigBase">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
-    <mutation Name="Blink" Level="8" TileColor="B" />
+    <mutation Name="UD_Blink" Level="8" TileColor="B" Shouts="false" PhysicalFeatures="false" />
     <inventoryobject Blueprint="Red Plastifer Runners" Number="1" />
   </object>
   
-  <object Name="BurrowingPricklePig" Inherits="PricklePigBase">
-    <!-- TileColor is black pixels, DetailColor is white pixels -->
+  <object Name="Burrowing Prickle Pig" Inherits="PricklePigBase">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="burrowing prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;R" DetailColor="Y" />
-    <mutation Name="Blink" Level="8" TileColor="R" />
+    <mutation Name="UD_Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
     <mutation Name="Burrowing Claws" Level="8" />
     <stat Name="Level" Value="16" />
     <stat Name="Speed" Value="110" />
-    <inventoryobject Blueprint="Magnetic Boots" Number="1" />
-    <inventoryobject Blueprint="Spiked Gauntlets" Number="1" />
+    <inventoryobject Blueprint="Spiked Climbers" Number="1" />
+    <inventoryobject Blueprint="Digging Gloves" Number="1" />
     <removeinventoryobject Blueprint="Plastifer Gloves" />
   </object>
   
-  <object Name="ShadowPricklePig" Inherits="PricklePigBase">
-    <!-- TileColor is black pixels, DetailColor is white pixels -->
+  <object Name="Shadow Prickle Pig" Inherits="PricklePigBase">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="shadow prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;K" DetailColor="r" />
-    <mutation Name="Blink" Level="10" TileColor="K" Shouts="true" />
+    <mutation Name="UD_Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
     <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />

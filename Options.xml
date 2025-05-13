@@ -53,18 +53,33 @@
       When enabled, internal debug information relating to the Blink mutation will be displayed when [{{W|l}}]ooking at anything with the relevant parts.
 
       {{M|Blink}}:
-      {{W|N/A}}: N/A.
+      {{W|General}}: Mutation Level information.
+      {{W|State}}: Current internal flags used to determine different actions happening.
 
       The default is {{w|Disabled}}.
     </helptext>
   </option>
   
   <!-- 
-  End of Debug Options
-  -->
-  <!-- 
   Mod Options
   -->
+  <option
+        ID="Option_UD_Blink_ObnoxiousYelling"
+        DisplayText="Enable obnoxious shouts from most types of creatures who have the Blink mutation included in this mod."
+        Category="UD Blink Mutation"
+        Type="Checkbox"
+        Default="Yes"
+    >
+    <helptext>
+      When enabled, blinking through or into hostile creatures results in the blinking creature emitting a "shout" based on the result of their blink.
+      
+      At higher levels, the short cooldown and the cooldown being refreshed when dealing damage results in a fair amount of on-screen visual clutter during fights.
+      
+      It's worth trying for a bit and turning off if you find it too obnoxious.
+
+      The default is {{w|Enabled}}.
+    </helptext>
+  </option>
 
   <!-- End of Mod Options -->
   

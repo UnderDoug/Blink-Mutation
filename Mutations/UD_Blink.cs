@@ -20,8 +20,6 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
-using XRL.CharacterBuilds;
-using static XRL.World.Capabilities.Mental;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -55,12 +53,68 @@ namespace XRL.World.Parts.Mutation
         public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
         public static readonly string BASE_TILE_COLOR = "&m";
 
-
         // Flags
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
-        public static Dictionary<int, FindPath> PathCache = new();
+        [NonSerialized]
+        public static Dictionary<int, BlinkPath> PathCache = new();
+
+        public class BlinkPath
+        {
+            public bool Selected;
+            public FindPath Path;
+            public List<Cell> Steps => Path?.Steps;
+
+            public Cell Destination;
+            public GameObject Kid;
+            public Cell KidDestination;
+            public Cell KidCell;
+
+            public BlinkPath()
+            {
+                Selected = false;
+                Path = null;
+                Destination = null;
+                Kid = null;
+                KidDestination = null;
+                KidCell = null;
+            }
+            public BlinkPath (FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
+                : this()
+            {
+                this.Path = Path;
+                this.Destination = Destination;
+                this.Kid = Kid;
+                this.KidDestination = KidDestination;
+            }
+            public BlinkPath (bool Selected, FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
+                : this(Path, Destination, Kid, KidDestination, KidCell)
+            {
+                this.Selected = Selected;
+            }
+
+            public override string ToString()
+            {
+                return ToString(false);
+            }
+            public string ToString(bool ShowSelected)
+            {
+                string output = string.Empty;
+                output += $"// ";
+                if (ShowSelected)
+                {
+                    output += $"{nameof(Selected)}: {Selected}, ";
+                }
+                output += $"{nameof(Path)}: {(Path != null ? "init".Quote() : NULL)}, ";
+                output += $"{nameof(Destination)}: [{Destination?.Location}], ";
+                output += $"{nameof(Kid)}: {Kid?.ShortDisplayNameStripped ?? NULL}, ";
+                output += $"{nameof(KidDestination)}: [{KidDestination?.Location}] ";
+                output += $"{nameof(KidCell)}: [{KidCell?.Location}] ";
+                output += "//";
+                return output;
+            }
+        }
 
         public bool IsNothinPersonnelKid 
         { 
@@ -83,6 +137,8 @@ namespace XRL.World.Parts.Mutation
         // Part Parameters
         public bool Shouts;
 
+        public bool PhysicalFeatures;
+
         public bool ColorChange;
         public int TileColorPriority;
         public string TileColor;
@@ -92,6 +148,7 @@ namespace XRL.World.Parts.Mutation
             DisplayName = "Blink";
             Type = "Physical";
             Shouts = true;
+            PhysicalFeatures = true;
             ColorChange = true;
             TileColor = string.Empty;
             TileColorPriority = 0;
@@ -463,8 +520,10 @@ namespace XRL.World.Parts.Mutation
             bool previousCellIsValid = false;
             int cellCount = blinkPath.Count;
             int iterationCounter = 1;
+            int previousiteration = 1;
             int padding = $"{cellCount}".Length;
             PathCache = new();
+            BlinkPath BlinkPath = new();
             FindPath previousPath = null;
             Debug.Entry(4, $"Validating blinkPath and acquiring destinations and target...", Indent: 1, Toggle: getDoDebug());
             for (int i = cellCount - 1; i >= 0; --i)
@@ -484,9 +543,19 @@ namespace XRL.World.Parts.Mutation
                     MaxWeight: 25,
                     IgnoreCreatures: true);
 
-                path.Steps.RemoveAt(0);
+                Debug.LoopItem(4, $"Removing origin step from path...", Indent: 2, Toggle: getDoDebug());
+                if (path.Steps.Contains(origin))
+                {
+                    Debug.CheckYeh(4, $"{nameof(origin)} found in {nameof(path)}.Steps", Indent: 3, Toggle: getDoDebug());
+                    path.Steps.Remove(origin);
+                }
+                else
+                {
+                    Debug.CheckNah(4, $"{nameof(origin)} not found in {nameof(path)}.Steps", Indent: 3, Toggle: getDoDebug());
+                }
+                Debug.LoopItem(4, $"{nameof(path)}.Steps no longer contains {origin} [{origin?.Location}]", $"{!path.Steps.Contains(origin)}",
+                    Good: !path.Steps.Contains(origin), Indent: 2, Toggle: getDoDebug());
 
-                PathCache.TryAdd(iterationCounter, path);
                 Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
                     Good: path.Steps.Count <= Range, Indent: 3, Toggle: getDoDebug());
 
@@ -497,11 +566,12 @@ namespace XRL.World.Parts.Mutation
                     Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
                     if (IsNothinPersonnelKid)
                     {
-                        KidDestination ??= thisCell;
-                        Path = path;
+                        PathCache[previousiteration].KidDestination = KidDestination ??= thisCell;
+                        PathCache[previousiteration].Path = Path = path;
                         Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: 4, Toggle: getDoDebug());
                     }
                     Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
+                    PathCache[previousiteration].Selected = true;
                     break;
                 }
                 else
@@ -518,8 +588,8 @@ namespace XRL.World.Parts.Mutation
                     Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
                     if (previousCellIsValid)
                     {
-                        KidDestination ??= previousCell;
-                        Path = previousPath;
+                        BlinkPath.KidDestination = KidDestination ??= previousCell;
+                        BlinkPath.Path = Path = previousPath;
                         Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
                     }
                     else
@@ -535,8 +605,8 @@ namespace XRL.World.Parts.Mutation
                 Debug.LoopItem(4, $"Checking validity of this cell...", Indent: 2, Toggle: getDoDebug());
                 if (previousCellIsValid = IsValidDestinationCell(Blinker, thisCell, Range, path.Steps.Count))
                 {
-                    Destination ??= thisCell;
-                    Path ??= path;
+                    BlinkPath.Destination = Destination ??= thisCell;
+                    BlinkPath.Path = Path ??= path;
                     if (Path == path)
                     {
                         Debug.LoopItem(4, $"Path is soft set to PathCache[{iterationCounter}]", Indent: 3, Toggle: getDoDebug());
@@ -545,10 +615,13 @@ namespace XRL.World.Parts.Mutation
                 Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
                     Good: Destination != null, Indent: 3, Toggle: getDoDebug());
 
+                if (i == 0) BlinkPath.Selected = true;
+                PathCache.TryAdd(iterationCounter, BlinkPath);
+
                 previousCell = thisCell;
                 previousPath = path;
-                iterationCounter++;
-
+                previousiteration = iterationCounter++;
+                
                 Debug.LoopItem(4, $"End {iteration}: (i:{i}) ////", Indent: 1, Toggle: getDoDebug());
             }
             Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
@@ -691,6 +764,7 @@ namespace XRL.World.Parts.Mutation
 
             Debug.Entry(4, $"Checking blinker has {nameof(UD_Blink)}...", Indent: 1, Toggle: getDoDebug());
             bool hasBlink = Blinker.TryGetPart(out UD_Blink blink);
+            bool Shouts = hasBlink && blink.Shouts;
 
             Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
@@ -850,18 +924,21 @@ namespace XRL.World.Parts.Mutation
                     );
 
                 Debug.Entry(4, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
-                    Indent: 2, Toggle: getDoDebug());
+                Indent: 2, Toggle: getDoDebug());
                 Blinker.EmitMessage(message, null, messageColor);
 
-                Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...", 
-                    Indent: 2, Toggle: getDoDebug());
-                Blinker.ParticleText(
-                    Text: message,
-                    Color: messageColor[0],
-                    IgnoreVisibility: true,
-                    juiceDuration: 1.5f,
-                    floatLength: floatLength
-                    );
+                if (ObnoxiousYelling && Shouts)
+                {
+                    Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
+                        Indent: 2, Toggle: getDoDebug());
+                    Blinker.ParticleText(
+                        Text: message,
+                        Color: messageColor[0],
+                        IgnoreVisibility: true,
+                        juiceDuration: 1.5f,
+                        floatLength: floatLength
+                        );
+                }
             }
             else
             {
@@ -1004,6 +1081,7 @@ namespace XRL.World.Parts.Mutation
                         { "&C", 1 },
                     };
                     ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
+
                     for (int i = 0; i <= pathStepsCount + 5; i++)
                     {
                         scrapBuffer.RenderBase();
@@ -1011,18 +1089,42 @@ namespace XRL.World.Parts.Mutation
                         {
                             string color = colors.Sample();
                             string particle = particles.Sample();
-                            if (BlinkParticleSkipChance.in100())
+
+                            Dictionary<string, int> echoes = new()
                             {
-                                continue;
+                                { "n", 8 }, // none
+                                { "t", 2 }, // tile
+                                { "s", 4 }, // string
+                            };
+                            switch (echoes.Sample())
+                            {
+                                case "n":
+                                    break;
+                                case "t":
+                                    BufferEcho(Blinker, step, scrapBuffer);
+                                    break;
+                                case "s":
+                                    scrapBuffer.Goto(step.X, step.Y);
+                                    scrapBuffer.Write($"{color}{particle}");
+                                    break;
                             }
-                            scrapBuffer.Goto(step.X, step.Y);
-                            scrapBuffer.Write($"{color}{particle}");
                         }
                         scrapBuffer.Draw();
                         Thread.Sleep(10);
                     }
                 }
             }
+        }
+        public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer)
+        {
+            scrapBuffer.Goto(cell.X, cell.Y);
+            scrapBuffer.Write(Blinker.Render.RenderString);
+            scrapBuffer.Buffer[cell.X, cell.Y].Tile = Blinker.Render.Tile;
+            scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
+            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
+            scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
+            scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
+            //scrapBuffer.Buffer[step.X, step.Y].SetForeground('y');
         }
 
         public static void Arrive(Cell From, Cell To, int Count = 8, int Life = 8, string Symbol1 = ".", string Color1 = "m", string Symbol2 = "\u00B1", string Color2 = "y")
@@ -1366,15 +1468,17 @@ namespace XRL.World.Parts.Mutation
             }
             int blinkerRapid = blinkerLevel > 10 ? blinkerLevel - 10 : 0;
             blinkerLevel = Math.Min(blinkerLevel, 10);
+
             GameObject Blinker = EncountersAPI.GetCreatureAroundPlayerLevel();
             Blinker.SetIntProperty("RapidLevel_UD_Blink", blinkerRapid, true);
+
             Mutations mutations = Blinker.RequirePart<Mutations>();
             mutations.AddMutation(nameof(UD_Blink), blinkerLevel);
-            Cell pickedCell = PickTarget.ShowPicker(PickTarget.PickStyle.EmptyCell, Locked: false, StartX: The.PlayerCell.X, StartY: The.PlayerCell.Y, Label: "put!");
-            if (pickedCell == null)
-            {
-                pickedCell = The.PlayerCell.getClosestEmptyCell();
-            }
+
+            Cell pickedCell = 
+                PickTarget.ShowPicker(PickTarget.PickStyle.EmptyCell, Locked: false, StartX: The.PlayerCell.X, StartY: The.PlayerCell.Y, Label: "put!") 
+                ?? The.PlayerCell.getClosestEmptyCell();
+
             pickedCell.AddObject(Blinker);
         }
     }
