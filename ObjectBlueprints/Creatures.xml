@@ -56,7 +56,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;R" DetailColor="Y" />
     <mutation Name="UD_Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
-    <mutation Name="Burrowing Claws" Level="8" />
+    <mutation Name="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <stat Name="Level" Value="16" />
     <stat Name="Speed" Value="110" />
     <inventoryobject Blueprint="Spiked Climbers" Number="1" />

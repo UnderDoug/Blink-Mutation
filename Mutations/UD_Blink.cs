@@ -20,6 +20,7 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
+using XRL.Language;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -122,6 +123,7 @@ namespace XRL.World.Parts.Mutation
             set 
             {
                 ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Silent: true, SetState: value);
+                AddActivatedAbilityBlink(Force: true, Silent: true);
             }
         }
 
@@ -241,7 +243,7 @@ namespace XRL.World.Parts.Mutation
             StringBuilder SB = Event.NewStringBuilder();
             SB.Append("You may blink up to ").AppendRule($"{GetBlinkRange(Level)} tiles").Append(" in a direction of your choosing.");
             SB.AppendLine();
-            SB.Append("With ").AppendColdSteel("Cold Steel").Append(" active, blinking through a hostile creature teleports you behind them making a free attack, and dealing an additional ");
+            SB.Append("With ").AppendColdSteel("Cold Steel").Append(" active, blinking through a hostile creature teleports you behind them and deals ");
             SB.AppendRule($"{GetColdSteelDamage(Level)} ").AppendColored("m", "unblockable").AppendRule(" damage.");
             SB.AppendLine();
             SB.Append("Cooldown: ").AppendRule(GetCooldownTurns(Level).Things("turn"));
@@ -253,7 +255,8 @@ namespace XRL.World.Parts.Mutation
 
         public virtual Guid AddActivatedAbilityBlink(GameObject GO, bool Force = false, bool Silent = false)
         {
-            if (BlinkActivatedAbilityID == Guid.Empty || Force)
+            bool removed = RemoveActivatedAbilityBlink(GO);
+            if (GO != null && BlinkActivatedAbilityID == Guid.Empty || Force)
             {
                 BlinkActivatedAbilityID =
                     AddMyActivatedAbility(
@@ -269,11 +272,15 @@ namespace XRL.World.Parts.Mutation
                         IsAttack: IsNothinPersonnelKid,
                         IsRealityDistortionBased: false,
                         IsWorldMapUsable: false,
-                        Silent: Silent,
+                        Silent: removed || Silent,
                         who: GO
                         );
             }
             return BlinkActivatedAbilityID;
+        }
+        public Guid AddActivatedAbilityBlink(bool Force = false, bool Silent = false)
+        {
+            return AddActivatedAbilityBlink(ParentObject, Force, Silent);
         }
         public virtual bool RemoveActivatedAbilityBlink(GameObject GO, bool Force = false)
         {
@@ -285,12 +292,17 @@ namespace XRL.World.Parts.Mutation
                     BlinkActivatedAbilityID = Guid.Empty;
                 }
             }
-            return removed;
+            return removed && BlinkActivatedAbilityID == Guid.Empty;
+        }
+        public bool RemoveActivatedAbilityBlink(bool Force = false)
+        {
+            return RemoveActivatedAbilityBlink(ParentObject, Force);
         }
 
         public virtual Guid AddActivatedAbilityColdSteel(GameObject GO, bool Force = false, bool Silent = false)
         {
-            if (ColdSteelActivatedAbilityID == Guid.Empty || Force)
+            bool removed = RemoveActivatedAbilityColdSteel();
+            if (GO != null && ColdSteelActivatedAbilityID == Guid.Empty || Force)
             {
                 ColdSteelActivatedAbilityID =
                     AddMyActivatedAbility(
@@ -306,12 +318,16 @@ namespace XRL.World.Parts.Mutation
                         IsAttack: false,
                         IsRealityDistortionBased: false,
                         IsWorldMapUsable: true,
-                        Silent: Silent,
+                        Silent: removed || Silent,
                         AffectedByWillpower: false,
                         who: GO
                         );
             }
             return ColdSteelActivatedAbilityID;
+        }
+        public Guid AddActivatedAbilityColdSteel(bool Force = false, bool Silent = false)
+        {
+            return AddActivatedAbilityColdSteel(ParentObject, Force, Silent);
         }
         public virtual bool RemoveActivatedAbilityColdSteel(GameObject GO, bool Force = false)
         {
@@ -323,7 +339,11 @@ namespace XRL.World.Parts.Mutation
                     ColdSteelActivatedAbilityID = Guid.Empty;
                 }
             }
-            return removed;
+            return removed && ColdSteelActivatedAbilityID == Guid.Empty;
+        }
+        public bool RemoveActivatedAbilityColdSteel(bool Force = false)
+        {
+            return RemoveActivatedAbilityColdSteel(ParentObject, Force);
         }
 
         public override bool Mutate(GameObject GO, int Level)
@@ -942,7 +962,7 @@ namespace XRL.World.Parts.Mutation
             }
             else
             {
-                Debug.Entry(4, $"DiX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
+                Debug.Entry(4, $"DidX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
                     Indent: 2, Toggle: getDoDebug());
                 blink.DidX(
                     Verb: "blunk",
@@ -1093,7 +1113,7 @@ namespace XRL.World.Parts.Mutation
                             Dictionary<string, int> echoes = new()
                             {
                                 { "n", 8 }, // none
-                                { "t", 2 }, // tile
+                                { "t", 4 }, // tile
                                 { "s", 4 }, // string
                             };
                             switch (echoes.Sample())
@@ -1124,7 +1144,6 @@ namespace XRL.World.Parts.Mutation
             scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
-            //scrapBuffer.Buffer[step.X, step.Y].SetForeground('y');
         }
 
         public static void Arrive(Cell From, Cell To, int Count = 8, int Life = 8, string Symbol1 = ".", string Color1 = "m", string Symbol2 = "\u00B1", string Color2 = "y")
@@ -1192,7 +1211,7 @@ namespace XRL.World.Parts.Mutation
             return base.WantEvent(ID, cascade)
                 || (DebugBlinkDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == BeforeAbilityManagerOpenEvent.ID
-                || ID == GetExtraPhysicalFeaturesEvent.ID
+                || (PhysicalFeatures && ID == GetExtraPhysicalFeaturesEvent.ID)
                 || ID == CommandEvent.ID
                 || ID == GetItemElementsEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
@@ -1480,6 +1499,76 @@ namespace XRL.World.Parts.Mutation
                 ?? The.PlayerCell.getClosestEmptyCell();
 
             pickedCell.AddObject(Blinker);
+        }
+        [WishCommand(Command = "gimme coldsteel dealt")]
+        // gimme coldsteel dealt count level
+        public static void GimmeColdSteelDealtWish(string Parameters)
+        {
+            int level = 0;
+            int count = 0;
+
+            if (The.Player.TryGetPart(out UD_Blink playerBlink))
+            {
+                level = playerBlink.Level;
+            }
+
+            if (!Parameters.IsNullOrEmpty())
+            {
+                if (Parameters.Contains(" "))
+                {
+                    string[] param = Parameters.Split(' ');
+                    if (!int.TryParse(param[0], out count))
+                    {
+                        count = 100;
+                    }
+                    if (!int.TryParse(param[1], out level))
+                    {
+                        level = 16;
+                    }
+                } 
+                else
+                {
+                    if (!int.TryParse(Parameters, out count))
+                    {
+                        count = 100;
+                        level = 16;
+                    }
+                }
+            }
+            Debug.Entry(4, $"{count} Cold Steel ({GetColdSteelDamage(level).Quote()}) at level {level} comin' right up!", Indent: 0);
+
+            bool allowSecondPerson = Grammar.AllowSecondPerson;
+            Grammar.AllowSecondPerson = false;
+            string message = GameText.VariableReplace("=subject.t= =verb:emit= {{m|%D}} {{coldsteel|Cold Steel}} damage!", Subject: The.Player);
+            Grammar.AllowSecondPerson = allowSecondPerson;
+            int total = 0;
+            for (int i = 0; i < count; i++)
+            {
+                int damage = Stat.Roll(GetColdSteelDamage(level));
+                total += damage;
+                Debug.Entry(4, message.Replace("%D", $"{damage}"), Indent: 1);
+            }
+            Debug.Entry(4, $"Total Cold Steel damage: {total}, Averaging: {total/count}", Indent: 0);
+        }
+        [WishCommand(Command = "gimme coldsteel damage")]
+        // gimme coldsteel damage maxLevel
+        public static void GimmeColdSteelDamageWish(string Parameters)
+        {
+            int maxLevel = 0;
+
+            if (!Parameters.IsNullOrEmpty() && !int.TryParse(Parameters, out maxLevel))
+            {
+                maxLevel = 45;
+            }
+            Debug.Entry(4, $"Cold Steel damage die up to level {maxLevel} comin' right up!", Indent: 0);
+
+            for (int i = 0; i < maxLevel; i++)
+            {
+                int padding = maxLevel.ToString().Length;
+                string level = $"{(i+1)}".PadLeft(padding, ' ');
+                string damage = GetColdSteelDamage(i + 1);
+                Debug.Entry(4, $"Level {level}: {damage}", Indent: 1);
+            }
         }
     }
 }

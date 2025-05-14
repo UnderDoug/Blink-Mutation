@@ -13,7 +13,7 @@
    -->
   <object Name="Red Plastifer Runners" Inherits="Plastifer Sneakers">
     <part Name="Armor" AV="0" DV="3" />
-    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{R|red}} {{plastifer|plastifer}} {{R|runners}}" 
           Tile="Items/sw_shoes.bmp" ColorString="&amp;R" 
           TileColor="&amp;R" DetailColor="Y" />
@@ -22,7 +22,7 @@
     <part Name="MoveCostMultiplier" Amount="-15" />
     <part Name="SpringBoots" />
     <part Name="ModSpringLoaded" />
-    <part Name="UD_ModImprovedMutationEntry" MutationEntry="Blink" Tier="4" />
+    <part Name="Mod_UD_ImprovedMutationEntry" EntryName="Blink" Tier="4" />
     <part Name="ItemElements" Elements="travel::2" />
     <part Name="Examiner" Complexity="3" Difficulty="1" />
     <stag Name="Movement" />
@@ -30,8 +30,8 @@
   
   <object Name="Spiked Climbers" Inherits="Magnetized Boots">
     <part Name="Armor" AV="2" DV="0" />
-    <!-- TileColor is white pixels, DetailColor is black pixels -->
-    <part Name="Render" DisplayName="{{r|spiked}} {{W|climbers}}" 
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="{{W|climbers}}" 
           Tile="Items/Spiked_Climbers.png" ColorString="&amp;R"
           TileColor="&amp;R" DetailColor="W" />
     <part Name="Commerce" Value="225" />
@@ -47,15 +47,17 @@
   
   <object Name="Rocket Runners" Inherits="Rocket Skates">
     <part Name="Armor" AV="0" DV="3" />
-    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{rocket|rocket}} {{Y|runners}}" 
           Tile="Items/sw_rocketskates.bmp" ColorString="&amp;Y"
           TileColor="&amp;Y" DetailColor="R" />
     <part Name="Commerce" Value="425" />
-    <part Name="Description" Short="A vibrant red pair of gas-caught foam sneaks stiffen instantaneously when pressure is applied. Their karst surfaces are dusted with the colorful abrasions of chiliads and the chemical reactions they produce; the material has careened past the outer rings of its expected lifetime and into the unknowing void." />
-    <part Name="SpringBoots" />
+    <part Name="Description" Short="The finned and wheeled boot had become the sigil of several sects of socionauts by the Late Sultanate. For decades their progenitors careened through the capsule pipelines of the slouching arcology, dismantling it plate by plate, pursued by the constabulary but ferried by their skates to the safety of their moss-skirted hideouts. The metaphor was writ large on the glass guts of the city: Scorch the past. Rocket into the future." />
     <part Name="ModSpringLoaded" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="40" World="JoppaWorld,OrbWorld,Tzimtzlum,ThinWorld,Interior,NorthSheva" />
+    <part Name="SpringBoots" />
+    <part Name="RocketSkates" ChargeUse="20" IsEMPSensitive="true" />
+    <part Name="Circuitry" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="20" World="*" />
     <part Name="TinkerItem" Bits="0035" CanDisassemble="true" CanBuild="false" />
     <part Name="Examiner" Complexity="5" Difficulty="1" />
     <removepart Name="LiquidFueledPowerPlant" />
@@ -70,6 +72,7 @@
    -->
   <object Name="Digging Gloves" Inherits="Plastifer Gloves">
     <part Name="Armor" AV="2" DV="0" Elec="5" Cold="5" Heat="5" Acid="5" WornOn="Hands" />
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{W|digging}} gloves" 
           Tile="Items/Digging_Gloves.png" 
           RenderString="]" ColorString="&amp;y"
@@ -78,7 +81,7 @@
     <part Name="Description" Short="Gloves of gas-caught foam stiffen instantaneously when pressure is applied. Stout, hardened claws protrude from the knuckles to assist in moving dirt and for better grip when climbing." />
     <tag Name="Tier" Value="5" />
     <part Name="ModSpiked" />
-    <part Name="UD_ModImprovedBurrowingClaws" Tier="5" />
+    <part Name="Mod_UD_ImprovedBurrowingClaws" Tier="5" />
   </object>
   
 </objects>

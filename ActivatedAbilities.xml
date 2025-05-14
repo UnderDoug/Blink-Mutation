@@ -10,7 +10,7 @@
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
-      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and makes a free attack, dealing additional {{m|unblockable}} damage</p>
+      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{m|unblockable}} damage</p>
       <br />
       <statline Name="Cooldown" />
     </description>
@@ -21,9 +21,7 @@
     <description>
       <p>You were turned to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
       <br />
-			<p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and makes a free attack.</p>
-      <br />
-      <p>Hitting with this attack deals an additional {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
+			<p> While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
       <br />
       <p>Killing an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
