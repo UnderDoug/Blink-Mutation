@@ -11,16 +11,16 @@ using UnityEngine;
 using XRL.UI;
 using XRL.Core;
 using XRL.Rules;
-using XRL.Wish;
 using XRL.World;
+using XRL.Language;
 using XRL.World.AI.Pathfinding;
+using XRL.Wish;
 
 using UD_Blink_Mutation;
 using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
-using XRL.Language;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -205,7 +205,7 @@ namespace XRL.World.Parts.Mutation
 
         public static int GetCooldownTurns(int Level)
         {
-            return 90 - Math.Min(85, Level * 5);
+            return 90 - Math.Min(80, Level * 5);
         }
         public static int GetCooldownTurns(GameObject Blinker)
         {
@@ -1143,6 +1143,7 @@ namespace XRL.World.Parts.Mutation
             scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
+            scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
         }
 
@@ -1566,8 +1567,22 @@ namespace XRL.World.Parts.Mutation
             int levelPadding = maxLevel.ToString().Length;
 
             DieRoll damageDie = new(GetColdSteelDamage(maxLevel));
-            int dieCountPaddingLeft = damageDie.Left.LeftValue.ToString().Length;
-            int dieCountPaddingRight = damageDie.Right.RightValue.ToString().Length;
+
+            int minPadding = damageDie.Min().ToString().Length;
+            int avgPadding = damageDie.Average().ToString().Length;
+            int maxPadding = damageDie.Max().ToString().Length;
+
+            int dieCountPaddingLeft = 0;
+            if (damageDie.ToString().Contains('d'))
+            {
+                dieCountPaddingLeft = 2+ damageDie.ToString().IndexOf('d');
+            }
+
+            int dieCountPaddingRight = 0;
+            if (damageDie.ToString().Contains('+'))
+            {
+                dieCountPaddingRight = 2 + damageDie.ToString().Length - damageDie.ToString().IndexOf('+');
+            }
 
             for (int i = 0; i < maxLevel; i++)
             {
@@ -1577,7 +1592,11 @@ namespace XRL.World.Parts.Mutation
                     .PadLeft(dieCountPaddingLeft, ' ')
                     .PadRight(dieCountPaddingRight, ' ');
 
-                Debug.Entry(4, $"Level {level}: {damageDie.ToString().PadLeft(dieCountPaddingLeft, ' ').PadRight(dieCountPaddingRight, ' ')} ({damageDie.Min()}, {damageDie.Average()}, {damageDie.Max()})", Indent: 1);
+                string minString = damageDie.Min().ToString().PadLeft(minPadding, ' ');
+                string avgString = ((int)damageDie.Average()).ToString().PadLeft(avgPadding, ' ');
+                string maxString = damageDie.Max().ToString().PadLeft(maxPadding, ' ');
+
+                Debug.Entry(4, $"Level {level}: {damage} ({minString}, {avgString}, {maxString})", Indent: 1);
             }
         }
     }

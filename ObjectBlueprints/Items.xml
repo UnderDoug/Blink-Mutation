@@ -57,12 +57,13 @@
     <part Name="SpringBoots" />
     <part Name="RocketSkates" ChargeUse="20" IsEMPSensitive="true" />
     <part Name="Circuitry" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="20" World="*" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="40" World="*" />
     <part Name="TinkerItem" Bits="0035" CanDisassemble="true" CanBuild="false" />
     <part Name="Examiner" Complexity="5" Difficulty="1" />
     <removepart Name="LiquidFueledPowerPlant" />
     <removepart Name="LiquidVolume" />
     <removepart Name="LeakWhenBroken" />
+    <part Name="ChargeUseInspector" />
   </object>
 
   <!-- 
