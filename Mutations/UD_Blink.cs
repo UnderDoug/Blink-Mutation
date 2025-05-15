@@ -1542,13 +1542,14 @@ namespace XRL.World.Parts.Mutation
             string message = GameText.VariableReplace("=subject.t= =verb:emit= {{m|%D}} {{coldsteel|Cold Steel}} damage!", Subject: The.Player);
             Grammar.AllowSecondPerson = allowSecondPerson;
             int total = 0;
+            DieRoll damageDie = new(GetColdSteelDamage(level));
             for (int i = 0; i < count; i++)
             {
-                int damage = Stat.Roll(GetColdSteelDamage(level));
+                int damage = damageDie.Resolve();
                 total += damage;
                 Debug.Entry(4, message.Replace("%D", $"{damage}"), Indent: 1);
             }
-            Debug.Entry(4, $"Total Cold Steel damage: {total}, Averaging: {total/count}", Indent: 0);
+            Debug.Entry(4, $"Total Cold Steel damage: {total} | {damageDie.Min()}, {total/count}, {damageDie.Max()}", Indent: 0);
         }
         [WishCommand(Command = "gimme coldsteel damage")]
         // gimme coldsteel damage maxLevel
@@ -1562,12 +1563,21 @@ namespace XRL.World.Parts.Mutation
             }
             Debug.Entry(4, $"Cold Steel damage die up to level {maxLevel} comin' right up!", Indent: 0);
 
+            int levelPadding = maxLevel.ToString().Length;
+
+            DieRoll damageDie = new(GetColdSteelDamage(maxLevel));
+            int dieCountPaddingLeft = damageDie.Left.LeftValue.ToString().Length;
+            int dieCountPaddingRight = damageDie.Right.RightValue.ToString().Length;
+
             for (int i = 0; i < maxLevel; i++)
             {
-                int padding = maxLevel.ToString().Length;
-                string level = $"{(i+1)}".PadLeft(padding, ' ');
-                string damage = GetColdSteelDamage(i + 1);
-                Debug.Entry(4, $"Level {level}: {damage}", Indent: 1);
+                damageDie = new(GetColdSteelDamage(i + 1));
+                string level = $"{(i+1)}".PadLeft(levelPadding, ' ');
+                string damage = damageDie.ToString()
+                    .PadLeft(dieCountPaddingLeft, ' ')
+                    .PadRight(dieCountPaddingRight, ' ');
+
+                Debug.Entry(4, $"Level {level}: {damageDie.ToString().PadLeft(dieCountPaddingLeft, ' ').PadRight(dieCountPaddingRight, ' ')} ({damageDie.Min()}, {damageDie.Average()}, {damageDie.Max()})", Indent: 1);
             }
         }
     }
