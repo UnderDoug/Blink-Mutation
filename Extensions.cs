@@ -1963,5 +1963,27 @@ namespace UD_Blink_Mutation
             return Thinker;
         }
 
+        public static bool TryGetStat(this GameObject Actor, string Stat, out Statistic Statistic)
+        {
+            Statistic = null;
+            if (Actor != null && Actor.HasStat(Stat))
+            {
+                Statistic = Actor.GetStat(Stat);
+                return true;
+            }
+            return false;
+        }
+
+        public static double GetMovementsPerTurn(this GameObject Actor)
+        {
+            if (Actor != null && Actor.TryGetStat("MoveSpeed", out Statistic MS) && Actor.TryGetStat("Speed", out Statistic QN))
+            {
+                int EMS = 200 - MS.Value;
+                int EQN = QN.Value;
+                return (EQN * EMS) / 10000.0;
+            }
+            return default;
+        }
+
     } //!-- public static class Extensions
 }

@@ -560,7 +560,7 @@ namespace XRL.World.Parts.Mutation
                     EndCell: thisCell, 
                     PathGlobal: true, 
                     Looker: Blinker, 
-                    MaxWeight: 25,
+                    MaxWeight: 10,
                     IgnoreCreatures: true);
 
                 Debug.LoopItem(4, $"Removing origin step from path...", Indent: 2, Toggle: getDoDebug());
@@ -703,9 +703,13 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            if (Range < Steps)
+            double speedFactor = Blinker.GetMovementsPerTurn();
+            int factoredRange = (int)(Range * speedFactor);
+            if (factoredRange < Steps)
             {
-                Debug.CheckNah(4, $"{nameof(Range)} is less than {nameof(Steps)}", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(4, 
+                    $"{nameof(Range)} x {nameof(speedFactor)} ({factoredRange}) is less than {nameof(Steps)} ({Steps})", 
+                    Indent: indent, Toggle: getDoDebug());
                 return false;
             }
 
@@ -1227,11 +1231,18 @@ namespace XRL.World.Parts.Mutation
             if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 StringBuilder SB = Event.NewStringBuilder();
+                int range = GetBlinkRange();
+                double speed = ParentObject.GetMovementsPerTurn();
+                string damage = GetColdSteelDamage();
+                DieRoll damageDie = new(damage);
                 SB.AppendColored("M", $"Blink").Append(": ");
                 SB.AppendLine();
                 SB.AppendColored("W", $"General").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("g", $"{GetBlinkRange()}").Append($"){HONLY}Blink Range").AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("m", $"{GetColdSteelDamage()}").Append($"){HONLY}Cold Steel Damage").AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{range}").Append($"){HONLY}Blink Range").AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{speed}").Append($"){HONLY}Moves Per Turn").AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{range * speed}").Append($"){HONLY}Effective Blink Range").AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("m", $"{damage}").Append($"){HONLY}Cold Steel Damage").AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("m", $"{damageDie.Min()}, {damageDie.Average()}, {damageDie.Max()}").Append($"){HONLY}Cold Steel Damage").AppendLine();
                 SB.AppendColored("W", $"State").AppendLine();
                 SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}").AppendLine();
                 SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}").AppendLine();
