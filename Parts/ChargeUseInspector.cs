@@ -23,13 +23,24 @@ namespace XRL.World.Parts
 
         public int TimesChargeUsed = 0;
 
+        public int QueryCharge => ParentObject != null ? ParentObject.QueryCharge(true) : 0;
+        public int ChargeRate => ParentObject != null ? ParentObject.QueryChargeProduction() : 0;
+
+        public StringBuilder LastChargeUseDescription;
+
         public override bool WantTurnTick()
         {
             return base.WantTurnTick();
         }
+        public override void RegisterActive(GameObject Object, IEventRegistrar Registrar)
+        {
+            Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
+            base.RegisterActive(Object, Registrar);
+        }
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == GetShortDescriptionEvent.ID
                 || ID == ChargeUsedEvent.ID;
         }
         public override void TurnTick(long TimeTick, int Amount)
@@ -37,32 +48,48 @@ namespace XRL.World.Parts
             Debug.Entry(4, 
                 $"{nameof(ChargeUseInspector)}." +
                 $"{nameof(TurnTick)}()" + 
-                $" For: {ParentObject?.ShortDisplayName ?? NULL}", 
+                $" For: {ParentObject?.ShortDisplayNameStripped ?? NULL}", 
                 Indent: 0, Toggle: true
                 );
+            LastChargeUseDescription = Event.NewStringBuilder();
 
-            int ChargeRate = ParentObject.QueryChargeProduction(); 
+            LastChargeUseDescription
+                .Append($"{nameof(TimesChargeUsed)}: {TimesChargeUsed}, ")
+                .Append($"{nameof(CumulativeChargeUsed)}: {CumulativeChargeUsed}, ")
+                .Append($"{nameof(QueryCharge)}: {QueryCharge}, ")
+                .Append($"{nameof(ChargeRate)}: {ChargeRate}");
 
-            Debug.Entry(4, 
-                $"{nameof(TimesChargeUsed)}: {TimesChargeUsed}, " + 
-                $"{nameof(CumulativeChargeUsed)}: {CumulativeChargeUsed}, " + 
-                $"{nameof(ChargeRate)}: {ChargeRate}", 
-                Indent: 1, Toggle: true
-                );
+            Debug.Entry(4, LastChargeUseDescription.ToString(), Indent: 1, Toggle: true);
 
             foreach ((int timeUsed, (int amount, GameObject source)) in ChargesUsed)
             {
-                Debug.LoopItem(4, 
-                    $"{timeUsed.ToString().PadLeft(timeUsed.ToString().Length, ' ')}]: " + 
-                    $"{amount} used by " + 
-                    $"{source?.ShortDisplayNameStripped ?? NULL}", 
-                    Indent: 2, Toggle: true
-                    );
+                string debugLoopItem =
+                    $"{timeUsed.ToString().PadLeft(timeUsed.ToString().Length, ' ')}]: " +
+                    $"{amount} used by " +
+                    $"{source?.ShortDisplayNameStripped ?? NULL}";
+
+                Debug.LoopItem(4, debugLoopItem, Indent: 2, Toggle: true);
+
+                LastChargeUseDescription
+                    .AppendLine()
+                    .Append("[").Append(debugLoopItem);
             }
             ChargesUsed = new();
             TimesChargeUsed = 0;
             CumulativeChargeUsed = 0;
             base.TurnTick(TimeTick, Amount);
+        }
+        public override bool HandleEvent(GetShortDescriptionEvent E)
+        {
+            if (LastChargeUseDescription != null)
+            {
+                E.Postfix
+                    .AppendLine()
+                    .AppendLine()
+                    .Append(LastChargeUseDescription)
+                    .AppendLine();
+            }
+            return base.HandleEvent(E);
         }
         public override bool HandleEvent(ChargeUsedEvent E)
         {

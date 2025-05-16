@@ -18,11 +18,11 @@ using XRL.World.Parts.Mutation;
 using XRL.World.Tinkering;
 using XRL.World.ObjectBuilders;
 using XRL.World.Parts.Skill;
+using XRL.CharacterBuilds;
+using XRL.CharacterBuilds.Qud;
 
 using static UD_Blink_Mutation.Utils;
 using static UD_Blink_Mutation.Const;
-using XRL.CharacterBuilds;
-using XRL.CharacterBuilds.Qud;
 
 namespace UD_Blink_Mutation
 {

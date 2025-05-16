@@ -582,15 +582,15 @@ namespace XRL.World.Parts.Mutation
                 Debug.LoopItem(4, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: 1, Toggle: getDoDebug());
                 if (Destination != null && (!IsNothinPersonnelKid || Kid != null))
                 {
-                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination.Location}]", Indent: 3, Toggle: getDoDebug());
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination?.Location}]", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid?.DebugName}", Indent: 3, Toggle: getDoDebug());
                     if (IsNothinPersonnelKid)
                     {
                         PathCache[previousiteration].KidDestination = KidDestination ??= thisCell;
                         PathCache[previousiteration].Path = Path = path;
                         Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: 4, Toggle: getDoDebug());
                     }
-                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
+                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination?.Location}]", Indent: 3, Toggle: getDoDebug());
                     PathCache[previousiteration].Selected = true;
                     break;
                 }
@@ -1203,9 +1203,9 @@ namespace XRL.World.Parts.Mutation
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
-            base.Register(Object, Registrar);
             Registrar.Register(COMMAND_UD_BLINK_ABILITY);
             Registrar.Register(COMMAND_UD_COLDSTEEL_ABILITY);
+            base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int cascade)
         {
@@ -1569,19 +1569,19 @@ namespace XRL.World.Parts.Mutation
             DieRoll damageDie = new(GetColdSteelDamage(maxLevel));
 
             int minPadding = damageDie.Min().ToString().Length;
-            int avgPadding = damageDie.Average().ToString().Length;
+            int avgPadding = ((int)damageDie.Average()).ToString().Length;
             int maxPadding = damageDie.Max().ToString().Length;
 
             int dieCountPaddingLeft = 0;
             if (damageDie.ToString().Contains('d'))
             {
-                dieCountPaddingLeft = 2+ damageDie.ToString().IndexOf('d');
+                dieCountPaddingLeft = damageDie.ToString().Length + damageDie.ToString().IndexOf('d');
             }
 
             int dieCountPaddingRight = 0;
             if (damageDie.ToString().Contains('+'))
             {
-                dieCountPaddingRight = 2 + damageDie.ToString().Length - damageDie.ToString().IndexOf('+');
+                dieCountPaddingRight = 1 + dieCountPaddingLeft + (damageDie.ToString().Length - damageDie.ToString().IndexOf('+'));
             }
 
             for (int i = 0; i < maxLevel; i++)
