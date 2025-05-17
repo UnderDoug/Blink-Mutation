@@ -15,6 +15,7 @@ using XRL.World.Anatomy;
 using XRL.World.Capabilities;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
+using XRL.World.Effects;
 using XRL.World.Tinkering;
 using XRL.World.ObjectBuilders;
 using XRL.World.Parts.Skill;
@@ -675,7 +676,7 @@ namespace UD_Blink_Mutation
                         }
                     case "Face":
                         {
-                            if (Object.HasPart<Spectacles>())
+                            if (Object.HasPart<XRL.World.Parts.Spectacles>())
                                 return "spectacle";
 
                             if (Object.InheritsFrom("BaseEyewear"))
@@ -1839,28 +1840,28 @@ namespace UD_Blink_Mutation
             return who.CurrentCell.GetDirectionFromCell(who.Physics.PickDirection(Label, who), NullIfSame);
         }
 
-        public static bool IsIn45DegreeMultipleWith(this Cell OriginCell, Cell TargetCell)
+        public static bool IsInOrthogonalDirectionWith(this Cell OriginCell, Cell TargetCell)
         {
             return OriginCell != null && TargetCell != null 
                 && (OriginCell.X == TargetCell.X 
                     || OriginCell.Y == TargetCell.Y 
                     || Math.Abs(OriginCell.X - TargetCell.X) == Math.Abs(OriginCell.Y - TargetCell.Y));
         }
-        public static bool IsIn45DegreeMultipleWith(this GameObject Origin, GameObject Target)
+        public static bool IsInOrthogonalDirectionWith(this GameObject Origin, GameObject Target)
         {
             Cell OriginCell = Origin.CurrentCell;
             Cell TargetCell = Target.CurrentCell;
-            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+            return IsInOrthogonalDirectionWith(OriginCell, TargetCell);
         }
-        public static bool IsIn45DegreeMultipleWith(this Cell OriginCell, GameObject Target)
+        public static bool IsInOrthogonalDirectionWith(this Cell OriginCell, GameObject Target)
         {
             Cell TargetCell = Target.CurrentCell;
-            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+            return IsInOrthogonalDirectionWith(OriginCell, TargetCell);
         }
-        public static bool IsIn45DegreeMultipleWith(this GameObject Origin, Cell TargetCell)
+        public static bool IsInOrthogonalDirectionWith(this GameObject Origin, Cell TargetCell)
         {
             Cell OriginCell = Origin.CurrentCell;
-            return IsIn45DegreeMultipleWith(OriginCell, TargetCell);
+            return IsInOrthogonalDirectionWith(OriginCell, TargetCell);
         }
 
         public static int CosmeticDistanceTo(this Cell Origin, Cell Target)
@@ -1974,11 +1975,16 @@ namespace UD_Blink_Mutation
             return false;
         }
 
-        public static double GetMovementsPerTurn(this GameObject Actor)
+        public static double GetMovementsPerTurn(this GameObject Mover, bool IgnoreSprint = false)
         {
-            if (Actor != null && Actor.TryGetStat("MoveSpeed", out Statistic MS) && Actor.TryGetStat("Speed", out Statistic QN))
+            if (Mover != null && Mover.TryGetStat("MoveSpeed", out Statistic MS) && Mover.TryGetStat("Speed", out Statistic QN))
             {
-                int EMS = 200 - MS.Value;
+                int EMS = 100 - MS.Value + 100;
+
+                if (IgnoreSprint && Mover.TryGetEffect(out Running running))
+                {
+                    EMS = (int)(EMS / (running.GetMovespeedMultiplier() - 1f));
+                }
                 int EQN = QN.Value;
                 return (EQN * EMS) / 10000.0;
             }

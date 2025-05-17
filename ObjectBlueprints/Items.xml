@@ -49,18 +49,21 @@
     <part Name="Armor" AV="0" DV="3" />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{rocket|rocket}} {{Y|runners}}" 
-          Tile="Items/sw_rocketskates.bmp" ColorString="&amp;Y"
+          Tile="Items/Rocket_Runners.png" ColorString="&amp;Y"
           TileColor="&amp;Y" DetailColor="R" />
     <part Name="Commerce" Value="425" />
-    <part Name="Description" Short="The finned and wheeled boot had become the sigil of several sects of socionauts by the Late Sultanate. For decades their progenitors careened through the capsule pipelines of the slouching arcology, dismantling it plate by plate, pursued by the constabulary but ferried by their skates to the safety of their moss-skirted hideouts. The metaphor was writ large on the glass guts of the city: Scorch the past. Rocket into the future." />
+    <part Name="Description" Short="Micro-jets draw a steady flow from the ambient non-null and toward the downward direction, creating a permanent sliver of absence twixt its red gliding-rails and aught else. Spurred, the internal capacitor can empty its reservoir of borrowed potential and stoke the absence to swell." />
     <part Name="ModSpringLoaded" />
     <part Name="SpringBoots" />
-    <part Name="RocketSkates" ChargeUse="20" IsEMPSensitive="true" />
-    <part Name="Capacitor" ChargeRate="5" Charge="65" MaxCharge="135" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="20" World="*" />
+    <part Name="RocketSkates" ChargeUse="1" IsEMPSensitive="true" />
+    <part Name="BootSequence" BootTime="3" VerbOnBootInitialized="rev" VerbOnBootAborted="stall" VerbOnBootDone="hum" ObviousIfUnderstood="true" IsEMPSensitive="true" ComputePowerFactor="0" />
+    <part Name="Capacitor" ChargeRate="5" Charge="25" MaxCharge="50" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="5" World="*" />
     <part Name="TinkerItem" Bits="0035" CanDisassemble="true" CanBuild="false" />
     <part Name="Examiner" Complexity="5" Difficulty="1" />
+    <tag Name="Tier" Value="6" />
     <removepart Name="LiquidFueledPowerPlant" />
+    <removepart Name="TemperatureAdjuster" />
     <removepart Name="LiquidVolume" />
     <removepart Name="LeakWhenBroken" />
     <part Name="ChargeUseInspector" />

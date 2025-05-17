@@ -21,6 +21,7 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
+using XRL.World.Effects;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -43,8 +44,8 @@ namespace XRL.World.Parts.Mutation
         // Options 
         private static bool MutationColor => UI.Options.MutationColor;
 
-        // Constants
-        public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
+        // "Constants"
+        public static readonly string BLINK_SOUND = "Sounds/Interact/sfx_interact_artifact_finish_fwoosh"; // "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
         public static readonly string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
 
         public static readonly string COMMAND_UD_BLINK_ABILITY = "Command_UD_Blink_Ability";
@@ -415,7 +416,7 @@ namespace XRL.World.Parts.Mutation
                             BlinkRange = blink.GetBlinkRange();
                         }
 
-                        if ((IsNothinPersonnelKid || !IsRetreat) && Blinker.IsIn45DegreeMultipleWith(Kid))
+                        if ((IsNothinPersonnelKid || !IsRetreat) && Blinker.IsInOrthogonalDirectionWith(Kid))
                         {
                             bool isApproach = !IsNothinPersonnelKid && !IsRetreat;
                             bool isAcceptableDistance = 
@@ -452,7 +453,7 @@ namespace XRL.World.Parts.Mutation
                     }
                     else
                     {
-                        if (Blinker.IsIn45DegreeMultipleWith(TargetCell))
+                        if (Blinker.IsInOrthogonalDirectionWith(TargetCell))
                         {
                             int Distance = Blinker.DistanceTo(TargetCell);
                             if (Distance > BlinkRange || ((BlinkRange - Distance) > Distance))
@@ -703,7 +704,7 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            double speedFactor = Blinker.GetMovementsPerTurn();
+            double speedFactor = Blinker.GetMovementsPerTurn(IgnoreSprint: true);
             int factoredRange = (int)(Range * speedFactor);
             if (factoredRange < Steps)
             {
