@@ -4,6 +4,7 @@
       
        1: Shoes
        2: Gloves
+       3: Rings
       
   -->
   <!-- 
@@ -26,6 +27,7 @@
     <part Name="ItemElements" Elements="travel::2" />
     <part Name="Examiner" Complexity="3" Difficulty="1" />
     <stag Name="Movement" />
+    <tag Name="EquipmentFrameColors" Value="RYRW" />
   </object>
   
   <object Name="Spiked Climbers" Inherits="Magnetized Boots">
@@ -43,6 +45,7 @@
     <part Name="TinkerItem" Bits="0024" CanDisassemble="true" CanBuild="false" />
     <part Name="ItemElements" Elements="travel::2" />
     <part Name="ModSpiked" />
+    <tag Name="EquipmentFrameColors" Value="gRWR" />
   </object>
   
   <object Name="Rocket Runners" Inherits="Rocket Skates">
@@ -52,13 +55,13 @@
           Tile="Items/Rocket_Runners.png" ColorString="&amp;Y"
           TileColor="&amp;Y" DetailColor="R" />
     <part Name="Commerce" Value="425" />
-    <part Name="Description" Short="Micro-jets draw a steady flow from the ambient non-null and toward the downward direction, creating a permanent sliver of absence twixt its red gliding-rails and aught else. Spurred, the internal capacitor can empty its reservoir of borrowed potential and stoke the absence to swell." />
+    <part Name="Description" Short="Micro-jets draw a steady flow from the ambient non-null and toward the downward direction, creating a permanent sliver of absence twixt its red gliding-rails and all else. Spurred, the internal capacitor can empty its reservoir of borrowed potential and stoke the absence to swell." />
     <part Name="ModSpringLoaded" />
     <part Name="SpringBoots" />
-    <part Name="RocketSkates" ChargeUse="1" IsEMPSensitive="true" />
+    <part Name="RocketSkates" ChargeUse="15" IsEMPSensitive="true" PlumeLevel="1" />
     <part Name="BootSequence" BootTime="3" VerbOnBootInitialized="rev" VerbOnBootAborted="stall" VerbOnBootDone="hum" ObviousIfUnderstood="true" IsEMPSensitive="true" ComputePowerFactor="0" />
-    <part Name="Capacitor" ChargeRate="5" Charge="25" MaxCharge="50" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="5" World="*" />
+    <part Name="Capacitor" ChargeRate="5" Charge="15" MaxCharge="45" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="10" World="*" />
     <part Name="TinkerItem" Bits="0035" CanDisassemble="true" CanBuild="false" />
     <part Name="Examiner" Complexity="5" Difficulty="1" />
     <tag Name="Tier" Value="6" />
@@ -66,6 +69,7 @@
     <removepart Name="TemperatureAdjuster" />
     <removepart Name="LiquidVolume" />
     <removepart Name="LeakWhenBroken" />
+    <tag Name="EquipmentFrameColors" Value="RYRK" />
     <part Name="ChargeUseInspector" />
   </object>
 
@@ -86,6 +90,46 @@
     <tag Name="Tier" Value="5" />
     <part Name="ModSpiked" />
     <part Name="Mod_UD_ImprovedBurrowingClaws" Tier="5" />
+    <tag Name="EquipmentFrameColors" Value="YyYy" />
+  </object>
+
+  <!-- 
+  
+       3: Rings
+       
+   -->
+  <object Name="Badass Earrings" Inherits="Polyhedral Rings">
+    <part Name="Render" DisplayName="{{m-m-K distribution|badass}} {{W|earrings}}" 
+          Tile="Items/sw_poly_rings.bmp" 
+          RenderString="236" ColorString="&amp;W" 
+          TileColor="&amp;W" DetailColor="K" />
+    <part Name="Commerce" Value="175" />
+    <part Name="Description" Short="Chipped golden-plated loops of scrap are bent into a crude imitation of luxury designed to invoke a sense of dangerousness, deserved or not, in any would-be observer. They've been driven haphazardously through whichever facial protusion looks like would have hurt the most." />
+    <part Name="Physics" Weight="1" Category="Trade Goods" />
+    <tag Name="EquipSound" Value="sfx_equip_material_coin" />
+    <tag Name="Tier" Value="4" />
+    <part Name="ItemElements" Elements="jewels::6" />
+    <part Name="Metal" />
+    <tag Name="DynamicObjectsTable:TradeGoods" />
+    <tag Name="Gender" Value="plural" />
+    <tag Name="ShowAsPhysicalFeature" />
+    <tag Name="EquipmentFrameColors" Value="YWKW" />
+  </object>
+  <object Name="Gold Ring" Inherits="BaseBracelet">
+    <part Name="Armor" DV="3" />
+    <part Name="Render" DisplayName="{{W|gold ring}}" 
+          Tile="Items/sw_bracelet_simple.bmp" 
+          RenderString="]" ColorString="&amp;W" 
+          TileColor="&amp;W" DetailColor="Y" />
+    <part Name="Commerce" Value="50" />
+    <part Name="Description" Short="A knitted sleeve warms itself through contact static." />
+    <part Name="Physics" Weight="3" />
+    <part Name="ItemElements" Elements="jewels::6" />
+    <part Name="Metal" />
+    <tag Name="EquipSound" Value="sfx_equip_material_coin" />
+    <tag Name="Tier" Value="5" />
+    <tag Name="ShowAsPhysicalFeature" />
+    <tag Name="EquipmentFrameColors" Value="YWYW" />
   </object>
   
 </objects>

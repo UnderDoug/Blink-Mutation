@@ -45,7 +45,7 @@ namespace XRL.World.Parts.Mutation
         private static bool MutationColor => UI.Options.MutationColor;
 
         // "Constants"
-        public static readonly string BLINK_SOUND = "Sounds/Interact/sfx_interact_artifact_finish_fwoosh"; // "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
+        public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
         public static readonly string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
 
         public static readonly string COMMAND_UD_BLINK_ABILITY = "Command_UD_Blink_Ability";
@@ -206,7 +206,9 @@ namespace XRL.World.Parts.Mutation
 
         public static int GetCooldownTurns(int Level)
         {
-            return 90 - Math.Min(80, Level * 5);
+            if (The.Core.IDKFA) return 5;
+            return 50;
+            // return 90 - Math.Min(40, Level * 5);
         }
         public static int GetCooldownTurns(GameObject Blinker)
         {
@@ -1233,7 +1235,7 @@ namespace XRL.World.Parts.Mutation
             {
                 StringBuilder SB = Event.NewStringBuilder();
                 int range = GetBlinkRange();
-                double speed = ParentObject.GetMovementsPerTurn();
+                double speed = ParentObject.GetMovementsPerTurn(IgnoreSprint: true);
                 string damage = GetColdSteelDamage();
                 DieRoll damageDie = new(damage);
                 SB.AppendColored("M", $"Blink").Append(": ");

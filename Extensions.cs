@@ -50,6 +50,9 @@ namespace UD_Blink_Mutation
             if (MethodName == nameof(GetNumberedTileVariants))
                 return false;
 
+            if (MethodName == nameof(GetMovementsPerTurn))
+                return true;
+
             return doDebug;
         }
 
@@ -1979,13 +1982,27 @@ namespace UD_Blink_Mutation
         {
             if (Mover != null && Mover.TryGetStat("MoveSpeed", out Statistic MS) && Mover.TryGetStat("Speed", out Statistic QN))
             {
-                int EMS = 100 - MS.Value + 100;
+                int indent = Debug.LastIndent;
+                Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint})", 
+                    Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
 
+                int EMS = 100 - MS.Value + 100;
+                Debug.Entry(4, $"{nameof(EMS)}", $"{EMS}",
+                    Indent: indent + 1, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
                 if (IgnoreSprint && Mover.TryGetEffect(out Running running))
                 {
-                    EMS = (int)(EMS / (running.GetMovespeedMultiplier() - 1f));
+                    EMS -= running.MovespeedBonus;
+                    Debug.Entry(4, $"{nameof(running.MovespeedBonus)}", $"{running.MovespeedBonus}",
+                        Indent: indent + 2, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                    Debug.Entry(4, $"{nameof(EMS)}", $"{EMS}",
+                        Indent: indent + 2, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
                 }
                 int EQN = QN.Value;
+                Debug.Entry(4, $"{nameof(EQN)}", $"{EQN}",
+                    Indent: indent + 1, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+
+                Debug.Entry(4, $"x {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint}) *//",
+                    Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
                 return (EQN * EMS) / 10000.0;
             }
             return default;

@@ -7,7 +7,7 @@
    -->
   <object Name="Troll King 3" Load="Merge">
     <mutation Name="UD_Blink" Level="10" ColorChange="false" PhysicalFeatures="false" />
-    <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <property Name="RapidLevel_UD_Blink" Value="6" />
   </object>
   
   <!-- 
@@ -70,7 +70,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;K" DetailColor="r" />
     <mutation Name="UD_Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
-    <stringproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <property Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />
     <inventoryobject Blueprint="Rocket Runners" Number="1" />
