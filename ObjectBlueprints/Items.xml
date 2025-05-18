@@ -27,6 +27,7 @@
     <part Name="ItemElements" Elements="travel::2" />
     <part Name="Examiner" Complexity="3" Difficulty="1" />
     <stag Name="Movement" />
+    <stag Name="Travel" />
     <tag Name="EquipmentFrameColors" Value="RYRW" />
   </object>
   
@@ -45,6 +46,8 @@
     <part Name="TinkerItem" Bits="0024" CanDisassemble="true" CanBuild="false" />
     <part Name="ItemElements" Elements="travel::2" />
     <part Name="ModSpiked" />
+    <stag Name="Movement" />
+    <stag Name="Travel" />
     <tag Name="EquipmentFrameColors" Value="gRWR" />
   </object>
   
@@ -69,8 +72,9 @@
     <removepart Name="TemperatureAdjuster" />
     <removepart Name="LiquidVolume" />
     <removepart Name="LeakWhenBroken" />
+    <stag Name="Movement" />
+    <stag Name="Travel" />
     <tag Name="EquipmentFrameColors" Value="RYRK" />
-    <part Name="ChargeUseInspector" />
   </object>
 
   <!-- 
