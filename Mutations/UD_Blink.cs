@@ -21,7 +21,6 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
-using XRL.World.Effects;
 
 namespace XRL.World.Parts.Mutation
 {

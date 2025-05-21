@@ -35,7 +35,7 @@
     <tag Name="BaseObject" Value="*noinherit" />
     <tag Name="customMeleeOrder" Value="abilities,defensiveAbilities,items,defensiveItems,missile" />
     <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
-    <inventoryobject Blueprint="Plastifer Gloves" Number="1" />
+    <inventoryobject Blueprint="Plastifer Gloves" Number="1" Chance="30" />
   </object>
   <object Name="Prickle_Pig_Bite" Inherits="Bite">
     <part Name="MeleeWeapon" BaseDamage="1d3+1" />
@@ -47,7 +47,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
     <mutation Name="UD_Blink" Level="8" TileColor="B" Shouts="false" PhysicalFeatures="false" />
-    <inventoryobject Blueprint="Red Plastifer Runners" Number="1" />
+    <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="5" />
   </object>
   
   <object Name="Burrowing Prickle Pig" Inherits="PricklePigBase">
@@ -59,8 +59,8 @@
     <mutation Name="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <stat Name="Level" Value="16" />
     <stat Name="Speed" Value="110" />
-    <inventoryobject Blueprint="Spiked Climbers" Number="1" />
-    <inventoryobject Blueprint="Digging Gloves" Number="1" />
+    <inventoryobject Blueprint="Spiked Climbers" Number="1" Chance="5" />
+    <inventoryobject Blueprint="Digging Gloves" Number="1" Chance="5" />
     <removeinventoryobject Blueprint="Plastifer Gloves" />
   </object>
   
@@ -73,7 +73,7 @@
     <property Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />
-    <inventoryobject Blueprint="Rocket Runners" Number="1" />
+    <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="5" />
   </object>
 
   <!-- 
@@ -81,6 +81,14 @@
    -->
   <object Name="Scorpiock_Claws" Load="Merge">
     <!-- this object is both a plural and has DisplayName="claws" resulting in "clawss" -->
-    <part Name="Render" DisplayName="claw" Tile="Creatures/natural-weapon-claw.bmp" ColorString="&amp;w" />
+    <part Name="Render" DisplayName="claw" />
+  </object>
+  <object Name="Horns" Load="Merge">
+    <!-- this object is both a plural and has DisplayName="claws" resulting in "hornses" -->
+    <part Name="Render" DisplayName="horn" />
+  </object>
+  <object Name="Horns Antlers" Load="Merge">
+    <!-- this object is both a plural and has DisplayName="antlers" resulting in "antlerses" -->
+    <part Name="Render" DisplayName="antler" />
   </object>
 </objects>

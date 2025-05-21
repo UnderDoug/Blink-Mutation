@@ -1958,6 +1958,27 @@ namespace UD_Blink_Mutation
             return list;
         }
 
+        public static string GetStartingPregen(this GameObject Player)
+        {
+            string pregen = null;
+            if (Player != null)
+            {
+                if (Player.IsOriginalPlayerBody())
+                {
+                    foreach (AbstractEmbarkBuilderModule activeModule in EmbarkBuilderConfiguration.activeModules)
+                    {
+                        if (activeModule.type == "QudPregenModule")
+                        {
+                            QudPregenModule pregenModule = activeModule as QudPregenModule;
+                            pregen = pregenModule.pregens[pregenModule.data.Pregen].Name;
+                            break;
+                        }
+                    }
+                }
+            }
+            return pregen;
+        }
+
         public static GameObject Think(this GameObject Thinker, string Hrm)
         {
             if (GameObject.Validate(Thinker) && Thinker.Brain != null && !Thinker.IsPlayerControlled())

@@ -28,6 +28,7 @@
     <part Name="Examiner" Complexity="3" Difficulty="1" />
     <stag Name="Movement" />
     <stag Name="Travel" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="RYRW" />
   </object>
   
@@ -48,6 +49,7 @@
     <part Name="ModSpiked" />
     <stag Name="Movement" />
     <stag Name="Travel" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="gRWR" />
   </object>
   
@@ -74,6 +76,7 @@
     <removepart Name="LeakWhenBroken" />
     <stag Name="Movement" />
     <stag Name="Travel" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="RYRK" />
   </object>
 
@@ -94,6 +97,7 @@
     <tag Name="Tier" Value="5" />
     <part Name="ModSpiked" />
     <part Name="Mod_UD_ImprovedBurrowingClaws" Tier="5" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YyYy" />
   </object>
 
@@ -116,7 +120,7 @@
     <part Name="Metal" />
     <tag Name="DynamicObjectsTable:TradeGoods" />
     <tag Name="Gender" Value="plural" />
-    <tag Name="ShowAsPhysicalFeature" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWKW" />
   </object>
   <object Name="Gold Ring" Inherits="BaseBracelet">
@@ -132,7 +136,7 @@
     <part Name="Metal" />
     <tag Name="EquipSound" Value="sfx_equip_material_coin" />
     <tag Name="Tier" Value="5" />
-    <tag Name="ShowAsPhysicalFeature" />
+    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWYW" />
   </object>
   
