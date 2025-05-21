@@ -32,6 +32,7 @@
     <skill Name="Tactics" />
     <skill Name="Tactics_Hurdle" />
     <skill Name="ShortBlades_Expertise" />
+    <tag Name="Species" Value="prickle pig" />
     <tag Name="BaseObject" Value="*noinherit" />
     <tag Name="customMeleeOrder" Value="abilities,defensiveAbilities,items,defensiveItems,missile" />
     <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
@@ -55,6 +56,7 @@
     <part Name="Render" DisplayName="burrowing prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
     <mutation Name="UD_Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
     <mutation Name="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <stat Name="Level" Value="16" />
@@ -67,9 +69,10 @@
   <object Name="Shadow Prickle Pig" Inherits="PricklePigBase">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="shadow prickle pig"
-          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 
           ColorString="&amp;B" TileColor="&amp;K" DetailColor="r" />
     <mutation Name="UD_Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
+    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
     <property Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />
@@ -85,10 +88,10 @@
   </object>
   <object Name="Horns" Load="Merge">
     <!-- this object is both a plural and has DisplayName="claws" resulting in "hornses" -->
-    <part Name="Render" DisplayName="horn" />
+    <part Name="Render" DisplayName="horns" />
   </object>
   <object Name="Horns Antlers" Load="Merge">
     <!-- this object is both a plural and has DisplayName="antlers" resulting in "antlerses" -->
-    <part Name="Render" DisplayName="antler" />
+    <part Name="Render" DisplayName="antlers" />
   </object>
 </objects>

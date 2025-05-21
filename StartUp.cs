@@ -1,18 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using XRL;
+using XRL.UI.ObjectFinderClassifiers;
 using XRL.World;
 using XRL.World.Parts.Mutation;
-
-using static UD_Blink_Mutation.Utils;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
+using static UD_Blink_Mutation.Utils;
 
 namespace UD_Blink_Mutation
 {
     [PlayerMutator]
-    public class GiveColdSteelPresetBadassEarrings : IPlayerMutator
+    public class PrepareColdSteelPreset : IPlayerMutator
     {
         public void mutate(GameObject player)
         {
@@ -25,24 +24,75 @@ namespace UD_Blink_Mutation
 
             bool playerStartedWithBlink = 
                 playerExists 
-             && player.GetStartingMutationClasses().Contains(nameof(UD_Blink));
+             && player.GetStartingMutations().Contains("Blink");
 
-            Debug.Header(3, $"{nameof(GiveColdSteelPresetBadassEarrings)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
-            if (playerIsColdSteel && playerStartedWithBlink)
+            bool playerStartedWithQuills = 
+                playerExists 
+             && player.GetStartingMutations().Contains("Quills");
+
+            Debug.Header(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
+
+            if (playerIsColdSteel && playerStartedWithBlink && playerStartedWithQuills)
             {
-                Debug.Entry(3, "COLD STEEL DETECTED, GENERATING BADASS EARRINGS...", Indent: 1);
-                GameObject badassEarrings = GameObjectFactory.Factory.CreateObject("Badass Earrings");
-                Debug.Entry(3, "BADASS EARRINGS CREATED, BESTOWING PLAYER WITH ADDITIONAL COOLNESS...", Indent: 1);
-                player.ReceiveObject(badassEarrings);
-                Debug.Entry(3, "WARNING!! APPROACHING CRITICAL LEVELS OF BADASS...", Indent: 1);
-                player.AutoEquip(badassEarrings, Silent: true);
-                Debug.Entry(3, "ALERT!! CRITICAL BADASS ACHIEVED! DIVERTING CONTROL TO PLAYER!", Indent: 1);
+                Debug.Entry(3, $"COLD STEEL DETECTED, PERFORMING PREPARATIONS...", Indent: 1);
+
+                bool didSetSpecies = SetColdSteelSpeciesPricklePig(player);
+                if (!didSetSpecies)
+                {
+                    Debug.Warn(4, 
+                        nameof(PrepareColdSteelPreset), 
+                        nameof(SetColdSteelSpeciesPricklePig), 
+                        $"Failed to set Coldsteel Species to {"prickle pig".Quote()}", 
+                        Indent: 0);
+                }
+
+                Debug.Entry(3, $"WARNING!! APPROACHING CRITICAL LEVELS OF BADASS...", Indent: 1);
+
+                bool didPierceEars = GiveColdSteelGoldEarrings(player);
+                if (!didSetSpecies)
+                {
+                    Debug.Warn(4,
+                        nameof(PrepareColdSteelPreset),
+                        nameof(GiveColdSteelGoldEarrings),
+                        $"Failed to pierce Coldsteel's ears, must be built different",
+                        Indent: 0);
+                }
+
+                Debug.Entry(3, $"ALERT!! CRITICAL BADASS ACHIEVED! DIVERTING CONTROL TO PLAYER!", Indent: 1);
             }
             else
             {
-                Debug.Entry(3, "NO COLD STEEL DETECTED, ABORTING...", Indent: 1);
+                Debug.Entry(3, $"NO COLD STEEL DETECTED, LAME. ABORTING...", Indent: 1);
             }
-            Debug.Footer(3, $"{nameof(GiveColdSteelPresetBadassEarrings)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
+
+            Debug.Footer(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
+        }
+
+        public static bool GiveColdSteelGoldEarrings(GameObject player)
+        {
+            Debug.Entry(3, $"* {nameof(GiveColdSteelGoldEarrings)}(GameObject player)", Indent: 1);
+            Debug.Entry(3, $"GENERATING BADASS EARRINGS...", Indent: 2);
+            GameObject badassEarrings = GameObjectFactory.Factory.CreateObject("Badass Earrings");
+            Debug.Entry(3, $"BADASS EARRINGS CREATED, BESTOWING PLAYER WITH ADDITIONAL COOLNESS...", Indent: 2);
+            player.ReceiveObject(badassEarrings);
+            Debug.Entry(3, $"DEFINITELY NOT GURLY EARRINGS BESTOWED, ASSIGNING TO MUG...", Indent: 2);
+            player.AutoEquip(badassEarrings, Silent: true);
+            Debug.Entry(3, $"SICK-ASS BLING ALLOCATED, CONTINUING PREPARATIONS...", Indent: 2);
+            Debug.Entry(3, $"x {nameof(GiveColdSteelGoldEarrings)}(GameObject player) *//", Indent: 1);
+            return player.HasEquippedItem(badassEarrings.Blueprint);
+        }
+        public static bool SetColdSteelSpeciesPricklePig(GameObject player)
+        {
+            Debug.Entry(3, $"* {nameof(SetColdSteelSpeciesPricklePig)}(GameObject player)", Indent: 1);
+
+            Debug.Entry(3, $"SHAPING ULTIMATE LIFE FORM...", Indent: 2);
+            Debug.Entry(3, $"TURNING TO DARKNESS...", Indent: 2);
+            player.SetStringProperty("Species", "prickle pig");
+            Debug.Entry(3, $"SPECIES ALTERATION PROCESSED...", Indent: 2);
+            Debug.Entry(3, $"CHECKING FOR JINCO JEANS...", Indent: 2);
+            Debug.Entry(3, $"FOUND, CONTINUING PREPARATIONS...", Indent: 2);
+            Debug.Entry(3, $"x {nameof(SetColdSteelSpeciesPricklePig)}(GameObject player) *//", Indent: 1);
+            return player.GetSpecies() == "prickle pig";
         }
     }
 

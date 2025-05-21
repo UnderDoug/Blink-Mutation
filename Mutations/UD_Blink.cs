@@ -54,9 +54,14 @@ namespace XRL.World.Parts.Mutation
         public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
         public static readonly string BASE_TILE_COLOR = "&m";
 
+        public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball.png";
+        public static readonly string PRICKLE_PIG_BALL_UPSIDEDOWN_TILE = "Creatures/Prickle_Pig_Ball_UpsideDown.png";
+
         // Flags
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
+
+        public bool VFlip = false;
 
         [NonSerialized]
         public static Dictionary<int, BlinkPath> PathCache = new();
@@ -1047,6 +1052,22 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null || Destination == null)
                 return;
 
+            bool isPricklePig = Blinker.GetSpecies() == "prickle pig";
+            string originalTile = Blinker.GetTile();
+
+            if (isPricklePig)
+            {
+                AnimatedMaterialGeneric animation = new()
+                {
+                    AnimationLength = 20,
+                    LowFrameOffset = 1,
+                    HighFrameOffset = 1,
+                    TileAnimationFrames = $"0={PRICKLE_PIG_BALL_UPSIDEDOWN_TILE},10={PRICKLE_PIG_BALL_TILE}",
+
+                };
+                Blinker.AddPart(animation);
+            }
+
             Cell origin = Blinker.CurrentCell;
 
             Location2D attackerLocation = Destination.Location;
@@ -1127,7 +1148,7 @@ namespace XRL.World.Parts.Mutation
                                 case "n":
                                     break;
                                 case "t":
-                                    BufferEcho(Blinker, step, scrapBuffer);
+                                    BufferEcho(Blinker, step, scrapBuffer, i);
                                     break;
                                 case "s":
                                     scrapBuffer.Goto(step.X, step.Y);
@@ -1140,14 +1161,24 @@ namespace XRL.World.Parts.Mutation
                     }
                 }
             }
+            if (isPricklePig && Blinker.HasPart<AnimatedMaterialGeneric>())
+            {
+                Blinker.RemovePart<AnimatedMaterialGeneric>();
+            }
         }
-        public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer)
+        public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
         {
+            bool isPricklePig = Blinker.GetSpecies() == "prickle pig";
+            bool vFlip = false;
+            if (Blinker.TryGetPart(out UD_Blink blink))
+            {
+                blink.VFlip = vFlip = !blink.VFlip;
+            }
             scrapBuffer.Goto(cell.X, cell.Y);
             scrapBuffer.Write(Blinker.Render.RenderString);
-            scrapBuffer.Buffer[cell.X, cell.Y].Tile = Blinker.Render.Tile;
+            scrapBuffer.Buffer[cell.X, cell.Y].Tile = isPricklePig ? PRICKLE_PIG_BALL_TILE : Blinker.Render.Tile;
             scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
-            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
+            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = isPricklePig && vFlip ? !Blinker.Render.VFlip : Blinker.Render.VFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
