@@ -1,29 +1,30 @@
 ﻿using Genkit;
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 
 using XRL;
-using XRL.UI;
+using XRL.CharacterBuilds;
+using XRL.CharacterBuilds.Qud;
 using XRL.Rules;
+using XRL.UI;
 using XRL.World;
 using XRL.World.Anatomy;
 using XRL.World.Capabilities;
+using XRL.World.Effects;
+using XRL.World.ObjectBuilders;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
-using XRL.World.Effects;
-using XRL.World.Tinkering;
-using XRL.World.ObjectBuilders;
 using XRL.World.Parts.Skill;
-using XRL.CharacterBuilds;
-using XRL.CharacterBuilds.Qud;
+using XRL.World.Tinkering;
 
-using static UD_Blink_Mutation.Utils;
 using static UD_Blink_Mutation.Const;
+using static UD_Blink_Mutation.Utils;
 
 namespace UD_Blink_Mutation
 {
@@ -1907,14 +1908,14 @@ namespace UD_Blink_Mutation
                         if (activeModule.type == "QudMutationsModule")
                         {
                             QudMutationsModule mutationModule = activeModule as QudMutationsModule;
-                            foreach (QudMutationModuleDataRow selection in mutationModule.data.selections)
+                            if (mutationModule?.data?.selections != null)
                             {
-                                if (!list.Contains(selection.Entry))
+                                foreach (QudMutationModuleDataRow selection in mutationModule.data.selections)
                                 {
-                                    list.Add(selection.Entry);
+                                    list.TryAdd(selection.Entry);
                                 }
+                                break;
                             }
-                            break;
                         }
                     }
                 }
@@ -1938,10 +1939,7 @@ namespace UD_Blink_Mutation
             List<string> list = new();
             foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
             {
-                if (!list.Contains(entry.DisplayName))
-                {
-                    list.Add(entry.DisplayName);
-                }
+                list.TryAdd(entry.DisplayName);
             }
             return list;
         }
@@ -1950,10 +1948,7 @@ namespace UD_Blink_Mutation
             List<string> list = new();
             foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
             {
-                if (!list.Contains(entry.Class))
-                {
-                    list.Add(entry.Class);
-                }
+                list.TryAdd(entry.Class);
             }
             return list;
         }
@@ -1970,7 +1965,11 @@ namespace UD_Blink_Mutation
                         if (activeModule.type == "QudPregenModule")
                         {
                             QudPregenModule pregenModule = activeModule as QudPregenModule;
-                            pregen = pregenModule.pregens[pregenModule.data.Pregen].Name;
+                            string pregenData = pregenModule?.data?.Pregen;
+                            if (pregenModule != null && pregenData != null && pregenModule.pregens.ContainsKey(pregenData))
+                            {
+                                pregen = pregenModule.pregens[pregenData].Name;
+                            }
                             break;
                         }
                     }

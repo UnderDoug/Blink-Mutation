@@ -13,7 +13,7 @@
   <!-- 
       Prickle-Pigs
    -->
-  <object Name="PricklePigBase" Inherits="BaseAnimal">
+  <object Name="BasePricklePig" Inherits="BaseAnimal">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="[Prickle Pig]"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
@@ -42,7 +42,7 @@
     <part Name="MeleeWeapon" BaseDamage="1d3+1" />
   </object>
   
-  <object Name="Prickle Pig" Inherits="PricklePigBase">
+  <object Name="Prickle Pig" Inherits="BasePricklePig">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
@@ -51,7 +51,7 @@
     <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="5" />
   </object>
   
-  <object Name="Burrowing Prickle Pig" Inherits="PricklePigBase">
+  <object Name="Burrowing Prickle Pig" Inherits="BasePricklePig">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="burrowing prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
@@ -66,7 +66,7 @@
     <removeinventoryobject Blueprint="Plastifer Gloves" />
   </object>
   
-  <object Name="Shadow Prickle Pig" Inherits="PricklePigBase">
+  <object Name="Shadow Prickle Pig" Inherits="BasePricklePig">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="shadow prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 

@@ -163,7 +163,15 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null)
                 return true;
 
-            if (Blinker.TryGetPart(out UD_Blink blink) && Blinker.GetStartingMutationClasses().Contains(nameof(UD_Blink)))
+            bool isGenotype = Blinker.GetGenotype() == "Prickle Pig";
+            bool startedWithBlink =
+                Blinker.TryGetPart(out UD_Blink blink)
+             && Blinker.GetStartingMutationClasses().Contains(nameof(UD_Blink));
+            bool literalPricklePig =
+                Blinker.GetBlueprint().InheritsFrom("BasePricklePig");
+
+
+            if (isGenotype || startedWithBlink)
             {
                 return true;
             }
@@ -1049,7 +1057,7 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null || Destination == null)
                 return;
 
-            bool isPricklePig = Blinker.GetSpecies() == "prickle pig";
+            bool isPricklePig = IsBornThisWay(Blinker);
             string originalTile = Blinker.GetTile();
 
             if (isPricklePig)
@@ -1168,9 +1176,9 @@ namespace XRL.World.Parts.Mutation
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
         {
-            bool isPricklePig = Blinker.GetSpecies() == "prickle pig";
+            bool isPricklePig = IsBornThisWay(Blinker);
 
-            string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) +1}");
+            string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) + 1}");
 
             scrapBuffer.Goto(cell.X, cell.Y);
             scrapBuffer.Write(Blinker.Render.RenderString);
