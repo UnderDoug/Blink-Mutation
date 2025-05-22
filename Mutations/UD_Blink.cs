@@ -54,14 +54,11 @@ namespace XRL.World.Parts.Mutation
         public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
         public static readonly string BASE_TILE_COLOR = "&m";
 
-        public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball.png";
-        public static readonly string PRICKLE_PIG_BALL_UPSIDEDOWN_TILE = "Creatures/Prickle_Pig_Ball_UpsideDown.png";
+        public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
 
         // Flags
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
-
-        public bool VFlip = false;
 
         [NonSerialized]
         public static Dictionary<int, BlinkPath> PathCache = new();
@@ -1057,13 +1054,16 @@ namespace XRL.World.Parts.Mutation
 
             if (isPricklePig)
             {
+                string frame1 = $"{0}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{1}")}";
+                string frame2 = $"{5}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{2}")}";
+                string frame3 = $"{10}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{3}")}";
+                string frame4 = $"{15}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{4}")}";
                 AnimatedMaterialGeneric animation = new()
                 {
                     AnimationLength = 20,
                     LowFrameOffset = 1,
                     HighFrameOffset = 1,
-                    TileAnimationFrames = $"0={PRICKLE_PIG_BALL_UPSIDEDOWN_TILE},10={PRICKLE_PIG_BALL_TILE}",
-
+                    TileAnimationFrames = $"{frame1},{frame2},{frame3},{frame4}",
                 };
                 Blinker.AddPart(animation);
             }
@@ -1169,16 +1169,14 @@ namespace XRL.World.Parts.Mutation
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
         {
             bool isPricklePig = Blinker.GetSpecies() == "prickle pig";
-            bool vFlip = false;
-            if (Blinker.TryGetPart(out UD_Blink blink))
-            {
-                blink.VFlip = vFlip = !blink.VFlip;
-            }
+
+            string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) +1}");
+
             scrapBuffer.Goto(cell.X, cell.Y);
             scrapBuffer.Write(Blinker.Render.RenderString);
-            scrapBuffer.Buffer[cell.X, cell.Y].Tile = isPricklePig ? PRICKLE_PIG_BALL_TILE : Blinker.Render.Tile;
+            scrapBuffer.Buffer[cell.X, cell.Y].Tile = isPricklePig ? prickleBallTile : Blinker.Render.Tile;
             scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
-            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = isPricklePig && vFlip ? !Blinker.Render.VFlip : Blinker.Render.VFlip;
+            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
@@ -1189,7 +1187,7 @@ namespace XRL.World.Parts.Mutation
             if (To.IsVisible())
             {
                 float angle = (float)Math.Atan2(To.X - From.X, To.Y - From.Y);
-                Arrive(To.X, To.Y, angle, Count, Life);
+                Arrive(To.X, To.Y, angle, Count, Life, Symbol1, Color1, Symbol2, Color2);
             }
         }
         public static void Arrive(int X, int Y, float Angle, int Count = 8, int Life = 8, string Symbol1 = ".", string Color1 = "m", string Symbol2 = "\u00B1", string Color2 = "y")
@@ -1271,6 +1269,7 @@ namespace XRL.World.Parts.Mutation
                 SB.AppendColored("M", $"Blink").Append(": ");
                 SB.AppendLine();
                 SB.AppendColored("W", $"General").AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{ParentObject.GetSpecies()}").Append($"){HONLY}Species").AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("g", $"{range}").Append($"){HONLY}Blink Range").AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("g", $"{speed}").Append($"){HONLY}Moves Per Turn").AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("G", $"{range * speed}").Append($"){HONLY}Effective Blink Range").AppendLine();

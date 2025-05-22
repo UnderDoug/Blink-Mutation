@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<subtypes>
+
+  <class ID="Ballings" ChargenTitle="choose balling" SingularTitle="balling">
+
+    <subtype Name="Badass" DisplayName="{{badass|Badass}}" 
+             Gear="StartingGear_Arconaut" 
+             Tile="Presets/UD_BlinkMutation_ColdSteel_Preset2_INV.png" 
+             TileColor="&amp;m" DetailColor="y" >
+      <stat Name="Agility" Bonus="2" />
+      <skills>
+        <skill Name="ShortBlades" />
+        <skill Name="Tinkering" />
+        <skill Name="Tinkering_Scavenger" />
+        <skill Name="Acrobatics" />
+        <skill Name="Acrobatics_Dodge" />
+      </skills>
+      <extrainfo>Starts with random junk, artifacts, badass earrings, and JINCO jeans</extrainfo>
+    </subtype>
+
+  </class>
+
+</subtypes>

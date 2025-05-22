@@ -107,7 +107,7 @@
        
    -->
   <object Name="Badass Earrings" Inherits="Polyhedral Rings">
-    <part Name="Render" DisplayName="{{m-m-K distribution|badass}} {{W|earrings}}" 
+    <part Name="Render" DisplayName="{{badass|badass}} {{W|earrings}}" 
           Tile="Items/sw_poly_rings.bmp" 
           RenderString="236" ColorString="&amp;W" 
           TileColor="&amp;W" DetailColor="K" />

@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<genotypes>
+
+  <genotype Name="Prickle Pig" 
+            MutationPoints="12" 
+            StatPoints="44" 
+            AllowedMutationCategories="*" 
+            RandomWeight="90" 
+            DisplayName="Prickle Pig" 
+            Subtypes="Ballings" 
+            Class="" 
+            Tile="Creatures/Prickle_Pig_INV.png" 
+            DetailColor="B" 
+            BodyObject="TailedBiped" 
+            BaseHPGain="1-4" 
+            BaseSPGain="50" 
+            BaseMPGain="1" 
+            Species="prickle pig" 
+            IsMutant="true" 
+            CharacterBuilderModules="" >
+    <stat Name="Strength" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Strength}} score determines how effectively you penetrate your opponents' armor with melee attacks, how much damage your melee attacks do, your ability to resist forced movement, and your carry capacity."/>
+    <stat Name="Agility" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Agility}} score determines your accuracy with both melee and ranged weapons and your ability to dodge attacks."/>
+    <stat Name="Toughness" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Toughness}} score determines your number of hit points, your natural healing rate, and your ability to resist poison and disease."/>
+    <stat Name="Intelligence" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Intelligence}} score determines your number of skill points and your ability to examine artifacts."/>
+    <stat Name="Willpower" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Willpower}} score modifies the cooldowns of your activated abilities, determines your ability to resist mental attacks, and modifies your natural healing rate."/>
+    <stat Name="Ego" 
+          Minimum="10" Maximum="24" 
+          ChargenDescription="Your {{W|Ego}} score determines the potency of your mental mutations, your ability to haggle with merchants, and your ability to dominate the wills of other living creatures."/>
+    <skills>
+      <skill Name="Tactics_Run" />
+      <skill Name="Survival_Camp" />
+    </skills>
+    <extrainfo>Mutations</extrainfo>
+    <extrainfo>Moderate starting attributes</extrainfo>
+    <extrainfo>-600 reputation with {{C|the Putus Templar}}</extrainfo>
+  </genotype>
+  
+</genotypes>

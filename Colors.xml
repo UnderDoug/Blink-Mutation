@@ -3,5 +3,6 @@
   <shaders>
     <shader Name="coldsteel" Type="sequence" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
     <shader Name="nothinpersonnel" Type="alternation" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
+    <shader Name="badass" Type="distribution" Colors="m-m-K" ShowInPicker="true" />
   </shaders>
 </colors>

@@ -36,13 +36,13 @@ namespace UD_Blink_Mutation
             {
                 Debug.Entry(3, $"COLD STEEL DETECTED, PERFORMING PREPARATIONS...", Indent: 1);
 
-                bool didSetSpecies = SetColdSteelSpeciesPricklePig(player);
+                bool didSetSpecies = SetColdSteelGenotypeSubtypePricklePigBadass(player);
                 if (!didSetSpecies)
                 {
                     Debug.Warn(4, 
                         nameof(PrepareColdSteelPreset), 
-                        nameof(SetColdSteelSpeciesPricklePig), 
-                        $"Failed to set Coldsteel Species to {"prickle pig".Quote()}", 
+                        nameof(SetColdSteelGenotypeSubtypePricklePigBadass), 
+                        $"Failed to set Coldsteel Genotype and/or Subtype", 
                         Indent: 0);
                 }
 
@@ -67,7 +67,22 @@ namespace UD_Blink_Mutation
 
             Debug.Footer(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
         }
-
+        public static bool SetColdSteelGenotypeSubtypePricklePigBadass(GameObject player)
+        {
+            Debug.Entry(3, $"* {nameof(SetColdSteelGenotypeSubtypePricklePigBadass)}(GameObject player)", Indent: 1);
+            Debug.Entry(3, $"SHAPING ULTIMATE LIFE FORM...", Indent: 2);
+            Debug.Entry(3, $"TURNING TO DARKNESS...", Indent: 2);
+            player.SetStringProperty("Genotype", "Prickle Pig");
+            Debug.Entry(3, $"GENOTYPICAL ALTERATION PROCESSED...", Indent: 2);
+            Debug.Entry(3, $"INCREASING DISDAIN FOR SUNSHINE...", Indent: 2);
+            Debug.Entry(3, $"GROWING NAILS TO NINNE INCHES...", Indent: 2);
+            player.SetStringProperty("Subtype", "Badass");
+            Debug.Entry(3, $"SUBTYPICAL ADJUSTMENT MANIFESTED...", Indent: 2);
+            Debug.Entry(3, $"CHECKING FOR JINCO JEANS...", Indent: 2);
+            Debug.Entry(3, $"FOUND, CONTINUING PREPARATIONS...", Indent: 2);
+            Debug.Entry(3, $"x {nameof(SetColdSteelGenotypeSubtypePricklePigBadass)}(GameObject player) *//", Indent: 1);
+            return player.genotypeEntry?.Name == "Prickle Pig" && player.subtypeEntry?.Name == "Badass";
+        }
         public static bool GiveColdSteelGoldEarrings(GameObject player)
         {
             Debug.Entry(3, $"* {nameof(GiveColdSteelGoldEarrings)}(GameObject player)", Indent: 1);
@@ -80,19 +95,6 @@ namespace UD_Blink_Mutation
             Debug.Entry(3, $"SICK-ASS BLING ALLOCATED, CONTINUING PREPARATIONS...", Indent: 2);
             Debug.Entry(3, $"x {nameof(GiveColdSteelGoldEarrings)}(GameObject player) *//", Indent: 1);
             return player.HasEquippedItem(badassEarrings.Blueprint);
-        }
-        public static bool SetColdSteelSpeciesPricklePig(GameObject player)
-        {
-            Debug.Entry(3, $"* {nameof(SetColdSteelSpeciesPricklePig)}(GameObject player)", Indent: 1);
-
-            Debug.Entry(3, $"SHAPING ULTIMATE LIFE FORM...", Indent: 2);
-            Debug.Entry(3, $"TURNING TO DARKNESS...", Indent: 2);
-            player.SetStringProperty("Species", "prickle pig");
-            Debug.Entry(3, $"SPECIES ALTERATION PROCESSED...", Indent: 2);
-            Debug.Entry(3, $"CHECKING FOR JINCO JEANS...", Indent: 2);
-            Debug.Entry(3, $"FOUND, CONTINUING PREPARATIONS...", Indent: 2);
-            Debug.Entry(3, $"x {nameof(SetColdSteelSpeciesPricklePig)}(GameObject player) *//", Indent: 1);
-            return player.GetSpecies() == "prickle pig";
         }
     }
 
