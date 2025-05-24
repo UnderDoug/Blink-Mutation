@@ -4,11 +4,7 @@
     <PackageId>UD_Blink_Mutation</PackageId>
     <Authors>UnderDoug</Authors>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+    <Title>UD Blink Mutation</Title>
   </PropertyGroup>
   <Import Project="../Mods.csproj" />
-  <ItemGroup>
-    <Reference Include="gigantism_Plus.dll">
-      <HintPath>..\..\..\ModAssemblies\gigantism_Plus.dll</HintPath>
-    </Reference>
-  </ItemGroup>
 </Project>
