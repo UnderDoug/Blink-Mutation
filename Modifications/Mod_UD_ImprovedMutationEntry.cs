@@ -12,7 +12,7 @@ namespace XRL.World.Parts
 
         public string EntryName = "Flaming Ray";
 
-        public string MutationDisplayName => MutationEntry?.DisplayName ?? EntryName;
+        public string MutationDisplayName => MutationEntry?.Name ?? EntryName;
 
         public string ClassName => MutationEntry?.Class;
 
@@ -44,7 +44,7 @@ namespace XRL.World.Parts
             base.Attach();
 
             Debug.Entry(4, $"EntryName: {EntryName ?? NULL}");
-            Debug.Entry(4, $"MutationEntry: {MutationEntry?.DisplayName ?? NULL}");
+            Debug.Entry(4, $"MutationEntry: {MutationEntry?.Name ?? NULL}");
 
             NameForStatus = $"{ClassName ?? EntryName.Replace(" ", "")}Amp";
         }

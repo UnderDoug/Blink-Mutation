@@ -1939,7 +1939,7 @@ namespace UD_Blink_Mutation
             List<string> list = new();
             foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
             {
-                list.TryAdd(entry.DisplayName);
+                list.TryAdd(entry.Name);
             }
             return list;
         }
