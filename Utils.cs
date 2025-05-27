@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
 using ConsoleLib.Console;
 
 using Kobold;
@@ -50,6 +49,7 @@ namespace UD_Blink_Mutation
         }
 
         public static ModInfo ThisMod => ModManager.GetMod(MOD_ID);
+        public static ModInfo HNPS_GigantismPlus => ModManager.GetMod(HNPS_GIGANTISMPLUS_MOD_ID);
 
         [VariableReplacer]
         public static string nbsp(DelegateContext Context)

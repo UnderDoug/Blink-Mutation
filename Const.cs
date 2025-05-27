@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
+
 using static UD_Blink_Mutation.Options;
 
 namespace UD_Blink_Mutation
 {
     public static class Const
     {
-        public const string MOD_ID = "Blink Mutation";
+        public const string MOD_ID = "UD_Blink_Mutation";
+        public const string HNPS_GIGANTISMPLUS_MOD_ID = "gigantism_Plus";
 
         public const string DEBUG_OBJECT_CREATION_ANALYSIS = "UD_Debug_DoObjectCreationAnalysis";
         public const string DEBUG_HIGHLIGHT_CELLS = "UD_Debug_HighlightCells";

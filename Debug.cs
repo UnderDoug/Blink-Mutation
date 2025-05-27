@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reflection;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 using Qud.API;
@@ -20,8 +18,6 @@ using static UD_Blink_Mutation.Const;
 
 using Debug = UD_Blink_Mutation.Debug;
 using Options = UD_Blink_Mutation.Options;
-using XRL.World.AI.Pathfinding;
-using System.IO;
 
 namespace UD_Blink_Mutation
 {

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+
 using XRL;
-using XRL.UI.ObjectFinderClassifiers;
 using XRL.World;
 using XRL.World.Parts.Mutation;
+using XRL.UI.ObjectFinderClassifiers;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
