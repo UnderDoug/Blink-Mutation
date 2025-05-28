@@ -28,7 +28,7 @@ namespace UD_Blink_Mutation.Harmony
         [HarmonyPostfix]
         public static void LoadBakedXML_MutationEntryIfSupplied_Postfix(ref GameObjectFactory __instance, ref GameObjectBlueprint __result, ObjectBlueprintLoader.ObjectBlueprintXMLData node)
         {
-            if (!HNPS_GigantismPlus.IsEnabled && Stat.Roll("1d2") > 2)
+            if (!HNPS_GigantismPlus.IsEnabled && Stat.Roll("1d2") < 3)
             {
                 try
                 {
