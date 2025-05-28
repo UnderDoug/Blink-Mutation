@@ -1062,7 +1062,7 @@ namespace UD_Blink_Mutation
             {
                 weightMax += entryWeight;
             }
-            int ticket = RndUD.Next(1, weightMax);
+            int ticket = Stat.Roll(1, weightMax);
             int weightCurrent = 0;
             foreach ((T entryT, int entryWeight) in WeightedList)
             {

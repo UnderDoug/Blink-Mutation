@@ -201,8 +201,6 @@ namespace UD_Blink_Mutation
             return output;
         }
 
-        public static Random RndUD = Stat.GetSeededRandomGenerator("UD_Blink_Mutation");
-
         // Ripped wholesale from ModGigantic.
         public static string GetProcessedItem(List<string> item, bool second, List<List<string>> items, GameObject obj)
         {
