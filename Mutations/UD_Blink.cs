@@ -149,7 +149,6 @@ namespace XRL.World.Parts.Mutation
 
         public UD_Blink()
         {
-            Type = "Physical";
             Shouts = true;
             PhysicalFeatures = true;
             ColorChange = true;
