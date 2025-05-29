@@ -16,7 +16,7 @@ namespace UD_Blink_Mutation.Harmony
     [HarmonyPatch]
     public static class GameObjectFactory_Patches
     {
-        public static bool doDebug = true;
+        public static bool doDebug = false;
 
         private static readonly string TargetAttribute = "DisplayName";
 
@@ -40,10 +40,10 @@ namespace UD_Blink_Mutation.Harmony
                     if (!node.NamedNodes("mutation").IsNullOrEmpty())
                     {
                         Debug.Entry(4,
-                        $"# [{MOD_ID}] {nameof(GameObjectFactory_Patches)}."
-                        + $"{nameof(LoadBakedXML_MutationEntryIfSupplied_Postfix)}"
-                        + $"(...)",
-                        Indent: 0, Toggle: doDebug);
+                            $"# [{MOD_ID}] {nameof(GameObjectFactory_Patches)}."
+                            + $"{nameof(LoadBakedXML_MutationEntryIfSupplied_Postfix)}"
+                            + $"(...)",
+                            Indent: 0, Toggle: doDebug);
                         Debug.Entry(4, $"__result: {__result.Name}/{__result.DisplayName()}", Indent: 1, Toggle: doDebug);
 
                         Debug.Entry(4, $"Checking Named mutation nodes for {TargetAttribute.Quote()} attribute...", Indent: 1, Toggle: doDebug);
@@ -86,7 +86,7 @@ namespace UD_Blink_Mutation.Harmony
                                 }
                             }
                         }
-                        Debug.Divider(4, HONLY, Count: 25, Indent: 2);
+                        Debug.Divider(4, HONLY, Count: 25, Indent: 2, Toggle: doDebug);
                         Debug.Entry(4,
                             $"x foreach ((string name, ObjectBlueprintLoader.ObjectBlueprintXMLChildNode childNode) in node.NamedNodes(\"mutation\")) >//",
                             Indent: 1, Toggle: doDebug);
@@ -122,7 +122,7 @@ namespace UD_Blink_Mutation.Harmony
                                     }
                                 }
                             }
-                            Debug.Divider(4, HONLY, Count: 25, Indent: 2);
+                            Debug.Divider(4, HONLY, Count: 25, Indent: 2, Toggle: doDebug);
                             Debug.Entry(4,
                                 $"x foreach (ObjectBlueprintLoader.ObjectBlueprintXMLChildNode childNode in node.UnnamedNodes(\"mutation\")) >//",
                                 Indent: 1, Toggle: doDebug);
