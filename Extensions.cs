@@ -1,13 +1,12 @@
-﻿using System;
+﻿using Battlehub.UIControls;
+using Genkit;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-
-using Genkit;
-
 using XRL;
 using XRL.CharacterBuilds;
 using XRL.CharacterBuilds.Qud;
@@ -22,7 +21,6 @@ using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
 using XRL.World.Parts.Skill;
 using XRL.World.Tinkering;
-
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
 
@@ -1893,22 +1891,32 @@ namespace UD_Blink_Mutation
             List<MutationEntry> list = new();
             if (Mutant != null)
             {
-                foreach ((string mutation, GamePartBlueprint _) in Mutant.GetBlueprint().Mutations)
+                if (!Mutant.GetBlueprint().Mutations.IsNullOrEmpty())
                 {
-                    MutationEntry entry = MutationFactory.GetMutationEntryByName(mutation);
-                    if (!list.Contains(entry))
+                    foreach ((string mutation, GamePartBlueprint mutationBlueprint) in Mutant.GetBlueprint().Mutations)
                     {
-                        list.Add(entry);
+                        BaseMutation baseMutation = Mutations.GetGenericMutation(mutation);
+                        if (baseMutation != null)
+                        {
+                            list.TryAdd(baseMutation.GetMutationEntry());
+                        }
+                        
+                        IPart part = mutationBlueprint.Reflector?.GetInstance() 
+                            ?? (Activator.CreateInstance(mutationBlueprint.T) as IPart);
+                        if (part is BaseMutation mutationPart)
+                        {
+                            list.TryAdd(mutationPart.GetMutationEntry());
+                        }
                     }
                 }
-                if (Mutant.IsOriginalPlayerBody())
+                if (Mutant.IsOriginalPlayerBody() && !EmbarkBuilderConfiguration.activeModules.IsNullOrEmpty())
                 {
                     foreach (AbstractEmbarkBuilderModule activeModule in EmbarkBuilderConfiguration.activeModules)
                     {
                         if (activeModule.type == "QudMutationsModule")
                         {
                             QudMutationsModule mutationModule = activeModule as QudMutationsModule;
-                            if (mutationModule?.data?.selections != null)
+                            if (mutationModule?.data?.selections != null && !mutationModule.data.selections.IsNullOrEmpty())
                             {
                                 foreach (QudMutationModuleDataRow selection in mutationModule.data.selections)
                                 {
@@ -1922,14 +1930,18 @@ namespace UD_Blink_Mutation
             }
             return list;
         }
+        public static bool HasStartingMutations(this GameObject Mutant)
+        {
+            return !Mutant.GetStartingMutationEntries().IsNullOrEmpty();
+        }
         public static List<BaseMutation> GetStartingBaseMutations(this GameObject Mutant)
         {
             List<BaseMutation> list = new();
-            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            if (Mutant != null && Mutant.HasStartingMutations())
             {
-                if (!list.Contains(entry.Mutation))
+                foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
                 {
-                    list.Add(entry.Mutation);
+                    list.TryAdd(entry.Mutation);
                 }
             }
             return list;
@@ -1937,18 +1949,24 @@ namespace UD_Blink_Mutation
         public static List<string> GetStartingMutations(this GameObject Mutant)
         {
             List<string> list = new();
-            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            if (Mutant != null && Mutant.HasStartingMutations())
             {
-                list.TryAdd(entry.Name);
+                foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+                {
+                    list.TryAdd(entry.Name);
+                }
             }
             return list;
         }
         public static List<string> GetStartingMutationClasses(this GameObject Mutant)
         {
             List<string> list = new();
-            foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+            if (Mutant != null && Mutant.HasStartingMutations())
             {
-                list.TryAdd(entry.Class);
+                foreach (MutationEntry entry in Mutant.GetStartingMutationEntries())
+                {
+                    list.TryAdd(entry.Class);
+                }
             }
             return list;
         }
@@ -1958,7 +1976,7 @@ namespace UD_Blink_Mutation
             string pregen = null;
             if (Player != null)
             {
-                if (Player.IsOriginalPlayerBody())
+                if (Player.IsOriginalPlayerBody() && !EmbarkBuilderConfiguration.activeModules.IsNullOrEmpty())
                 {
                     foreach (AbstractEmbarkBuilderModule activeModule in EmbarkBuilderConfiguration.activeModules)
                     {

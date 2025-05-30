@@ -12,6 +12,9 @@ namespace UD_Blink_Mutation
         public const string DEBUG_OBJECT_CREATION_ANALYSIS = "UD_Debug_DoObjectCreationAnalysis";
         public const string DEBUG_HIGHLIGHT_CELLS = "UD_Debug_HighlightCells";
 
+        public const string PRICKLE_PIG_GENOTYPE = "Prickle Pig";
+        public const string PRICKLE_PIG_SPECIES = "prickle pig";
+
         public const string NULL = "\"null\"";
 
         public const string TICK = "\u221A";  // √

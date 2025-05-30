@@ -12,6 +12,7 @@ using XRL.UI;
 using XRL.Core;
 using XRL.Rules;
 using XRL.World;
+using XRL.World.Effects;
 using XRL.Language;
 using XRL.World.AI.Pathfinding;
 using XRL.Wish;
@@ -21,7 +22,6 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
-using XRL.World.Effects;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -180,15 +180,19 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null)
                 return true;
 
-            bool isGenotype = Blinker.GetGenotype() == "Prickle Pig";
             bool startedWithBlink =
                 Blinker.TryGetPart(out UD_Blink blink)
              && Blinker.GetStartingMutationClasses().Contains(nameof(UD_Blink));
+
+            bool isGenotype = Blinker.GetGenotype() == PRICKLE_PIG_GENOTYPE;
+            bool isSpecies = Blinker.GetSpecies() == PRICKLE_PIG_SPECIES;
+
             bool literalPricklePig =
-                Blinker.GetBlueprint().InheritsFrom("BasePricklePig");
+                isGenotype
+             || isSpecies
+             || Blinker.GetBlueprint().InheritsFrom("BasePricklePig");
 
-
-            if (isGenotype || startedWithBlink)
+            if (startedWithBlink || literalPricklePig)
             {
                 return true;
             }
@@ -1279,16 +1283,33 @@ namespace XRL.World.Parts.Mutation
                 DieRoll damageDie = new(damage);
                 SB.AppendColored("M", $"Blink").Append(": ");
                 SB.AppendLine();
-                SB.AppendColored("W", $"General").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("g", $"{ParentObject.GetSpecies()}").Append($"){HONLY}Species").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("g", $"{range}").Append($"){HONLY}Blink Range").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("g", $"{speed}").Append($"){HONLY}Moves Per Turn").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{range * speed}").Append($"){HONLY}Effective Blink Range").AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("m", $"{damage}").Append($"){HONLY}Cold Steel Damage").AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("m", $"{damageDie.Min()}, {damageDie.Average()}, {damageDie.Max()}").Append($"){HONLY}Cold Steel Damage").AppendLine();
-                SB.AppendColored("W", $"State").AppendLine();
-                SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}").AppendLine();
-                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}").AppendLine();
+
+                SB.AppendColored("W", $"General");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{ParentObject.GetSpecies()}").Append($"){HONLY}Species");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("g", $"{ParentObject.GetGenotype()}").Append($"){HONLY}Genotype");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"Mechanics");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{range}").Append($"){HONLY}Blink Range");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{speed}").Append($"){HONLY}Moves Per Turn");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{range * speed}").Append($"){HONLY}Effective Blink Range");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("m", $"{damage}").Append($"){HONLY}Cold Steel Damage");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("m", $"{damageDie.Min()}, {damageDie.Average()}, {damageDie.Max()}").Append($"){HONLY}Cold Steel Damage");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"State");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
+                SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
             }
@@ -1501,18 +1522,49 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(EffectAppliedEvent E)
         {
-            if (E.Effect.ClassName == nameof(Running) && IsBornThisWay(E.Actor))
+            Debug.Entry(4,
+                $"@ {nameof(UD_Blink)}"
+                + $"{nameof(HandleEvent)}("
+                + $"{nameof(EffectAppliedEvent)} E.{E.Effect.ClassName} (want {nameof(Running)}))",
+                Indent: 0, Toggle: getDoDebug());
+
+            Debug.Entry(4, $"E.Actor: {E.Actor?.DebugName ?? NULL}",
+                Indent: 1, Toggle: getDoDebug());
+
+            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && IsBornThisWay(ParentObject))
             {
-                E.Actor.AddPart(PrickleBallAnimation ??= NewAnimatedMaterialGenericPart());
+                Debug.CheckYeh(4, $"Attempting to add {nameof(PrickleBallAnimation)}",
+                    Indent: 1, Toggle: getDoDebug());
+
+                PrickleBallAnimation ??= NewAnimatedMaterialGenericPart();
+                ParentObject.AddPart(PrickleBallAnimation);
+
+                Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
+                    Good: E.Actor.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(EffectRemovedEvent E)
         {
-            if (E.Effect.ClassName == nameof(Running) && IsBornThisWay(E.Actor))
+            Debug.Entry(4, 
+                $"@ {nameof(UD_Blink)}"
+                + $"{nameof(HandleEvent)}("
+                + $"{nameof(EffectRemovedEvent)} E.{E.Effect.ClassName} (want {nameof(Running)}))",
+                Indent: 0, Toggle: getDoDebug());
+
+            Debug.Entry(4, $"E.Actor: {E.Actor?.DebugName ?? NULL}",
+                Indent: 1, Toggle: getDoDebug());
+
+            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && IsBornThisWay(ParentObject))
             {
-                PrickleBallAnimation = E.Actor.RequirePart(PrickleBallAnimation ??= NewAnimatedMaterialGenericPart()) as AnimatedMaterialGeneric;
-                E.Actor.RemovePart(PrickleBallAnimation);
+                Debug.CheckYeh(4, $"Attempting to remove {nameof(PrickleBallAnimation)}",
+                    Indent: 1, Toggle: getDoDebug());
+
+                PrickleBallAnimation ??= NewAnimatedMaterialGenericPart();
+                ParentObject.RemovePart(PrickleBallAnimation);
+
+                Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
+                    Good: !E.Actor.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
         }

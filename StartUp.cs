@@ -26,11 +26,13 @@ namespace UD_Blink_Mutation
 
             bool playerStartedWithBlink = 
                 playerExists 
-             && player.GetStartingMutations().Contains("Blink");
+             && (player.GetStartingMutations().Contains("Blink") || player.GetStartingMutationClasses().Contains(nameof(UD_Blink)));
 
-            bool playerStartedWithQuills = 
-                playerExists 
-             && player.GetStartingMutations().Contains("Quills");
+            bool playerStartedWithQuills =
+                playerExists
+             && (player.GetStartingMutations().Contains("Quills") 
+                || player.GetStartingMutationClasses().Contains("UD_QuillsPlus")
+                || player.GetStartingMutationClasses().Contains("Quills"));
 
             Debug.Header(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
 
