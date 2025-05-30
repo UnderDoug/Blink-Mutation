@@ -21,6 +21,7 @@ using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
+using XRL.World.Effects;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -138,6 +139,8 @@ namespace XRL.World.Parts.Mutation
         public Guid BlinkActivatedAbilityID = Guid.Empty;
         public Guid ColdSteelActivatedAbilityID = Guid.Empty;
 
+        public AnimatedMaterialGeneric PrickleBallAnimation;
+
         // Part Parameters
         public bool Shouts;
 
@@ -154,8 +157,24 @@ namespace XRL.World.Parts.Mutation
             ColorChange = true;
             TileColor = string.Empty;
             TileColorPriority = 0;
+            PrickleBallAnimation = NewAnimatedMaterialGenericPart();
         }
 
+        public static AnimatedMaterialGeneric NewAnimatedMaterialGenericPart()
+        {
+            string frame1 = $"{0}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{1}")}";
+            string frame2 = $"{5}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{2}")}";
+            string frame3 = $"{10}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{3}")}";
+            string frame4 = $"{15}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{4}")}";
+
+            return new()
+            {
+                AnimationLength = 20,
+                LowFrameOffset = 1,
+                HighFrameOffset = 1,
+                TileAnimationFrames = $"{frame1},{frame2},{frame3},{frame4}",
+            };
+        }
         public static bool IsBornThisWay(GameObject Blinker)
         {
             if (Blinker == null)
@@ -1055,23 +1074,9 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null || Destination == null)
                 return;
 
-            bool isPricklePig = IsBornThisWay(Blinker);
-            string originalTile = Blinker.GetTile();
-
-            if (isPricklePig)
+            if (IsBornThisWay(Blinker))
             {
-                string frame1 = $"{0}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{1}")}";
-                string frame2 = $"{5}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{2}")}";
-                string frame3 = $"{10}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{3}")}";
-                string frame4 = $"{15}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{4}")}";
-                AnimatedMaterialGeneric animation = new()
-                {
-                    AnimationLength = 20,
-                    LowFrameOffset = 1,
-                    HighFrameOffset = 1,
-                    TileAnimationFrames = $"{frame1},{frame2},{frame3},{frame4}",
-                };
-                Blinker.AddPart(animation);
+                Blinker.AddPart(NewAnimatedMaterialGenericPart());
             }
 
             Cell origin = Blinker.CurrentCell;
@@ -1167,20 +1172,18 @@ namespace XRL.World.Parts.Mutation
                     }
                 }
             }
-            if (isPricklePig && Blinker.HasPart<AnimatedMaterialGeneric>())
+            if (IsBornThisWay(Blinker) && Blinker.HasPart<AnimatedMaterialGeneric>())
             {
                 Blinker.RemovePart<AnimatedMaterialGeneric>();
             }
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
         {
-            bool isPricklePig = IsBornThisWay(Blinker);
-
             string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) + 1}");
 
             scrapBuffer.Goto(cell.X, cell.Y);
             scrapBuffer.Write(Blinker.Render.RenderString);
-            scrapBuffer.Buffer[cell.X, cell.Y].Tile = isPricklePig ? prickleBallTile : Blinker.Render.Tile;
+            scrapBuffer.Buffer[cell.X, cell.Y].Tile = IsBornThisWay(Blinker) ? prickleBallTile : Blinker.Render.Tile;
             scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
@@ -1261,7 +1264,9 @@ namespace XRL.World.Parts.Mutation
                 || ID == AIGetMovementAbilityListEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
                 || ID == GetAttackerMeleePenetrationEvent.ID
-                || ID == KilledEvent.ID;
+                || ID == KilledEvent.ID
+                || ID == EffectAppliedEvent.ID
+                || ID == EffectRemovedEvent.ID;
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
@@ -1491,6 +1496,23 @@ namespace XRL.World.Parts.Mutation
                 SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
                 WeGoAgain = true;
                 */
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(EffectAppliedEvent E)
+        {
+            if (E.Effect.ClassName == nameof(Running) && IsBornThisWay(E.Actor))
+            {
+                E.Actor.AddPart(PrickleBallAnimation ??= NewAnimatedMaterialGenericPart());
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(EffectRemovedEvent E)
+        {
+            if (E.Effect.ClassName == nameof(Running) && IsBornThisWay(E.Actor))
+            {
+                PrickleBallAnimation = E.Actor.RequirePart(PrickleBallAnimation ??= NewAnimatedMaterialGenericPart()) as AnimatedMaterialGeneric;
+                E.Actor.RemovePart(PrickleBallAnimation);
             }
             return base.HandleEvent(E);
         }
