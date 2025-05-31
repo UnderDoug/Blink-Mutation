@@ -61,6 +61,33 @@ namespace XRL.World.Parts.Mutation
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
+        public bool IsAnimatedBall => 
+            IsBornThisWay(ParentObject)
+         && PrickleBallAnimation != null
+         && ParentObject.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
+         && animatedMaterialGeneric == PrickleBallAnimation;
+
+        public bool IsNothinPersonnelKid 
+        { 
+            get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID);
+            set 
+            {
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Silent: true, SetState: value);
+                AddActivatedAbilityBlink(Force: true, Silent: true);
+            }
+        }
+
+        public bool WeGoAgain = false;
+        public double WeGoAgainEnergyFactor = 0.5;
+
+        public bool IsSteelCold = false;
+
+        // Containers
+        public Guid BlinkActivatedAbilityID = Guid.Empty;
+        public Guid ColdSteelActivatedAbilityID = Guid.Empty;
+
+        public AnimatedMaterialGeneric PrickleBallAnimation;
+
         [NonSerialized]
         public static Dictionary<int, BlinkPath> PathCache = new();
 
@@ -84,7 +111,7 @@ namespace XRL.World.Parts.Mutation
                 KidDestination = null;
                 KidCell = null;
             }
-            public BlinkPath (FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
+            public BlinkPath(FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
                 : this()
             {
                 this.Path = Path;
@@ -92,7 +119,7 @@ namespace XRL.World.Parts.Mutation
                 this.Kid = Kid;
                 this.KidDestination = KidDestination;
             }
-            public BlinkPath (bool Selected, FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
+            public BlinkPath(bool Selected, FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
                 : this(Path, Destination, Kid, KidDestination, KidCell)
             {
                 this.Selected = Selected;
@@ -120,27 +147,6 @@ namespace XRL.World.Parts.Mutation
             }
         }
 
-        public bool IsNothinPersonnelKid 
-        { 
-            get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID);
-            set 
-            {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Silent: true, SetState: value);
-                AddActivatedAbilityBlink(Force: true, Silent: true);
-            }
-        }
-
-        public bool WeGoAgain = false;
-        public double WeGoAgainEnergyFactor = 0.5;
-
-        public bool IsSteelCold = false;
-
-        // Containers
-        public Guid BlinkActivatedAbilityID = Guid.Empty;
-        public Guid ColdSteelActivatedAbilityID = Guid.Empty;
-
-        public AnimatedMaterialGeneric PrickleBallAnimation;
-
         // Part Parameters
         public bool Shouts;
 
@@ -153,27 +159,28 @@ namespace XRL.World.Parts.Mutation
         public UD_Blink()
         {
             Shouts = true;
-            PhysicalFeatures = true;
+            PhysicalFeatures = false;
             ColorChange = true;
             TileColor = string.Empty;
             TileColorPriority = 0;
-            PrickleBallAnimation = NewAnimatedMaterialGenericPart();
+            PrickleBallAnimation = NewPrickleBallAnimationPart();
         }
 
-        public static AnimatedMaterialGeneric NewAnimatedMaterialGenericPart()
+        public static AnimatedMaterialGeneric NewPrickleBallAnimationPart(AnimatedMaterialGeneric Source = null)
         {
             string frame1 = $"{0}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{1}")}";
             string frame2 = $"{5}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{2}")}";
             string frame3 = $"{10}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{3}")}";
             string frame4 = $"{15}={PRICKLE_PIG_BALL_TILE.Replace("%n", $"{4}")}";
 
-            return new()
-            {
-                AnimationLength = 20,
-                LowFrameOffset = 1,
-                HighFrameOffset = 1,
-                TileAnimationFrames = $"{frame1},{frame2},{frame3},{frame4}",
-            };
+            Source ??= new();
+
+            Source.AnimationLength = 20;
+            Source.LowFrameOffset = 1;
+            Source.HighFrameOffset = 1;
+            Source.TileAnimationFrames = $"{frame1},{frame2},{frame3},{frame4}";
+
+            return Source;
         }
         public static bool IsBornThisWay(GameObject Blinker)
         {
@@ -1078,9 +1085,11 @@ namespace XRL.World.Parts.Mutation
             if (Blinker == null || Destination == null)
                 return;
 
-            if (IsBornThisWay(Blinker))
-            {
-                Blinker.AddPart(NewAnimatedMaterialGenericPart());
+            AnimatedMaterialGeneric prickleBallAnimation = null;
+            UD_Blink blink = Blinker.GetPart<UD_Blink>();
+            if (IsBornThisWay(Blinker) && AddPrickleBallAnimation(Blinker, out prickleBallAnimation) && blink != null)
+            { 
+                blink.PrickleBallAnimation = prickleBallAnimation;
             }
 
             Cell origin = Blinker.CurrentCell;
@@ -1176,9 +1185,10 @@ namespace XRL.World.Parts.Mutation
                     }
                 }
             }
-            if (IsBornThisWay(Blinker) && Blinker.HasPart<AnimatedMaterialGeneric>())
+
+            if (IsBornThisWay(Blinker))
             {
-                Blinker.RemovePart<AnimatedMaterialGeneric>();
+                RemovePrickleBallAnimation(Blinker, prickleBallAnimation);
             }
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
@@ -1193,6 +1203,42 @@ namespace XRL.World.Parts.Mutation
             scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
+        }
+
+        public static bool AddPrickleBallAnimation(GameObject PricklePig, out AnimatedMaterialGeneric PrickleBallAnimation)
+        {
+            PrickleBallAnimation = null;
+            if (PricklePig != null)
+            {
+                if (!PricklePig.TryGetPart(out PrickleBallAnimation))
+                {
+                    PrickleBallAnimation = PricklePig.RequirePart<AnimatedMaterialGeneric>();
+                }
+                NewPrickleBallAnimationPart(PrickleBallAnimation);
+                return PrickleBallAnimation != null;
+            }
+            return false;
+        }
+        public bool AddPrickleBallAnimation(out AnimatedMaterialGeneric PrickleBallAnimation)
+        {
+            return AddPrickleBallAnimation(ParentObject, out PrickleBallAnimation);
+        }
+
+        public static bool RemovePrickleBallAnimation(GameObject PricklePig, AnimatedMaterialGeneric PrickleBallAnimation)
+        {
+            if (PricklePig != null && PrickleBallAnimation != null)
+            {
+                if (PricklePig.TryGetPart(out AnimatedMaterialGeneric animatedMaterialPart) && animatedMaterialPart == PrickleBallAnimation)
+                {
+                    PricklePig.RemovePart(PrickleBallAnimation);
+                    return PricklePig.HasPart<AnimatedMaterialGeneric>();
+                }
+            }
+            return false;
+        }
+        public bool RemovePrickleBallAnimation()
+        {
+            return RemovePrickleBallAnimation(ParentObject, PrickleBallAnimation);
         }
 
         public static void Arrive(Cell From, Cell To, int Count = 8, int Life = 8, string Symbol1 = ".", string Color1 = "m", string Symbol2 = "\u00B1", string Color2 = "y")
@@ -1249,6 +1295,25 @@ namespace XRL.World.Parts.Mutation
             return WeGoingAgain(ParentObject, SetTo, Silent);
         }
 
+        public override void TurnTick(long TimeTick, int Amount)
+        {
+            if (ParentObject.CurrentZone == The.ActiveZone)
+            {
+                if (ParentObject.HasEffectDescendedFrom<Running>() && !IsAnimatedBall)
+                {
+                    AddPrickleBallAnimation(out PrickleBallAnimation);
+                }
+                if (!ParentObject.HasEffectDescendedFrom<Running>() && IsAnimatedBall)
+                {
+                    RemovePrickleBallAnimation();
+                }
+            }
+            base.TurnTick(TimeTick, Amount);
+        }
+        public override bool WantTurnTick()
+        {
+            return BornThisWay;
+        }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register(COMMAND_UD_BLINK_ABILITY);
@@ -1260,7 +1325,7 @@ namespace XRL.World.Parts.Mutation
             return base.WantEvent(ID, cascade)
                 || (DebugBlinkDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == BeforeAbilityManagerOpenEvent.ID
-                || (PhysicalFeatures && ID == GetExtraPhysicalFeaturesEvent.ID)
+                || ID == GetExtraPhysicalFeaturesEvent.ID
                 || ID == CommandEvent.ID
                 || ID == GetItemElementsEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
@@ -1325,15 +1390,18 @@ namespace XRL.World.Parts.Mutation
         {
             if (ParentObject != null)
             {
-                if (ParentObject.Body.HasPart("Face", EvenIfDismembered: false))
+                if (PhysicalFeatures || (BornThisWay && ParentObject.IsPlayerControlled()))
                 {
-                    E.Features.Add("a part missing from one ear");
-                }
-                if (ParentObject.Body.HasPart("Leg", EvenIfDismembered: false) 
-                    || ParentObject.Body.HasPart("Feet", EvenIfDismembered: false) 
-                    || ParentObject.Body.HasPart("Foot", EvenIfDismembered: false))
-                {
-                    E.Features.Add("a pair of {{y|jinco jeans}}");
+                    if (ParentObject.Body.HasPart("Face", EvenIfDismembered: false))
+                    {
+                        E.Features.Add("a part missing from one ear");
+                    }
+                    if (ParentObject.Body.HasPart("Leg", EvenIfDismembered: false)
+                        || ParentObject.Body.HasPart("Feet", EvenIfDismembered: false)
+                        || ParentObject.Body.HasPart("Foot", EvenIfDismembered: false))
+                    {
+                        E.Features.Add("a pair of {{y|jinco jeans}}");
+                    }
                 }
             }
             return base.HandleEvent(E);
@@ -1525,22 +1593,21 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(4,
                 $"@ {nameof(UD_Blink)}"
                 + $"{nameof(HandleEvent)}("
-                + $"{nameof(EffectAppliedEvent)} E.{E.Effect.ClassName} (want {nameof(Running)}))",
+                + $"{nameof(EffectAppliedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
                 Indent: 0, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"E.Actor: {E.Actor?.DebugName ?? NULL}",
+            Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
                 Indent: 1, Toggle: getDoDebug());
 
-            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && IsBornThisWay(ParentObject))
+            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
             {
                 Debug.CheckYeh(4, $"Attempting to add {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
-                PrickleBallAnimation ??= NewAnimatedMaterialGenericPart();
-                ParentObject.AddPart(PrickleBallAnimation);
+                AddPrickleBallAnimation(out PrickleBallAnimation);
 
                 Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
-                    Good: E.Actor.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
+                    Good: ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
         }
@@ -1549,22 +1616,21 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(4, 
                 $"@ {nameof(UD_Blink)}"
                 + $"{nameof(HandleEvent)}("
-                + $"{nameof(EffectRemovedEvent)} E.{E.Effect.ClassName} (want {nameof(Running)}))",
+                + $"{nameof(EffectRemovedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
                 Indent: 0, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"E.Actor: {E.Actor?.DebugName ?? NULL}",
+            Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
                 Indent: 1, Toggle: getDoDebug());
 
-            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && IsBornThisWay(ParentObject))
+            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
             {
                 Debug.CheckYeh(4, $"Attempting to remove {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
-                PrickleBallAnimation ??= NewAnimatedMaterialGenericPart();
-                ParentObject.RemovePart(PrickleBallAnimation);
+                RemovePrickleBallAnimation();
 
                 Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
-                    Good: !E.Actor.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
+                    Good: !ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
         }

@@ -7,7 +7,7 @@
    -->
   <object Name="Troll King 3" Load="Merge">
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" ColorChange="false" PhysicalFeatures="false" />
-    <property Name="RapidLevel_UD_Blink" Value="6" />
+    <intproperty Name="RapidLevel_UD_Blink" Value="6" />
   </object>
   
   <!-- 
@@ -33,10 +33,19 @@
     <skill Name="Tactics_Hurdle" />
     <skill Name="ShortBlades_Expertise" />
     <tag Name="Species" Value="prickle pig" />
+    <tag Name="Genotype" Value="Prickle Pig" />
     <tag Name="BaseObject" Value="*noinherit" />
     <tag Name="customMeleeOrder" Value="abilities,defensiveAbilities,items,defensiveItems,missile" />
+    <tag Name="Role" Value="Skirmisher" />
     <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
-    <inventoryobject Blueprint="Plastifer Gloves" Number="1" Chance="30" />
+    <inventoryobject Blueprint="Master Emerald" Number="1" IntProperties="AlwaysEquipAsArmor:1" />
+    <inventoryobject Blueprint="Plastifer Gloves" Number="1" Chance="75" IntProperties="AlwaysEquipAsArmor:1" />
+    <tag Name="InventoryPopulationTable" Value="HumanoidEquipment Broad" />
+    <inventoryobject Blueprint="Gold Ring" IntProperties="AlwaysEquipAsArmor:1" Number="0-4" />
+    <inventoryobject Blueprint="Waterskin" Number="0-2" />
+    <inventoryobject Blueprint="@Junk 4" Number="1d4" />
+    <inventoryobject Blueprint="@Junk 5" Number="1d4" />
+    <inventoryobject Blueprint="@Junk 6" Number="1d2-1" />
   </object>
   <object Name="PricklePig_Bite" Inherits="Bite">
     <part Name="MeleeWeapon" BaseDamage="1d3+1" />
@@ -47,36 +56,40 @@
     <part Name="Render" DisplayName="prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
+    <tag Name="Subtype" Value="Speed Ball" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="B" Shouts="false" PhysicalFeatures="false" />
-    <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="5" />
+    <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   
   <object Name="Burrowing Prickle Pig" Inherits="BasePricklePig">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
     <part Name="Render" DisplayName="burrowing prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
-          ColorString="&amp;B" TileColor="&amp;R" DetailColor="Y" />
-    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
+          ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="Description" Short="A small stout spheroid scratches around =pronouns.possessive= surroundings seemingly searching for something... {{G|valuable}}. Possessed of =pronouns.reflexive=, =pronouns.subjective= =verb:pay:afterpronoun= little mind to would-be threats, unless, of course, they would serve as a perfect opportunity to show off =pronouns.possessive= {{R|martial}} {{Y|prowess}}." />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
     <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <stat Name="Level" Value="16" />
     <stat Name="Speed" Value="110" />
-    <inventoryobject Blueprint="Spiked Climbers" Number="1" Chance="5" />
-    <inventoryobject Blueprint="Digging Gloves" Number="1" Chance="5" />
+    <tag Name="Subtype" Value="Relic Hunter" />
+    <inventoryobject Blueprint="Spiked Climbers" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
     <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <inventoryobject Blueprint="Digging Gloves" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   
-  <object Name="Shadow Prickle Pig" Inherits="BasePricklePig">
+  <object Name="Dark Prickle Pig" Inherits="BasePricklePig">
     <!-- TileColor is white pixels, DetailColor is black pixels -->
-    <part Name="Render" DisplayName="shadow prickle pig"
+    <part Name="Render" DisplayName="dark prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 
-          ColorString="&amp;B" TileColor="&amp;K" DetailColor="r" />
+          ColorString="&amp;K" TileColor="&amp;K" DetailColor="r" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
-    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
-    <property Name="RapidLevel_UD_Blink" Value="6" />
+    <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
+    <part Name="Description" Short="A small disaffected spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:is:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
+    <intproperty Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />
-    <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="5" />
+    <tag Name="Subtype" Value="Imposter" />
+    <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   
 </objects>

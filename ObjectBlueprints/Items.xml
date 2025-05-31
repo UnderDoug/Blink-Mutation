@@ -99,6 +99,7 @@
     <part Name="Mod_UD_ImprovedBurrowingClaws" Tier="5" />
     <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YyYy" />
+    <stag Name="Movement" />
   </object>
 
   <!-- 
@@ -122,7 +123,9 @@
     <tag Name="Gender" Value="plural" />
     <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWKW" />
+    <stag Name="Badass" />
   </object>
+  
   <object Name="Gold Ring" Inherits="BaseBracelet">
     <part Name="Armor" DV="3" />
     <part Name="Render" DisplayName="{{W|gold ring}}" 
@@ -130,7 +133,7 @@
           RenderString="]" ColorString="&amp;W" 
           TileColor="&amp;W" DetailColor="Y" />
     <part Name="Commerce" Value="50" />
-    <part Name="Description" Short="A knitted sleeve warms itself through contact static." />
+    <part Name="Description" Short="Some internal force imposes uprightedness on this toroid, although its manner of construction appears otherwise mundane." />
     <part Name="Physics" Weight="3" />
     <part Name="ItemElements" Elements="jewels::6" />
     <part Name="Metal" />
@@ -138,6 +141,55 @@
     <tag Name="Tier" Value="5" />
     <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWYW" />
+    <stag Name="Precious" />
+  </object>
+
+  <!-- 
+  
+       3: Gems
+       
+   -->
+  <object Name="Master Emerald" Inherits="Polished Emerald">
+    <part Name="Render" DisplayName="{{W|Master}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="W" />
+    <part Name="Physics" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" />
+    <part Name="Armor" AV="6" DV="6" Willpower="8" SpeedBonus="40" WornOn="Floating Nearby" />
+    <part Name="LightSource" Lit="true" Radius="5" />
+    <part Name="Commerce" Value="2200" />
+    <stat Name="Hitpoints" Value="2500" />
+    <stat Name="HeatResistance" Value="100" />
+    <stat Name="ColdResistance" Value="100" />
+    <stat Name="AcidResistance" Value="100" />
+    <stat Name="ElectricResistance" Value="100" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of reality itself." />
+    <removetag Name="Gift" />
+    <tag Name="Mods" Value="None" />
+    <tag Name="Tier" Value="8" />
+    <tag Name="NoEffects" />
+    <part Name="Examiner" Complexity="8" Difficulty="3" Alternate="Polished Emerald" />
+    <part Name="ItemElements" Elements="might::10" />
+    <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
+    <part Name="MutationOnEquip" ClassName="Telepathy" />
+    <part Name="EquipStatBoost" Boosts="AcidResistance:20;ColdResistance:20;HeatResistance:20;ElectricResistance:20" IsTechScannable="false" />
+    <part Name="EquipIntProperties" Props="AllMutationLevelModifier:1;CyberneticsLicenses:6;FreeCyberneticsLicenses:6" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="5" World="*" />
+    <part Name="SolarArray" ChargeRate="5" />
+    <part Name="BroadcastPowerReceiver" />
+    <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" />
+    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{W|Master}} {{G|emerald}}" NameForStatus="GravityNegationLattice" />
+    <property Name="ShowAsPhysicalFeature" Value="Noice!" />
+    <tag Name="EquipmentFrameColors" Value="WGYg" />
+    <tag Name="EquipSound" Value="sfx_equip_material_generic_glass" />
+    <xtagGrammar Proper="true" />
+    <tag Name="IndefiniteArticle" Value="the" />
+    <part Name="Unreplicable" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
+    <stag Name="Floating" />
+    <stag Name="Travel" />
+    <stag Name="Movement" />
+    <stag Name="Precious" />
+    <stag Name="Precious" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
   
 </objects>

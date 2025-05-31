@@ -17,6 +17,53 @@
       </skills>
       <extrainfo>Starts with badass earrings, and JINCO jeans</extrainfo>
     </subtype>
+    
+    <subtype Name="Speed Ball" DisplayName="{{B|Speedy}} Ball" 
+             Gear="StartingGear_Arconaut" 
+             Tile="Creatures/Prickle_Pig_Upright.png" 
+             DetailColor="B" >
+      <stat Name="Agility" Bonus="2" />
+      <skills>
+        <skill Name="ShortBlades" />
+        <skill Name="Tinkering" />
+        <skill Name="Tinkering_Scavenger" />
+        <skill Name="Acrobatics" />
+        <skill Name="Acrobatics_Dodge" />
+      </skills>
+      <extrainfo>Starts with some junk and artifacts.</extrainfo>
+    </subtype>
+    
+    <subtype Name="Relic Hunter" DisplayName="{{G|Relic}} {{R|Hunter}}" 
+             Gear="StartingGear_Arconaut" 
+             Tile="Creatures/Prickle_Pig_Upright.png" 
+             DetailColor="R" >
+      <stat Name="Strength" Bonus="1" />
+      <stat Name="Agility" Bonus="1" />
+      <skills>
+        <skill Name="ShortBlades" />
+        <skill Name="Tinkering" />
+        <skill Name="Tinkering_Scavenger" />
+        <skill Name="Acrobatics" />
+        <skill Name="Acrobatics_Dodge" />
+      </skills>
+      <extrainfo>Starts with some junk and artifacts.</extrainfo>
+    </subtype>
+    
+    <subtype Name="Imposter" DisplayName="{{K|Imposter}}" 
+             Gear="StartingGear_Arconaut" 
+             Tile="Creatures/Prickle_Pig_Upright.png" 
+             DetailColor="K" >
+      <stat Name="Strength" Bonus="1" />
+      <stat Name="Agility" Bonus="1" />
+      <skills>
+        <skill Name="ShortBlades" />
+        <skill Name="Tinkering" />
+        <skill Name="Tinkering_Scavenger" />
+        <skill Name="Acrobatics" />
+        <skill Name="Acrobatics_Dodge" />
+      </skills>
+      <extrainfo>Starts with some junk and artifacts.</extrainfo>
+    </subtype>
 
   </class>
 
