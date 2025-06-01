@@ -175,7 +175,7 @@
     <part Name="SolarArray" ChargeRate="5" />
     <part Name="BroadcastPowerReceiver" />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" />
-    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{W|Master}} {{G|emerald}}" NameForStatus="GravityNegationLattice" />
+    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{W|Master}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="WGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_glass" />
