@@ -613,7 +613,7 @@ namespace XRL.World.Parts.Mutation
                 {
                     Debug.CheckNah(4, $"{nameof(origin)} not found in {nameof(path)}.Steps", Indent: 3, Toggle: getDoDebug());
                 }
-                Debug.LoopItem(4, $"{nameof(path)}.Steps no longer contains {origin} [{origin?.Location}]", $"{!path.Steps.Contains(origin)}",
+                Debug.LoopItem(4, $"{nameof(path)}.Steps no longer contains [{origin?.Location}]", $"{!path.Steps.Contains(origin)}",
                     Good: !path.Steps.Contains(origin), Indent: 2, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
