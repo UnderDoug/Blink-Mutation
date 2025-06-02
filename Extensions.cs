@@ -50,7 +50,7 @@ namespace UD_Blink_Mutation
                 return false;
 
             if (MethodName == nameof(GetMovementsPerTurn))
-                return true;
+                return false;
 
             return doDebug;
         }
