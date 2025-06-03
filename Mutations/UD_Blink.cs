@@ -1590,17 +1590,17 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(EffectAppliedEvent E)
         {
-            Debug.Entry(4,
-                $"@ {nameof(UD_Blink)}"
-                + $"{nameof(HandleEvent)}("
-                + $"{nameof(EffectAppliedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
-                Indent: 0, Toggle: getDoDebug());
-
-            Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
-                Indent: 1, Toggle: getDoDebug());
-
             if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
             {
+                Debug.Entry(4,
+                    $"@ {nameof(UD_Blink)}"
+                    + $"{nameof(HandleEvent)}("
+                    + $"{nameof(EffectAppliedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
+                    Indent: 0, Toggle: getDoDebug());
+
+                Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 1, Toggle: getDoDebug());
+
                 Debug.CheckYeh(4, $"Attempting to add {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
@@ -1613,17 +1613,17 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(EffectRemovedEvent E)
         {
-            Debug.Entry(4, 
+            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
+            {
+                Debug.Entry(4,
                 $"@ {nameof(UD_Blink)}"
                 + $"{nameof(HandleEvent)}("
                 + $"{nameof(EffectRemovedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
                 Indent: 0, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
-                Indent: 1, Toggle: getDoDebug());
+                Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 1, Toggle: getDoDebug());
 
-            if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
-            {
                 Debug.CheckYeh(4, $"Attempting to remove {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
