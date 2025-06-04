@@ -84,7 +84,7 @@
           ColorString="&amp;K" TileColor="&amp;K" DetailColor="r" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
     <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
-    <part Name="Description" Short="A small disaffected spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:is:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
+    <part Name="Description" Short="A small disaffected spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
     <stat Name="Level" Value="30" />
     <stat Name="Speed" Value="135" />

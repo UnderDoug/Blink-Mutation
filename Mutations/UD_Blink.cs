@@ -226,7 +226,7 @@ namespace XRL.World.Parts.Mutation
         {
             int DieCount = (int)Math.Max(1, Math.Floor((Level + 1) / 2.0));
             int DamageBonus = (int)Math.Floor(Level / 2.0);
-            return DieCount + "d4" + (DamageBonus != 0 ? DamageBonus.Signed() : "");
+            return DieCount + "d6" + (DamageBonus != 0 ? DamageBonus.Signed() : "");
         }
         public static string GetColdSteelDamage(GameObject Blinker)
         {
@@ -303,15 +303,8 @@ namespace XRL.World.Parts.Mutation
                         Name: "Blink",
                         Command: COMMAND_UD_BLINK_ABILITY,
                         Class: "Physical Mutations",
-                        Description: null,
                         Icon: "~",
-                        DisabledMessage: null,
-                        Toggleable: false,
-                        DefaultToggleState: false,
-                        ActiveToggle: false,
                         IsAttack: IsNothinPersonnelKid,
-                        IsRealityDistortionBased: false,
-                        IsWorldMapUsable: false,
                         Silent: removed || Silent,
                         who: GO
                         );
@@ -349,14 +342,9 @@ namespace XRL.World.Parts.Mutation
                         Name: "{{coldsteel|Cold Steel}}",
                         Command: COMMAND_UD_COLDSTEEL_ABILITY,
                         Class: "Physical Mutations",
-                        Description: null,
                         Icon: "\\",
-                        DisabledMessage: null,
                         Toggleable: true,
                         DefaultToggleState: true,
-                        ActiveToggle: false,
-                        IsAttack: false,
-                        IsRealityDistortionBased: false,
                         IsWorldMapUsable: true,
                         Silent: removed || Silent,
                         AffectedByWillpower: false,
