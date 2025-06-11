@@ -59,6 +59,20 @@
       The default is {{w|Disabled}}.
     </helptext>
   </option>
+	
+  <option
+        ID="Option_UD_Blink_DebugIgnorePlayerWhenSquaringUp"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Ignore the player when AI_UD_SquareUp is squaring up for a worthy opponent."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, creatures with the AI_UD_SquareUp behaviour will ignore the player as a viable opponent to make it easier to observe how they'd react in the player's absence.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
   
   <!-- 
   Mod Options

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<factions>
+
+  <faction
+    Name="Prickle Pigs"
+    Visible="false"
+  >
+    <partreputation About="UD_Blink" Value="200" />
+    <partreputation About="Quills" Value="100" />
+    <partreputation About="UD_ManagedQuills" Value="100" />
+    <feeling About="*" Value="0" />
+    <feeling About="Player" Value="100" />
+    <feeling About="DarkPricklePigs" Value="-250" />
+    <factionworshipattitudes>
+      <factionworshipattitude Name="Barathrumites" Attitude="100" />
+      <factionworshipattitude Name="Urchins" Attitude="50" />
+      <factionworshipattitude Name="DarkPricklePigs" Attitude="-100" />
+    </factionworshipattitudes>
+  </faction>
+
+  <faction
+    Name="Dark Prickle Pigs"
+    Visible="false"
+  >
+    <partreputation About="UD_Blink" Value="-200" />
+    <partreputation About="Quills" Value="50" />
+    <partreputation About="UD_ManagedQuills" Value="50" />
+    <feeling About="*" Value="-450" />
+    <feeling About="Player" Value="-800" />
+    <feeling About="PricklePigs" Value="-1200" />
+    <feeling About="DarkPricklePigs" Value="-450" />
+    <factionworshipattitudes>
+      <factionworshipattitude Name="Barathrumites" Attitude="-50" />
+      <factionworshipattitude Name="Urchins" Attitude="50" />
+      <factionworshipattitude Name="Templar" Attitude="-100" />
+      <factionworshipattitude Name="GiantTemplar" Attitude="-100" />
+    </factionworshipattitudes>
+  </faction>
+  
+</factions>

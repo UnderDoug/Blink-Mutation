@@ -10,20 +10,31 @@ namespace UD_Blink_Mutation
     [HasModSensitiveStaticCache]
     public static class Options
     {
+        private static string OptionsLabel => "Option_UD_Blink_";
         private static Dictionary<string, string> Directory => new()
         {
-            { nameof(ObnoxiousYelling), "Option_UD_Blink_ObnoxiousYelling" },
-            { nameof(DebugVerbosity), "Option_UD_Blink_DebugVerbosity" },
-            { nameof(DebugIncludeInMessage), "Option_UD_Blink_DebugIncludeInMessage" },
-            { nameof(DebugBlinkDescriptions), "Option_UD_Blink_DebugIncludeBlinkDebugDescriptions" },
+            { nameof(ObnoxiousYelling), "ObnoxiousYelling" },
+            { nameof(DebugVerbosity), "DebugVerbosity" },
+            { nameof(DebugIncludeInMessage), "DebugIncludeInMessage" },
+            { nameof(DebugBlinkDescriptions), "DebugIncludeBlinkDebugDescriptions" },
+            { nameof(DebugIgnorePlayerWhenSquaringUp), "DebugIgnorePlayerWhenSquaringUp" },
         };
 
-        // Per the wiki, code is taken 1:1
-        private static string GetStringOption(string ID, string Default = "")
+        public static string GetOptionID(string Option)
         {
-            if (Directory.ContainsKey(ID))
+            return Directory.ContainsKey(Option) ? OptionsLabel + Directory[Option] : null;
+        }
+        public static bool TryGetOptionID(string Option, out string ID)
+        {
+            return (ID = GetOptionID(Option)) != null;
+        }
+
+        // Per the wiki, code is taken 1:1
+        private static string GetStringOption(string Option, string Default = "")
+        {
+            if (TryGetOptionID(Option, out string ID))
             {
-                return XRL.UI.Options.GetOption(Directory[ID], Default: Default);
+                return XRL.UI.Options.GetOption(ID, Default: Default);
             }
             return Default;
         }
@@ -36,33 +47,23 @@ namespace UD_Blink_Mutation
             return int.Parse(GetStringOption(ID, $"{Default}"));
         }
 
-        private static void SetBoolOption(string ID, bool Value)
+        private static void SetBoolOption(string Option, bool Value)
         {
-            if (Directory.ContainsKey(ID))
-                XRL.UI.Options.SetOption(Directory[ID], Value);
+            if (TryGetOptionID(Option, out string ID))
+            {
+                XRL.UI.Options.SetOption(ID, Value);
+            }
         }
-        private static void SetStringOption(string ID, string Value)
+        private static void SetStringOption(string Option, string Value)
         {
-            if (Directory.ContainsKey(ID))
-                XRL.UI.Options.SetOption(Directory[ID], Value);
+            if (TryGetOptionID(Option, out string ID))
+            {
+                XRL.UI.Options.SetOption(ID, Value);
+            }
         }
         private static void SetIntOption(string ID, int Value)
         {
-            SetStringOption(Directory[ID], $"{Value}");
-        }
-
-        // Checkbox settings
-
-        public static bool ObnoxiousYelling
-        {
-            get
-            {
-                return GetBoolOption(nameof(ObnoxiousYelling), true);
-            }
-            set
-            {
-                SetBoolOption(nameof(ObnoxiousYelling), value);
-            }
+            SetStringOption(ID, $"{Value}");
         }
 
         // Debug Settings
@@ -99,6 +100,32 @@ namespace UD_Blink_Mutation
             set
             {
                 SetBoolOption(nameof(DebugBlinkDescriptions), value);
+            }
+        }
+
+        public static bool DebugIgnorePlayerWhenSquaringUp
+        {
+            get
+            {
+                return GetBoolOption($"{nameof(DebugIgnorePlayerWhenSquaringUp)}", false);
+            }
+            set
+            {
+                SetBoolOption(nameof(DebugIgnorePlayerWhenSquaringUp), value);
+            }
+        }
+
+        // Checkbox settings
+
+        public static bool ObnoxiousYelling
+        {
+            get
+            {
+                return GetBoolOption(nameof(ObnoxiousYelling), true);
+            }
+            set
+            {
+                SetBoolOption(nameof(ObnoxiousYelling), value);
             }
         }
 

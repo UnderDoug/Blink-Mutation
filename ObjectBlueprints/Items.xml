@@ -183,6 +183,7 @@
     <tag Name="IndefiniteArticle" Value="the" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
+    <part Name="TakenAccomplishment" Text="You acquired a most powerful relic, =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonphrases.prized.!random&gt; relic. =player.Subjective= took the gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.refname=. " />
     <stag Name="Floating" />
     <stag Name="Travel" />
     <stag Name="Movement" />
