@@ -1,27 +1,25 @@
-﻿using System;
+﻿using ConsoleLib.Console;
+using Genkit;
+using Qud.API;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-using ConsoleLib.Console;
-
-using Qud.API;
-using Genkit;
-using UnityEngine;
-
-using XRL.UI;
-using XRL.Core;
-using XRL.Rules;
-using XRL.World;
-using XRL.World.Effects;
-using XRL.Language;
-using XRL.World.AI.Pathfinding;
-using XRL.Wish;
-
 using UD_Blink_Mutation;
-using Debug = UD_Blink_Mutation.Debug;
-using static UD_Blink_Mutation.Options;
+using UnityEngine;
+using XRL.Core;
+using XRL.Language;
+using XRL.Rules;
+using XRL.UI;
+using XRL.Wish;
+using XRL.World;
+using XRL.World.AI.Pathfinding;
+using XRL.World.Capabilities;
+using XRL.World.Effects;
 using static UD_Blink_Mutation.Const;
+using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
+using Debug = UD_Blink_Mutation.Debug;
 
 namespace XRL.World.Parts.Mutation
 {
@@ -794,14 +792,33 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(4, $"Checking for being on the world map...", Indent: 1, Toggle: getDoDebug());
             if (Blinker.OnWorldMap())
             {
-                Blinker.Fail($"You cannot {verb} on the world map.");
+                if (!Silent)
+                {
+                    Blinker.Fail($"You cannot {verb} on the world map.");
+                }
                 return false;
             }
             Debug.Entry(4, $"Checking for currently flying...", Indent: 1, Toggle: getDoDebug());
             if (Blinker.IsFlying)
             {
-                Blinker.Fail($"You cannot {verb} while flying.");
-                return false;
+                Debug.Entry(4, $"Attempting to land and checking again...", Indent: 2, Toggle: getDoDebug());
+                Flight.Land(Blinker, Silent);
+                if (Blinker.IsFlying)
+                {
+                    Debug.Warn(4, 
+                        $"{nameof(UD_Blink)}",
+                        $"{nameof(Blink)}",
+                        $"Still flying despite calling " +
+                        $"{nameof(Flight)}.{nameof(Flight.Land)} on " +
+                        $"{nameof(Blinker)} {Blinker?.DebugName ?? NULL}", 
+                        Indent: 2);
+
+                    if (!Silent)
+                    {
+                        Blinker.Fail($"You cannot {verb} while flying.");
+                    }
+                    return false;
+                }
             }
             Debug.Entry(4, $"Checking can change movement mode...", Indent: 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
@@ -1412,7 +1429,7 @@ namespace XRL.World.Parts.Mutation
 
                         if (isRetreat)
                         {
-                            blinkThink = $"I am going to try and blink away from {E?.Target?.ShortDisplayNameStripped ?? NULL}";
+                            blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
                         }
                         else if (isMovement)
                         {
@@ -1420,7 +1437,7 @@ namespace XRL.World.Parts.Mutation
                         }
                         else
                         {
-                            blinkThink = $"psssh...nothin personnel...{E.Target?.ShortDisplayNameStripped ?? NULL}";
+                            blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
                         }
 
                         E.Actor.Think(blinkThink);

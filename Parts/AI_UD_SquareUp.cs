@@ -61,8 +61,8 @@ namespace XRL.World.Parts
                 && (int)secondDifficultyEvaluation < 15
                 && secondSquareUpScore > -1;
 
-            string firstOpponentName = FirstOpponent.Render?.DisplayName ?? "an unnamed first opponent";
-            string secondOpponentName = SecondOpponent.Render?.DisplayName ?? "an unnamed second opponent";
+            string firstOpponentName = FirstOpponent?.Render?.DisplayName ?? "an unnamed first opponent";
+            string secondOpponentName = SecondOpponent?.Render?.DisplayName ?? "an unnamed second opponent";
 
             if (firstDifficultyEvaluation != null)
             {
@@ -134,7 +134,7 @@ namespace XRL.World.Parts
 
             if (IgnoreSameCreatureType && Squarer.Blueprint == Opponent.Blueprint)
             {
-                Squarer.Think($"{opponentName} is the same type of creature as me, I already know I'm a better fighter than them!");
+                Squarer.Think($"{opponentName} is the same type of creature as me and I already know I'm a better fighter than them!");
                 return -1;
             }
 
@@ -184,6 +184,12 @@ namespace XRL.World.Parts
             return GetSquareUpScore(ParentObject, Target, Weight, IgnoreSameCreatureType);
         }
 
+        public bool SquareUp()
+        {
+            // Put square up logic here so it can be used in multiple events.
+            return true;
+        }
+
         public override void TurnTick(long TimeTick, int Amount)
         {
             if (TimeTick - StoredTurnTick > 3 && RecentlyAcquiredTarget)
@@ -213,7 +219,8 @@ namespace XRL.World.Parts
         {
             return base.WantEvent(ID, Cascade)
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
-                || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID);
+                || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
+                || (!RecentlyAcquiredTarget && ID == PooledEvent<AIBoredEvent>.ID);
         }
         public override bool HandleEvent(TakeOnRoleEvent E)
         {
@@ -278,7 +285,7 @@ namespace XRL.World.Parts
                     }
                     if (firstOpponent != null)
                     {
-                        if (firstOpponent == ParentObject.Target)
+                        if (firstOpponent != ParentObject.Target)
                         {
                             ParentObject.Think($"I will fight {firstOpponent.Render?.DisplayName ?? "an unnamed opponent"}!");
                             ParentObject.Brain.PushGoal(new Kill(firstOpponent, true));
