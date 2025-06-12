@@ -40,7 +40,7 @@ namespace XRL.World.Parts.Mutation
         private static int BlinkParticleSkipChance = 85;
 
         // Options 
-        private static bool MutationColor => UI.Options.MutationColor;
+        private static bool OptionMutationColor => UI.Options.MutationColor;
 
         // "Constants"
         public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
@@ -52,6 +52,9 @@ namespace XRL.World.Parts.Mutation
 
         public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
         public static readonly string BASE_TILE_COLOR = "&m";
+
+        public static readonly string BASE_SHOUT = "psssh...nothin personnel...kid...";
+        public static readonly string BASE_SHOUT_COLOR = "&m";
 
         public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
 
@@ -81,7 +84,10 @@ namespace XRL.World.Parts.Mutation
         public bool IsSteelCold = false;
 
         // Containers
+        [NonSerialized]
         public Guid BlinkActivatedAbilityID = Guid.Empty;
+
+        [NonSerialized]
         public Guid ColdSteelActivatedAbilityID = Guid.Empty;
 
         public AnimatedMaterialGeneric PrickleBallAnimation;
@@ -89,7 +95,8 @@ namespace XRL.World.Parts.Mutation
         [NonSerialized]
         public static Dictionary<int, BlinkPath> PathCache = new();
 
-        public class BlinkPath
+        [Serializable]
+        public class BlinkPath : IScribedPart
         {
             public bool Selected;
             public FindPath Path;
@@ -143,10 +150,32 @@ namespace XRL.World.Parts.Mutation
                 output += "//";
                 return output;
             }
+
+            public override void Write(GameObject Basis, SerializationWriter Writer)
+            {
+                base.Write(Basis, Writer);
+
+            }
+            public override void Read(GameObject Basis, SerializationReader Reader)
+            {
+                base.Read(Basis, Reader);
+
+            }
+
+            public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+            {
+                UD_Blink blink = base.DeepCopy(Parent, MapInv) as UD_Blink;
+
+                return blink;
+            }
         }
 
         // Part Parameters
         public bool Shouts;
+        public string Shout;
+        public string ShoutColor;
+
+        public bool DoNani;
 
         public bool PhysicalFeatures;
 
@@ -157,10 +186,13 @@ namespace XRL.World.Parts.Mutation
         public UD_Blink()
         {
             Shouts = true;
+            Shout = GetShout();
+            ShoutColor = GetShoutColor();
+            DoNani = true;
             PhysicalFeatures = false;
             ColorChange = true;
-            TileColor = string.Empty;
-            TileColorPriority = 0;
+            TileColor = BASE_TILE_COLOR;
+            TileColorPriority = BASE_TILE_COLOR_PRIORITY;
             PrickleBallAnimation = NewPrickleBallAnimationPart();
         }
 
@@ -256,6 +288,15 @@ namespace XRL.World.Parts.Mutation
         public int GetCooldownTurns()
         {
             return GetCooldownTurns(Level);
+        }
+
+        public string GetShout()
+        {
+            return Shout ?? BASE_SHOUT;
+        }
+        public string GetShoutColor()
+        {
+            return ShoutColor ?? TileColor ?? BASE_SHOUT;
         }
 
         public override string GetDescription()
@@ -389,7 +430,7 @@ namespace XRL.World.Parts.Mutation
             bool flag = ColorChange && !ParentObject.HasTagOrProperty(UDBM_NO_TILE_COLOR);
             if (flag && ParentObject.IsPlayerControlled())
             {
-                if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L && !MutationColor)
+                if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L && !OptionMutationColor)
                 {
                     flag = false;
                 }
@@ -1659,6 +1700,45 @@ namespace XRL.World.Parts.Mutation
                     Silent: false);
             }
             return base.FireEvent(E);
+        }
+
+        public override void Write(GameObject Basis, SerializationWriter Writer)
+        {
+            base.Write(Basis, Writer);
+
+            Writer.Write(BlinkActivatedAbilityID);
+            Writer.Write(ColdSteelActivatedAbilityID);
+            PrickleBallAnimation.Write(Basis, Writer);
+        }
+        public override void Read(GameObject Basis, SerializationReader Reader)
+        {
+            base.Read(Basis, Reader);
+
+            BlinkActivatedAbilityID = Reader.ReadGuid();
+            ColdSteelActivatedAbilityID = Reader.ReadGuid();
+            PrickleBallAnimation = Reader.ReadObject() as AnimatedMaterialGeneric;
+        }
+
+        public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+        {
+            UD_Blink blink = base.DeepCopy(Parent, MapInv) as UD_Blink;
+
+            if (blink.BlinkActivatedAbilityID != Guid.Empty)
+            {
+                blink.BlinkActivatedAbilityID = Guid.Empty;
+                blink.AddActivatedAbilityBlink();
+            }
+            if (blink.ColdSteelActivatedAbilityID != Guid.Empty)
+            {
+                blink.ColdSteelActivatedAbilityID = Guid.Empty;
+                blink.AddActivatedAbilityColdSteel();
+            }
+            if (blink.PrickleBallAnimation != null && blink.RemovePrickleBallAnimation())
+            {
+                blink.AddPrickleBallAnimation(out blink.PrickleBallAnimation);
+            }
+
+            return blink;
         }
 
         [WishCommand(Command = "set bpc")]

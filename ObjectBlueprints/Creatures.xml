@@ -24,7 +24,7 @@
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="2" />
     <part Name="Brain" Wanders="true" Factions="Prickle Pigs-100" />
     <part Name="Body" Anatomy="TailedBiped" />
-    <part Name="Description" Short="A small trembling spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
+    <part Name="Description" Short="A small trembling spheroid =verb.tumble= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
     <part Name="Corpse" CorpseChance="80" CorpseBlueprint="Prickle Pig Corpse" />
     <stat Name="Level" Value="14" />
     <stat Name="Speed" Value="125" />
@@ -34,7 +34,7 @@
     <skill Name="Acrobatics_Jump" />
     <skill Name="Tactics" />
     <skill Name="Tactics_Hurdle" />
-    <part Name="AISelfPreservation" Threshold="20" />
+    <part Name="AISelfPreservation" Threshold="30" />
     <skill Name="ShortBlades_Expertise" />
     <tag Name="Species" Value="prickle pig" />
     <tag Name="Genotype" Value="Prickle Pig" />
@@ -74,12 +74,13 @@
     <part Name="Render" DisplayName="burrowing prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
-    <part Name="Description" Short="A small stout spheroid scratches around =pronouns.possessive= surroundings seemingly searching for something... {{G|valuable}}. Possessed of =pronouns.reflexive=, =pronouns.subjective= =verb:pay:afterpronoun= little mind to would-be threats, unless, of course, they would serve as a perfect opportunity to show off =pronouns.possessive= {{R|martial}} {{Y|prowess}}." />
+    <part Name="Description" Short="A small stout spheroid =verb.scratch= around =pronouns.possessive= surroundings seemingly searching for something... {{G|valuable}}. Possessed of =pronouns.reflexive=, =pronouns.subjective= =verb:pay:afterpronoun= little mind to would-be threats, unless, of course, they would serve as a perfect opportunity to show off =pronouns.possessive= {{R|martial}} {{Y|prowess}}." />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="4" />
     <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
+    <part Name="AISelfPreservation" Threshold="20" />
     <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" />
     <stat Name="Level" Value="16" />
-    <stat Name="Speed" Value="110" />
     <tag Name="Subtype" Value="Relic Hunter" />
     <inventoryobject Blueprint="Spiked Climbers" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
     <removeinventoryobject Blueprint="Plastifer Gloves" />
@@ -91,16 +92,49 @@
     <part Name="Render" DisplayName="dark prickle pig"
           RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 
           ColorString="&amp;K" TileColor="&amp;K" DetailColor="r" />
+    <part Name="Description" Short="A small disaffected spheroid =verb.tumble= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
     <intproperty Name="RapidLevel_Blink" Value="6" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="6" />
     <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
-    <part Name="Description" Short="A small disaffected spheroid tumbles unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
-    <part Name="Brain" Wanders="true" Factions="Dark Prickle Pigs-100" />
+    <part Name="Brain" Wanders="true" Hostile="true" Factions="Dark Prickle Pigs-100,Prickle Pigs-50" />
     <stat Name="Level" Value="30" />
-    <stat Name="Speed" Value="135" />
     <tag Name="Subtype" Value="Imposter" />
     <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
+  </object>
+  
+  <object Name="Metal Prickle Pig" Inherits="BasePricklePig">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;b" TileColor="&amp;b" DetailColor="C" />
+    <part Name="Description" Short="A small jittery spheroid =verb.whir= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{w|fleshier}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{r|{{W|m}}arv{{Y|e}}l}} of {{r|{{W|e}}ngin{{Y|e}}ering}}- Yosh! Those blue prickle pigs had better watch out, lest they find themselves equally {{c|mechanized}}." />
+    <builder Name="Roboticized" ChanceOneIn="1" />
+    <tag Name="Gender" Value="neuter" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b" Shouts="true" PhysicalFeatures="false" />
+    <intproperty Name="RapidLevel_UD_Blink" Value="9" />
+    <intproperty Name="RapidLevel_Blink" Value="9" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="8" />
+    <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
+    <part Name="Brain" Wanders="true" Hostile="true" Factions="Dark Prickle Pigs-100,Robots-50" />
+    <removepart Name="AISelfPreservation" />
+    <stat Name="Level" Value="40" />
+    <tag Name="Subtype" Value="Imposter" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="100" IntProperties="AlwaysEquipAsArmor:1" />
+    <inventoryobject Blueprint="MetalPricklePig_Bite" Number="1" Chance="100" />
+    <inventoryobject Blueprint="MetalPricklePig_Claw" Number="2" Chance="100" />
+  </object>
+  <object Name="MetalPricklePig_Bite" Inherits="PricklePig_Bite">
+    <part Name="Render" DisplayName="metal bite" ColorString="&amp;C" />
+    <part Name="MeleeWeapon" BaseDamage="3d3+3" />
+    <part Name="Metal" />
+  </object>
+  <object Name="MetalPricklePig_Claw" Inherits="NaturalWeapon">
+    <part Name="Render" DisplayName="metal claw" Tile="Creatures/natural-weapon-claw.bmp" ColorString="&amp;C" />
+    <part Name="MeleeWeapon" BaseDamage="3d3+3" Skill="ShortBlades" Stat="Strength" Slot="Hand" />
+    <part Name="Metal" />
   </object>
   
 </objects>
