@@ -171,6 +171,8 @@ namespace XRL.World.Parts.Mutation
         }
 
         // Part Parameters
+        public int BaseRange;
+
         public bool Shouts;
         public string Shout;
         public string ShoutColor;
@@ -185,6 +187,7 @@ namespace XRL.World.Parts.Mutation
 
         public UD_Blink()
         {
+            BaseRange = 3;
             Shouts = true;
             Shout = GetShout();
             ShoutColor = GetShoutColor();
@@ -235,21 +238,21 @@ namespace XRL.World.Parts.Mutation
             }
             return false;
         }
-        public static int GetBlinkRange(int Level)
+        public static int GetBlinkRange(int Level, int BaseRange = 3)
         {
-            return 3 + (int)Math.Min(9, Math.Floor(Level / 2.0));
+            return BaseRange + (int)Math.Min(9, Math.Floor(Level / 2.0));
         }
         public static int GetBlinkRange(GameObject Blinker)
         {
             if (Blinker.TryGetPart(out UD_Blink blink))
             {
-                return GetBlinkRange(blink.Level);
+                return GetBlinkRange(blink.Level, blink.BaseRange);
             }
             return 0;
         }
         public int GetBlinkRange()
         {
-            return GetBlinkRange(Level);
+            return GetBlinkRange(Level, BaseRange);
         }
 
         public static string GetColdSteelDamage(int Level)
@@ -312,7 +315,7 @@ namespace XRL.World.Parts.Mutation
         public override void CollectStats(Templates.StatCollector stats, int Level)
         {
             stats.Set("BornWith", BornWith, changes: false);
-            stats.Set("BlinkRange", GetBlinkRange(Level));
+            stats.Set("BlinkRange", GetBlinkRange(Level, BaseRange));
             stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
         }
@@ -320,7 +323,7 @@ namespace XRL.World.Parts.Mutation
         public override string GetLevelText(int Level)
         {
             StringBuilder SB = Event.NewStringBuilder();
-            SB.Append("You may blink up to ").AppendRule($"{GetBlinkRange(Level)} tiles").Append(" in a direction of your choosing.");
+            SB.Append("You may blink up to ").AppendRule($"{GetBlinkRange(Level, BaseRange)} tiles").Append(" in a direction of your choosing.");
             SB.AppendLine();
             SB.Append("With ").AppendColdSteel("Cold Steel").Append(" active, blinking through a hostile creature teleports you behind them and deals ");
             SB.AppendRule($"{GetColdSteelDamage(Level)} ").AppendColored("m", "unblockable").AppendRule(" damage.");
@@ -948,7 +951,6 @@ namespace XRL.World.Parts.Mutation
                     Good: KidDestination != null, Indent: 2, Toggle: getDoDebug());
             }
 
-
             Debug.Entry(4, $"Playing world sound {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             Blinker?.PlayWorldSound(BLINK_SOUND);
 
@@ -982,8 +984,6 @@ namespace XRL.World.Parts.Mutation
                 if (!isNani)
                 {
                     Debug.CheckYeh(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
-
-
 
                     Debug.Entry(4, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: 2, Toggle: getDoDebug());
                     bool attacked = 
@@ -1100,10 +1100,14 @@ namespace XRL.World.Parts.Mutation
         public static bool PerformNothinPersonnel(GameObject Blinker, GameObject Kid)
         {
             if (Blinker == null || Kid == null)
+            {
                 return false;
+            }
 
             if (!Blinker.TryGetPart(out UD_Blink blink))
+            {
                 return false;
+            }
 
             CombatJuice.punch(Blinker, Kid);
             int amount = Stat.Roll(blink.GetColdSteelDamage());

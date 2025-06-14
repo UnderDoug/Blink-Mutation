@@ -134,7 +134,7 @@
           TileColor="&amp;W" DetailColor="Y" />
     <part Name="Commerce" Value="50" />
     <part Name="Description" Short="Some internal force imposes uprightedness on this toroid, although its manner of construction appears otherwise mundane." />
-    <part Name="Physics" Weight="3" />
+    <part Name="Physics" Weight="-1" />
     <part Name="ItemElements" Elements="jewels::6" />
     <part Name="Metal" />
     <tag Name="EquipSound" Value="sfx_equip_material_coin" />
@@ -149,9 +149,9 @@
        3: Gems
        
    -->
-  <object Name="Master Emerald" Inherits="Polished Emerald">
-    <part Name="Render" DisplayName="{{W|Master}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="W" />
-    <part Name="Physics" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" />
+  <object Name="BaseMasterEmerald" Inherits="Polished Emerald">
+    <part Name="Render" DisplayName="[master emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" />
+    <part Name="Physics" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="-5" />
     <part Name="Armor" AV="6" DV="6" Willpower="8" SpeedBonus="40" WornOn="Floating Nearby" />
     <part Name="LightSource" Lit="true" Radius="5" />
     <part Name="Commerce" Value="2200" />
@@ -175,12 +175,13 @@
     <part Name="SolarArray" ChargeRate="5" />
     <part Name="BroadcastPowerReceiver" />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" />
-    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{W|Master}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
+    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{Y|Master}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
-    <tag Name="EquipmentFrameColors" Value="WGYg" />
+    <tag Name="EquipmentFrameColors" Value="yGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_glass" />
     <xtagGrammar Proper="true" />
     <tag Name="IndefiniteArticle" Value="the" />
+    <part Name="ModSturdy" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
     <part Name="TakenAccomplishment" Text="You acquired a most powerful relic, =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonphrases.prized.!random&gt; relic. =player.Subjective= took the gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.refname=. " />
@@ -188,7 +189,57 @@
     <stag Name="Travel" />
     <stag Name="Movement" />
     <stag Name="Precious" />
-    <stag Name="Precious" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Green Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{G|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yGYg" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Red Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{R|Emerald}}" ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{R|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yRYr" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Blue Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{B|Emerald}}" ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{B|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yBYb" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Yellow Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{W|Emerald}}" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{W|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yWYw" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Cyan Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{C|Emerald}}" ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{C|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yCYc" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Pink Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{M|Emerald}}" ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{M|Emerald}}" />
+    <tag Name="EquipmentFrameColors" Value="yMYm" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="Orange Master Emerald" Inherits="BaseMasterEmerald">
+    <part Name="Render" DisplayName="{{Y|Master}} {{O|Emerald}}" ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{O|Emerald}}" />
+    <part Name="ModExtradimensional" />
+    <tag Name="EquipmentFrameColors" Value="yOYo" />
     <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
     <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
