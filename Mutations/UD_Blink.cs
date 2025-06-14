@@ -1509,6 +1509,7 @@ namespace XRL.World.Parts.Mutation
 
                             Arrive(ParentObject.CurrentCell.GetCellFromDirection(Direction), ParentObject.CurrentCell, Life: 8, Color1: "C", Symbol1: "\u203C", Color2: "Y", Symbol2: "\u221E");
 
+                            energyCost = (int)(energyCost * 1.25f);
                             blinkThink += $"We Go Again";
                         }
                         else
