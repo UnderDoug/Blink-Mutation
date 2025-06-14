@@ -165,7 +165,7 @@
     <tag Name="Mods" Value="None" />
     <tag Name="Tier" Value="8" />
     <tag Name="NoEffects" />
-    <part Name="Examiner" Complexity="8" Difficulty="3" Alternate="Polished Emerald" />
+    <part Name="Examiner" Complexity="8" Difficulty="3" Unknown="Rough Emerald" Alternate="Polished Emerald" />
     <part Name="ItemElements" Elements="might::10" />
     <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
     <part Name="MutationOnEquip" ClassName="Telepathy" />
