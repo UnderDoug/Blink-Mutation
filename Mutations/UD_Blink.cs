@@ -90,7 +90,7 @@ namespace XRL.World.Parts.Mutation
         [NonSerialized]
         public Guid ColdSteelActivatedAbilityID = Guid.Empty;
 
-        public AnimatedMaterialGeneric PrickleBallAnimation;
+        public AnimatedMaterialGeneric PrickleBallAnimation => NewPrickleBallAnimationPart();
 
         [NonSerialized]
         public static Dictionary<int, BlinkPath> PathCache = new();
@@ -196,7 +196,6 @@ namespace XRL.World.Parts.Mutation
             ColorChange = true;
             TileColor = BASE_TILE_COLOR;
             TileColorPriority = BASE_TILE_COLOR_PRIORITY;
-            PrickleBallAnimation = NewPrickleBallAnimationPart();
         }
 
         public static AnimatedMaterialGeneric NewPrickleBallAnimationPart(AnimatedMaterialGeneric Source = null)
@@ -1137,9 +1136,9 @@ namespace XRL.World.Parts.Mutation
 
             AnimatedMaterialGeneric prickleBallAnimation = null;
             UD_Blink blink = Blinker.GetPart<UD_Blink>();
-            if (IsBornThisWay(Blinker) && AddPrickleBallAnimation(Blinker, out prickleBallAnimation) && blink != null)
-            { 
-                blink.PrickleBallAnimation = prickleBallAnimation;
+            if (IsBornThisWay(Blinker) && blink != null)
+            {
+                AddPrickleBallAnimation(Blinker);
             }
 
             Cell origin = Blinker.CurrentCell;
@@ -1255,12 +1254,11 @@ namespace XRL.World.Parts.Mutation
             scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
         }
 
-        public static bool AddPrickleBallAnimation(GameObject PricklePig, out AnimatedMaterialGeneric PrickleBallAnimation)
+        public static bool AddPrickleBallAnimation(GameObject PricklePig)
         {
-            PrickleBallAnimation = null;
             if (PricklePig != null)
             {
-                if (!PricklePig.TryGetPart(out PrickleBallAnimation))
+                if (!PricklePig.TryGetPart(out AnimatedMaterialGeneric PrickleBallAnimation))
                 {
                     PrickleBallAnimation = PricklePig.RequirePart<AnimatedMaterialGeneric>();
                 }
@@ -1269,18 +1267,19 @@ namespace XRL.World.Parts.Mutation
             }
             return false;
         }
-        public bool AddPrickleBallAnimation(out AnimatedMaterialGeneric PrickleBallAnimation)
+        public bool AddPrickleBallAnimation()
         {
-            return AddPrickleBallAnimation(ParentObject, out PrickleBallAnimation);
+            return AddPrickleBallAnimation(ParentObject);
         }
 
         public static bool RemovePrickleBallAnimation(GameObject PricklePig, AnimatedMaterialGeneric PrickleBallAnimation)
         {
             if (PricklePig != null && PrickleBallAnimation != null)
             {
-                if (PricklePig.TryGetPart(out AnimatedMaterialGeneric animatedMaterialPart) && animatedMaterialPart == PrickleBallAnimation)
+                if (PricklePig.TryGetPart(out AnimatedMaterialGeneric animatedMaterialPart) 
+                    && animatedMaterialPart.TileAnimationFrames == PrickleBallAnimation.TileAnimationFrames)
                 {
-                    PricklePig.RemovePart(PrickleBallAnimation);
+                    PricklePig.RemovePart<AnimatedMaterialGeneric>();
                     return PricklePig.HasPart<AnimatedMaterialGeneric>();
                 }
             }
@@ -1351,7 +1350,7 @@ namespace XRL.World.Parts.Mutation
             {
                 if (ParentObject.HasEffectDescendedFrom<Running>() && !IsAnimatedBall)
                 {
-                    AddPrickleBallAnimation(out PrickleBallAnimation);
+                    AddPrickleBallAnimation();
                 }
                 if (!ParentObject.HasEffectDescendedFrom<Running>() && IsAnimatedBall)
                 {
@@ -1655,7 +1654,7 @@ namespace XRL.World.Parts.Mutation
                 Debug.CheckYeh(4, $"Attempting to add {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
-                AddPrickleBallAnimation(out PrickleBallAnimation);
+                AddPrickleBallAnimation();
 
                 Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
                     Good: ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
@@ -1678,10 +1677,10 @@ namespace XRL.World.Parts.Mutation
                 Debug.CheckYeh(4, $"Attempting to remove {nameof(PrickleBallAnimation)}",
                     Indent: 1, Toggle: getDoDebug());
 
-                RemovePrickleBallAnimation();
+                bool removedAnimation = RemovePrickleBallAnimation();
 
                 Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
-                    Good: !ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
+                    Good: !removedAnimation, Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
         }
@@ -1713,7 +1712,6 @@ namespace XRL.World.Parts.Mutation
 
             Writer.Write(BlinkActivatedAbilityID);
             Writer.Write(ColdSteelActivatedAbilityID);
-            PrickleBallAnimation.Write(Basis, Writer);
         }
         public override void Read(GameObject Basis, SerializationReader Reader)
         {
@@ -1721,7 +1719,6 @@ namespace XRL.World.Parts.Mutation
 
             BlinkActivatedAbilityID = Reader.ReadGuid();
             ColdSteelActivatedAbilityID = Reader.ReadGuid();
-            PrickleBallAnimation = Reader.ReadObject() as AnimatedMaterialGeneric;
         }
 
         public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
@@ -1738,9 +1735,9 @@ namespace XRL.World.Parts.Mutation
                 blink.ColdSteelActivatedAbilityID = Guid.Empty;
                 blink.AddActivatedAbilityColdSteel();
             }
-            if (blink.PrickleBallAnimation != null && blink.RemovePrickleBallAnimation())
+            if (Parent.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) && animatedMaterialGeneric.SameAs(blink.PrickleBallAnimation) && blink.RemovePrickleBallAnimation())
             {
-                blink.AddPrickleBallAnimation(out blink.PrickleBallAnimation);
+                blink.AddPrickleBallAnimation();
             }
 
             return blink;

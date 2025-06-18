@@ -12,6 +12,8 @@ namespace XRL.World.Parts
 
         public string EntryName = "Flaming Ray";
 
+        public string Variant = null;
+
         public string MutationDisplayName => MutationEntry?.Name ?? EntryName;
 
         public string ClassName => MutationEntry?.Class;
@@ -101,7 +103,7 @@ namespace XRL.World.Parts
             NameForStatus = $"{ClassName ?? EntryName.Replace(" ", "")}Amp";
             return who.RequirePart<Mutations>().AddMutationMod(
                     Mutation: MutationEntry,
-                    Variant: null,
+                    Variant: Variant,
                     Level: Tier,
                     SourceType: Mutations.MutationModifierTracker.SourceType.Equipment,
                     SourceName: ParentObject.DisplayName);
