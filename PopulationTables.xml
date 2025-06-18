@@ -107,7 +107,7 @@
   </population>
 
   <population Name="RuinsPerSector">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <table Weight="500" Number="2-3" Name="Prickle Pig Relic Hunting Party" />
       <table Weight="500" Number="1" Name="Fighting Prickle Pigs" />
       <group Weight="500" Name="Combined Prickle Pig Encounters" Style="pickeach">
@@ -127,7 +127,7 @@
   </population>
 
   <population Name="BaroqueRuinsPerSector">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <group Weight="800" Name="Combined Prickle Pig Encounters" Style="pickeach">
         <object Chance="50" Number="1-3" Blueprint="Prickle Pig" />
         <table Number="3-4" Name="Prickle Pig Relic Hunting Party" />
@@ -138,7 +138,7 @@
   </population>
 
   <population Name="CommonOddEncounters">
-    <group Name="Types" Load="Merge">
+    <group Name="Types" Style="pickone" Load="Merge">
       <group Weight="100" Name="Combined Prickle Pig Encounters" Style="pickeach">
         <table Number="1-2" Name="Prickle Pig Relic Hunting Party" />
         <table Number="1" Name="Fighting Prickle Pigs" />
@@ -148,21 +148,21 @@
   </population>
 
   <population Name="FlowerFieldsPopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Chance="10" Number="1d2" Blueprint="Prickle Pig" />
       <table Weight="5" Number="1-3" Name="DynamicInheritsTable:BasePricklePig:Tier{zonetier}" />
     </group>
   </population>
 
   <population Name="DesertCanyonCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Chance="10" Number="1d2" Blueprint="Prickle Pig" />
       <table Weight="5" Number="1-3" Name="DynamicInheritsTable:BasePricklePig:Tier{zonetier}" />
     </group>
   </population>
 
   <population Name="SaltDuneCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <group Name="Prickle Pigs" Style="pickeach" Weight="5" >
         <object Number="1d2" Blueprint="Prickle Pig" />
         <table Chance="1" Number="1" Name="Prickle Pig Relic Hunting Party" />
@@ -171,46 +171,46 @@
   </population>
 
   <population Name="HillCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1-2" Blueprint="Prickle Pig" />
       <table Weight="1" Number="1-3" Name="DynamicInheritsTable:BasePricklePig:Tier{zonetier}" />
     </group>
   </population>
 
   <population Name="MountainCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1-2" Blueprint="Prickle Pig" />
       <table Weight="1" Number="1-3" Name="DynamicInheritsTable:BasePricklePig:Tier{zonetier}" />
     </group>
   </population>
 
   <population Name="FlowerfieldCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1-3" Blueprint="Prickle Pig" />
     </group>
   </population>
 
   <population Name="JungleCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1-3" Blueprint="Prickle Pig" />
       <object Weight="1" Number="1" Blueprint="Burrowing Prickle Pig" />
     </group>
   </population>
 
   <population Name="BananaGroveCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="2-4" Blueprint="Burrowing Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier2CaveCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1" Blueprint="Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier5CaveCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="2-3" Blueprint="Prickle Pig" />
       <object Weight="5" Number="1" Blueprint="Burrowing Prickle Pig" />
       <object Weight="1" Number="1" Blueprint="Dark Prickle Pig" />
@@ -218,14 +218,14 @@
   </population>
 
   <population Name="Tier3CavePopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1-2" Blueprint="Prickle Pig" />
       <object Weight="1" Number="1" Blueprint="Burrowing Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier4CavePopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="2-4" Blueprint="Prickle Pig" />
       <object Weight="10" Number="1-2" Blueprint="Burrowing Prickle Pig" />
       <table Weight="1" Number="1" Name="Prickle Pig Relic Hunting Party" />
@@ -233,7 +233,7 @@
   </population>
 
   <population Name="Tier6CavePopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1-2" Blueprint="Burrowing Prickle Pig" />
       <object Weight="5" Number="1" Blueprint="Dark Prickle Pig" />
       <table Weight="4" Number="1" Name="Prickle Pig Relic Hunting Party" />
@@ -243,7 +243,7 @@
   </population>
 
   <population Name="Tier7CavePopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1" Blueprint="Dark Prickle Pig" />
       <table Weight="9" Number="1" Name="Prickle Pig Relic Hunting Party" />
       <table Weight="1" Number="1-2" Name="Prickle Pig Relic Hunting Party" />
@@ -254,32 +254,32 @@
   </population>
 
   <population Name="Tier8CavePopulation">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <table Weight="1" Number="1" Name="Metal Prickle Pig Slaughter" />
     </group>
   </population>
 
   <population Name="Tier1RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1d3" Blueprint="Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier2RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1d3" Blueprint="Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier3RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="2d3" Blueprint="Prickle Pig" />
       <object Weight="1" Number="1" Blueprint="Burrowing Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier4RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="3d2" Blueprint="Prickle Pig" />
       <object Weight="10" Number="1d2" Blueprint="Burrowing Prickle Pig" />
       <table Weight="1" Number="1" Name="Prickle Pig Relic Hunting Party" />
@@ -287,21 +287,21 @@
   </population>
 
   <population Name="Tier5RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="2d2" Blueprint="Burrowing Prickle Pig" />
       <table Weight="10" Number="1" Name="Prickle Pig Relic Hunting Party" />
     </group>
   </population>
 
   <population Name="Tier6RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="2d2" Blueprint="Burrowing Prickle Pig" />
       <table Weight="10" Number="1" Name="Prickle Pig Relic Hunting Party" />
     </group>
   </population>
 
   <population Name="Tier7RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1" Blueprint="Dark Prickle Pig" />
       <table Weight="9" Number="1" Name="Prickle Pig Relic Hunting Party" />
       <table Weight="1" Number="1-2" Name="Prickle Pig Relic Hunting Party" />
@@ -311,13 +311,13 @@
   </population>
 
   <population Name="Tier7RuinsRobots">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="10" Number="1" Blueprint="Metal Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier8RuinsCreatures">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="2-3" Blueprint="Dark Prickle Pig" />
       <table Weight="10" Number="1-2" Name="Prickle Pig Relic Hunting Party" />
       <table Weight="5" Number="1-2" Name="Fighting Prickle Pigs" />
@@ -326,19 +326,19 @@
   </population>
 
   <population Name="Tier8RuinsRobots">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <object Weight="5" Number="1" Blueprint="Metal Prickle Pig" />
     </group>
   </population>
 
   <population Name="Tier4BossEncounter">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <table Weight="4" Number="1" Name="Prickle Pig Relic Hunting Party" />
     </group>
   </population>
 
   <population Name="Tier5BossEncounter">
-    <group Name="Creatures" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <table Weight="4" Number="1" Name="Fighting Prickle Pigs" />
     </group>
   </population>

@@ -1280,7 +1280,7 @@ namespace XRL.World.Parts.Mutation
                     && animatedMaterialPart.TileAnimationFrames == PrickleBallAnimation.TileAnimationFrames)
                 {
                     PricklePig.RemovePart<AnimatedMaterialGeneric>();
-                    return PricklePig.HasPart<AnimatedMaterialGeneric>();
+                    return !PricklePig.HasPart<AnimatedMaterialGeneric>();
                 }
             }
             return false;
@@ -1541,6 +1541,10 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
+            if (!ParentObject.IsFleeing())
+            {
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, SetState: true);
+            }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 25.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
             {
                 E.Actor.Think($"I want to attack {E.Target.ShortDisplayNameStripped}");
@@ -1563,6 +1567,10 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(AIGetRetreatAbilityListEvent E)
         {
+            if (ParentObject.IsFleeing())
+            {
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, SetState: false);
+            }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 100.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
             {
                 E.Actor.Think($"I want to retreat from {E.Target.ShortDisplayNameStripped}");
@@ -1679,7 +1687,7 @@ namespace XRL.World.Parts.Mutation
 
                 bool removedAnimation = RemovePrickleBallAnimation();
 
-                Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
+                Debug.LoopItem(4, $"Removed {nameof(PrickleBallAnimation)}?",
                     Good: !removedAnimation, Indent: 2, Toggle: getDoDebug());
             }
             return base.HandleEvent(E);
@@ -1688,7 +1696,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.ID == COMMAND_UD_COLDSTEEL_ABILITY)
             {
-                IsNothinPersonnelKid = !IsNothinPersonnelKid;
+                IsNothinPersonnelKid = IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
             }
             if (E.ID == COMMAND_UD_BLINK_ABILITY)
             {
