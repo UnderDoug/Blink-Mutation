@@ -45,11 +45,9 @@
     <inventoryobject Blueprint="PricklePig_Bite" Number="1" />
     <!-- inventoryobject Blueprint="Master Emerald" Number="1" IntProperties="AlwaysEquipAsArmor:1" /-->
     <inventoryobject Blueprint="Plastifer Gloves" Number="1" Chance="75" IntProperties="AlwaysEquipAsArmor:1" />
-    <tag Name="InventoryPopulationTable" Value="HumanoidEquipment Broad" />
+    <tag Name="InventoryPopulationTable" Value="Prickle Pig Equipment Broad" />
     <inventoryobject Blueprint="Gold Ring" IntProperties="AlwaysEquipAsArmor:1" Number="0-4" />
     <inventoryobject Blueprint="Waterskin" Number="0-2" />
-    <inventoryobject Blueprint="@Junk 4" Number="1d4" />
-    <inventoryobject Blueprint="@Junk 5" Number="1d4" />
   </object>
   <object Name="PricklePig_Bite" Inherits="Bite">
     <part Name="MeleeWeapon" BaseDamage="1d3+1" />
