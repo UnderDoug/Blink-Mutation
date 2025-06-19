@@ -82,14 +82,14 @@
 
   <population Name="RuinsPerSector" Load="Merge">
     <group Name="Creatures" Load="Merge">
-      <table Weight="500" Number="2-3" Name="Prickle Pig Relic Hunting Party" />
-      <table Weight="500" Number="1" Name="Fighting Prickle Pigs" />
-      <group Weight="500" Name="Combined Prickle Pig Encounters" Style="pickeach">
+      <table Weight="150" Number="2-3" Name="Prickle Pig Relic Hunting Party" />
+      <table Weight="150" Number="1" Name="Fighting Prickle Pigs" />
+      <group Weight="150" Name="Combined Prickle Pig Encounters" Style="pickeach">
         <table Number="1-2" Name="Prickle Pig Relic Hunting Party" />
         <table Number="1" Name="Fighting Prickle Pigs" />
         <object Chance="50" Number="1" Blueprint="Metal Prickle Pig" />
       </group>
-      <object Chance="250" Number="1" Blueprint="Metal Prickle Pig" />
+      <object Weight="25" Number="1" Blueprint="Metal Prickle Pig" />
     </group>
   </population>
 
@@ -102,7 +102,7 @@
 
   <population Name="BaroqueRuinsPerSector" Load="Merge">
     <group Name="Creatures" Load="Merge">
-      <group Weight="800" Name="Combined Prickle Pig Encounters" Style="pickeach">
+      <group Weight="500" Name="Combined Prickle Pig Encounters" Style="pickeach">
         <object Chance="50" Number="1-3" Blueprint="Prickle Pig" />
         <table Number="3-4" Name="Prickle Pig Relic Hunting Party" />
         <table Number="1" Name="Fighting Prickle Pigs" />
@@ -324,6 +324,11 @@
       <table Weight="5" Number="1" Name="Metal Prickle Pig Slaughter" />
     </group>
   </population>
+
+  <population Name="Aleksh_DeepCaves" Load="MergeIfExists">
+    <object Chance="1" Number="1" Blueprint="Metal Prickle Pig" />
+    <table Chance="1" Number="0-1" Name="Metal Prickle Pig Slaughter" />
+  </population>
   
   <!-- 
   
@@ -346,8 +351,8 @@
       <object Number="1-2" Blueprint="Prickle Pig" />
       <object Number="1-2" Blueprint="Burrowing Prickle Pig" />
       <object Number="6-9" Blueprint="Garbage" Hint="AdjacentToEndsWith:Prickle Pig" />
-      <table Chance="10" Number="1" Name="DynamicObjectsTable:Corpses:Tier{zonetier}" Hint="AdjacentTo:Dark Prickle Pig" />
-      <object Chance="50" Number="1-3" Blueprint="Bloodsplatter" Hint="AdjacentTo:Dark Prickle Pig" />
+      <table Chance="10" Number="1" Name="DynamicObjectsTable:Corpses:Tier{zonetier}" Hint="AdjacentToBlueprint:Dark Prickle Pig" />
+      <object Chance="50" Number="1-3" Blueprint="Bloodsplatter" Hint="AdjacentToBlueprint:Dark Prickle Pig" />
     </group>
   </population>
   
@@ -357,7 +362,7 @@
       <object Number="1-3" Blueprint="Prickle Pig" />
       <object Number="1-2" Blueprint="Burrowing Prickle Pig" />
       <object Number="6-9" Blueprint="Garbage" Hint="AdjacentToEndsWith:Prickle Pig" />
-      <object Number="2-5" Name="Prickle Pig Corpse"  Hint="AdjacentTo:Metal Prickle Pig" />
+      <object Number="2-5" Name="Prickle Pig Corpse"  Hint="AdjacentToBlueprint:Metal Prickle Pig" />
       <object Number="1-3" Blueprint="Bloodsplatter" Hint="AdjacentToEndsWith:Corpse" />
     </group>
   </population>

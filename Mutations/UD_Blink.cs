@@ -66,7 +66,7 @@ namespace XRL.World.Parts.Mutation
             IsBornThisWay(ParentObject)
          && PrickleBallAnimation != null
          && ParentObject.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
-         && animatedMaterialGeneric == PrickleBallAnimation;
+         && animatedMaterialGeneric.TileAnimationFrames == PrickleBallAnimation.TileAnimationFrames;
 
         public bool IsNothinPersonnelKid 
         { 
@@ -1743,7 +1743,9 @@ namespace XRL.World.Parts.Mutation
                 blink.ColdSteelActivatedAbilityID = Guid.Empty;
                 blink.AddActivatedAbilityColdSteel();
             }
-            if (Parent.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) && animatedMaterialGeneric.SameAs(blink.PrickleBallAnimation) && blink.RemovePrickleBallAnimation())
+            if (Parent.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
+                && animatedMaterialGeneric.TileAnimationFrames == blink.PrickleBallAnimation.TileAnimationFrames
+                && blink.RemovePrickleBallAnimation())
             {
                 blink.AddPrickleBallAnimation();
             }
