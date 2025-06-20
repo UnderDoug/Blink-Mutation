@@ -30,7 +30,7 @@
     <part Name="Body" Anatomy="TailedBiped" />
     <part Name="Description" Short="A small trembling spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
     <part Name="Corpse" CorpseChance="80" CorpseBlueprint="Prickle Pig Corpse" />
-    <stat Name="Hitpoints" sValue="5,2d4,(18d(t-1)+((t-1)*12))/(4-(t/2))" />
+    <stat Name="Hitpoints" sValue="5,2d4,(18d(t-1)+((t-1)*12))/(4-(t/4))" />
     <stat Name="Level" Value="8" />
     <stat Name="Speed" Value="110" />
     <part Name="Swarmer" />
