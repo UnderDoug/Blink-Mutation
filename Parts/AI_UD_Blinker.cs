@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Text;
 
+using XRL.World.AI.GoalHandlers;
 using XRL.World.Parts.Mutation;
 
 using UD_Blink_Mutation;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -23,13 +25,15 @@ namespace XRL.World.Parts
 
         public long BlunkTurnThreshold => HasBlink 
             ? BlinkMutation.GetMyActivatedAbilityCooldown(BlinkMutation.BlinkActivatedAbilityID) 
-            : Math.Max(5, 60 - (BlinkLevel * 5));
+            : Math.Max(5, BaseCooldown - (BlinkLevel * CooldownFactor));
 
         private long StoredTurnTickForBlunk = 0L;
 
         public UD_Blink BlinkMutation => ParentObject?.GetPart<UD_Blink>();
         public bool HasBlink => BlinkMutation != null;
 
+        public int CooldownFactor = 5;
+        public int BaseCooldown = 60;
         public int BlinkLevel = 5;
         public int BaseRange = 3;
         public int Range => HasBlink ? BlinkMutation.GetBlinkRange() : UD_Blink.GetBlinkRange(BlinkLevel, BaseRange);
@@ -70,19 +74,12 @@ namespace XRL.World.Parts
         {
             return base.WantEvent(ID, Cascade)
                 || ID == GetItemElementsEvent.ID
+                || ID == ActorGetNavigationWeightEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
                 || ID == AIGetRetreatAbilityListEvent.ID
                 || ID == AIGetMovementAbilityListEvent.ID
                 || (!RecentlyBlunk && ID == SingletonEvent<BeginTakeActionEvent>.ID)
                 || ID == CommandEvent.ID;
-        }
-        public override bool HandleEvent(GetItemElementsEvent E)
-        {
-            if (E.IsRelevantCreature(ParentObject))
-            {
-                E.Add("travel", BlinkLevel/2);
-            }
-            return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
@@ -100,6 +97,10 @@ namespace XRL.World.Parts
                 SB.Append(VANDR).Append($"[{HasBlink.YehNah()}]{HONLY}{nameof(HasBlink)}: ").AppendColored("B", $"{HasBlink}");
                 SB.AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("G", $"{BlinkLevel}").Append($"){HONLY}{nameof(BlinkLevel)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseCooldown}").Append($"){HONLY}{nameof(BaseCooldown)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{CooldownFactor}").Append($"){HONLY}{nameof(CooldownFactor)}");
                 SB.AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseRange}").Append($"){HONLY}{nameof(BaseRange)}");
                 SB.AppendLine();
@@ -127,6 +128,36 @@ namespace XRL.World.Parts
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(GetItemElementsEvent E)
+        {
+            if (E.IsRelevantCreature(ParentObject))
+            {
+                E.Add("travel", BlinkLevel/2);
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(ActorGetNavigationWeightEvent E)
+        {
+            if (E.Actor == ParentObject && E.Actor.IsPlayerControlled() && !RecentlyBlunk && !E.Actor.IsFleeing() && E.Actor.HasGoal(nameof(Kill)))
+            {
+                int penalty = 15;
+                Cell targetCell = E.Actor.Target.CurrentCell;
+                Cell navCell = E.Cell;
+                if (targetCell.IsInOrthogonalDirectionWith(navCell))
+                {
+                    penalty -= 15;
+                }
+                foreach (Cell navAdjacentCell in navCell.GetAdjacentCells())
+                {
+                    if (targetCell.IsInOrthogonalDirectionWith(navAdjacentCell))
+                    {
+                        penalty -= 3;
+                    }
+                }
+                E.MinWeight(penalty);
             }
             return base.HandleEvent(E);
         }
