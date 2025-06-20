@@ -319,13 +319,13 @@
 
   <population Name="Tier8BossEncounter" Load="Merge">
     <table Chance="0" Number="0" Name="Tier5BossEncounter" Load="Merge" />
-    <group Name="Creatures" Style="pickone">
+    <group Name="Creatures" Style="pickone" Load="Merge">
       <table Weight="10" Name="Tier5BossEncounter" />
       <table Weight="5" Number="1" Name="Metal Prickle Pig Slaughter" />
     </group>
   </population>
 
-  <population Name="Aleksh_DeepCaves" Load="MergeIfExists">
+  <population Name="Aleksh_DeepCaves" Load="Merge">
     <object Chance="1" Number="1" Blueprint="Metal Prickle Pig" />
     <table Chance="1" Number="0-1" Name="Metal Prickle Pig Slaughter" />
   </population>

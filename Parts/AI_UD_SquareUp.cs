@@ -1,17 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Security.Policy;
 using System.Text;
-using UD_Blink_Mutation;
-using UnityEngine;
-using UnityEngine.SocialPlatforms.Impl;
+
 using XRL.Rules;
-using XRL.UI;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
-using XRL.World.Tinkering;
+
+using UD_Blink_Mutation;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -27,17 +23,19 @@ namespace XRL.World.Parts
 
         private bool RecentlyAcquiredTarget = false;
 
-        public long AcquiredTargetTurnThreshold = 3L;
+        public long AcquiredTargetTurnThreshold = 8L;
         private long StoredTurnTickForAcquiredTarget = 0L;
 
         public long SquareUpCacheTurnThreshold = 3600L;
         private long StoredTurnTickForSquareUpCache = 0L;
 
+        public Dictionary<string, int> SquareUpCache = new();
+
+        public GameObject CurrentSquareUpTarget = null;
+
         public bool IgnoreSameCreatureType = false;
 
         public bool IgnoreSameFaction = false;
-
-        public Dictionary<string, int> SquareUpCache = new();
 
         public static GameObject GetMoreWorthyOpponent(GameObject Squarer, GameObject FirstOpponent, GameObject SecondOpponent, ref Dictionary<string, int> SquareUpCache, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false)
         {
@@ -229,7 +227,7 @@ namespace XRL.World.Parts
             return GetSquareUpScore(ParentObject, Target, ref SquareUpCache, Weight, WeightReason, IgnoreSameCreatureType, IgnoreSameFaction);
         }
 
-        public static bool SquareUp(GameObject Squarer, bool RecentlyAcquiredTarget, out bool TargetAcquired, ref Dictionary<string, int> SquareUpCache)
+        public static bool SquareUp(GameObject Squarer, bool RecentlyAcquiredTarget, out bool TargetAcquired, out GameObject SquareUpTarget, ref Dictionary<string, int> SquareUpCache)
         {
             Debug.Entry(4,
                 $"* {nameof(AI_UD_SquareUp)}."
@@ -239,6 +237,7 @@ namespace XRL.World.Parts
                 Indent: 0, Toggle: doDebug);
 
             TargetAcquired = false;
+            SquareUpTarget = null;
 
             Cell cell = Squarer.CurrentCell;
             
@@ -306,6 +305,7 @@ namespace XRL.World.Parts
                         {
                             Squarer.Think($"My opponent, {firstOpponent.Render?.DisplayName ?? "an unnamed opponent"}, remains unchanged!");
                         }
+                        SquareUpTarget = firstOpponent;
                         TargetAcquired = true;
                     }
                 }
@@ -327,7 +327,11 @@ namespace XRL.World.Parts
         }
         public bool SquareUp(out bool TargetAcquired)
         {
-            return SquareUp(ParentObject, RecentlyAcquiredTarget, out TargetAcquired, ref SquareUpCache);
+            return SquareUp(ParentObject, RecentlyAcquiredTarget, out TargetAcquired, out CurrentSquareUpTarget, ref SquareUpCache);
+        }
+        public bool SquareUp()
+        {
+            return SquareUp(ParentObject, RecentlyAcquiredTarget, out RecentlyAcquiredTarget, out CurrentSquareUpTarget, ref SquareUpCache);
         }
 
         public override void TurnTick(long TimeTick, int Amount)
@@ -360,17 +364,70 @@ namespace XRL.World.Parts
             return base.WantTurnTick()
                 || true;
         }
-        public override void RegisterActive(GameObject Object, IEventRegistrar Registrar)
+        public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
-            base.RegisterActive(Object, Registrar);
+            base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == GetItemElementsEvent.ID
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
                 || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
-                || (!RecentlyAcquiredTarget && ID == PooledEvent<AIBoredEvent>.ID);
+                || (!RecentlyAcquiredTarget && ID == PooledEvent<AIBoredEvent>.ID)
+                || ID == KilledEvent.ID;
+        }
+        public override bool HandleEvent(GetItemElementsEvent E)
+        {
+            if (E.IsRelevantCreature(ParentObject))
+            {
+                E.Add("might", 3);
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(GetShortDescriptionEvent E)
+        {
+            if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            {
+                GameObject currentTarget = ParentObject?.Target;
+
+                StringBuilder SB = Event.NewStringBuilder();
+
+                SB.AppendColored("M", $"{nameof(AI_UD_SquareUp)}").Append(": ");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"Target");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("o", $"{CurrentSquareUpTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(CurrentSquareUpTarget)}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"State");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{IgnorePlayer.YehNah()}]{HONLY}{nameof(IgnorePlayer)}: ").AppendColored("B", $"{IgnorePlayer}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{RecentlyAcquiredTarget.YehNah()}]{HONLY}{nameof(RecentlyAcquiredTarget)}: ").AppendColored("B", $"{RecentlyAcquiredTarget}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{IgnoreSameCreatureType.YehNah()}]{HONLY}{nameof(IgnoreSameCreatureType)}: ").AppendColored("B", $"{IgnoreSameCreatureType}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{IgnoreSameFaction.YehNah()}]{HONLY}{nameof(IgnoreSameFaction)}: ").AppendColored("B", $"{IgnoreSameFaction}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("C", $"{The.Game?.TimeTicks}").Append($"){HONLY}Current{nameof(The.Game.TimeTicks)}");
+                SB.AppendLine();
+                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{AcquiredTargetTurnThreshold}").Append($"){HONLY}{nameof(AcquiredTargetTurnThreshold)}");
+                SB.AppendLine();
+                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnTickForAcquiredTarget}").Append($"){HONLY}{nameof(StoredTurnTickForAcquiredTarget)}");
+                SB.AppendLine();
+                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{SquareUpCacheTurnThreshold}").Append($"){HONLY}{nameof(SquareUpCacheTurnThreshold)}");
+                SB.AppendLine();
+                SB.Append(NBSP).Append(TANDR).Append("(").AppendColored("c", $"{StoredTurnTickForSquareUpCache}").Append($"){HONLY}{nameof(StoredTurnTickForSquareUpCache)}");
+                SB.AppendLine();
+
+                E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+            }
+            return base.HandleEvent(E);
         }
         public override bool HandleEvent(TakeOnRoleEvent E)
         {
@@ -386,7 +443,7 @@ namespace XRL.World.Parts
                 + $" For: {ParentObject?.DebugName ?? NULL}",
                 Indent: 0, Toggle: doDebug);
 
-            if (SquareUp(out RecentlyAcquiredTarget))
+            if (SquareUp())
             {
                 return false;
             }
@@ -403,10 +460,21 @@ namespace XRL.World.Parts
                     + $" For: {ParentObject?.DebugName ?? NULL}",
                     Indent: 0, Toggle: doDebug);
 
-                if (Stat.RollCached("1d10") == 1 && SquareUp(out RecentlyAcquiredTarget))
+                if (Stat.RollCached("1d10") == 1 && SquareUp())
                 {
                     return false;
                 }
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(KilledEvent E)
+        {
+            if (E.Dying == CurrentSquareUpTarget)
+            {
+                ParentObject.Think($"I have secured victory over my opponent! I will look for another one!");
+                CurrentSquareUpTarget = null;
+                RecentlyAcquiredTarget = false;
+                StoredTurnTickForAcquiredTarget = The.Game.TimeTicks;
             }
             return base.HandleEvent(E);
         }

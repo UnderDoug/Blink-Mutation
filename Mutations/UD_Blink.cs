@@ -96,7 +96,7 @@ namespace XRL.World.Parts.Mutation
         public static Dictionary<int, BlinkPath> PathCache = new();
 
         [Serializable]
-        public class BlinkPath : IScribedPart
+        public class BlinkPath : IComposite
         {
             public bool Selected;
             public FindPath Path;
@@ -132,9 +132,9 @@ namespace XRL.World.Parts.Mutation
 
             public override string ToString()
             {
-                return ToString(false);
+                return ToString();
             }
-            public string ToString(bool ShowSelected)
+            public string ToString(bool ShowSelected = false)
             {
                 string output = string.Empty;
                 output += $"// ";
@@ -149,24 +149,6 @@ namespace XRL.World.Parts.Mutation
                 output += $"{nameof(KidCell)}: [{KidCell?.Location}] ";
                 output += "//";
                 return output;
-            }
-
-            public override void Write(GameObject Basis, SerializationWriter Writer)
-            {
-                base.Write(Basis, Writer);
-
-            }
-            public override void Read(GameObject Basis, SerializationReader Reader)
-            {
-                base.Read(Basis, Reader);
-
-            }
-
-            public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
-            {
-                UD_Blink blink = base.DeepCopy(Parent, MapInv) as UD_Blink;
-
-                return blink;
             }
         }
 
@@ -479,7 +461,7 @@ namespace XRL.World.Parts.Mutation
                         int Distance = Blinker.DistanceTo(Kid);
                         bool haveBlink = Blinker.TryGetPart(out UD_Blink blink);
 
-                        if (BlinkRange < 1 &&  haveBlink)
+                        if (BlinkRange < 1 && haveBlink)
                         {
                             BlinkRange = blink.GetBlinkRange();
                         }
@@ -1002,7 +984,10 @@ namespace XRL.World.Parts.Mutation
                     }
                     else
                     {
-                        blink.WeGoAgain = true;
+                        if (blink != null)
+                        {
+                            blink.WeGoAgain = true;
+                        }
                     }
                     Debug.LoopItem(4, $"{nameof(attacked)}", $"{attacked}", 
                         Good: attacked, Indent: 3, Toggle: getDoDebug());
@@ -1053,13 +1038,26 @@ namespace XRL.World.Parts.Mutation
             {
                 Debug.Entry(4, $"DidX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
                     Indent: 2, Toggle: getDoDebug());
-                blink.DidX(
-                    Verb: "blunk",
-                    Extra: "to a new location faster than perceptable",
-                    EndMark: "!",
-                    SubjectOverride: null,
-                    Color: "m"
-                    );
+                if (blink != null)
+                {
+                    blink.DidX(
+                        Verb: "blunk",
+                        Extra: "to a new location faster than perceptable",
+                        EndMark: "!",
+                        SubjectOverride: null,
+                        Color: "m"
+                        );
+                }
+                else if (Blinker.TryGetPart(out AI_UD_Blinker aIBlink))
+                {
+                    aIBlink.DidX(
+                        Verb: "blunk",
+                        Extra: "to a new location faster than perceptable",
+                        EndMark: "!",
+                        SubjectOverride: null,
+                        Color: "m"
+                        );
+                }
             }
             Debug.Entry(4,
                 $"{nameof(UD_Blink)}." +
@@ -1365,6 +1363,7 @@ namespace XRL.World.Parts.Mutation
         }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
+            Registrar.Register(GetAttackerMeleePenetrationEvent.ID, EventOrder.EXTREMELY_EARLY);
             Registrar.Register(COMMAND_UD_BLINK_ABILITY);
             Registrar.Register(COMMAND_UD_COLDSTEEL_ABILITY);
             base.Register(Object, Registrar);
@@ -1381,7 +1380,6 @@ namespace XRL.World.Parts.Mutation
                 || ID == AIGetRetreatAbilityListEvent.ID
                 || ID == AIGetMovementAbilityListEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
-                || ID == GetAttackerMeleePenetrationEvent.ID
                 || ID == KilledEvent.ID
                 || ID == EffectAppliedEvent.ID
                 || ID == EffectRemovedEvent.ID;
@@ -1506,7 +1504,16 @@ namespace XRL.World.Parts.Mutation
                         {
                             WeGoingAgain(false);
 
-                            Arrive(ParentObject.CurrentCell.GetCellFromDirection(Direction), ParentObject.CurrentCell, Life: 8, Color1: "C", Symbol1: "\u203C", Color2: "Y", Symbol2: "\u221E");
+                            Cell currentCell = ParentObject.CurrentCell;
+                            Arrive(
+                                From: currentCell.GetCellFromDirection(Direction), 
+                                To: currentCell, 
+                                Life: 8, 
+                                Color1: "C", 
+                                Symbol1: "\u203C", 
+                                Color2: "Y", 
+                                Symbol2: "\u221E"
+                                );
 
                             energyCost = (int)(energyCost * 1.25f);
                             blinkThink += $"We Go Again";
@@ -1535,7 +1542,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.IsRelevantCreature(ParentObject))
             {
-                E.Add("travel", 3);
+                E.Add("travel", GetBlinkRange()/2);
             }
             return base.HandleEvent(E);
         }
@@ -1615,7 +1622,7 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(GetMovementCapabilitiesEvent E)
         {
-            E.Add("Blink a short distance", COMMAND_UD_BLINK_ABILITY, 5500, MyActivatedAbility(BlinkActivatedAbilityID));
+            E.Add("Blink a short distance", COMMAND_UD_BLINK_ABILITY, 5500, MyActivatedAbility(BlinkActivatedAbilityID), IsNothinPersonnelKid);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetAttackerMeleePenetrationEvent E)
@@ -1625,7 +1632,10 @@ namespace XRL.World.Parts.Mutation
                 GameObject blinker = E.Attacker;
                 GameObject kid = E.Defender;
 
-                PerformNothinPersonnel(blinker, kid);
+                if (PerformNothinPersonnel(blinker, kid))
+                {
+                    return false;
+                }
             }
             else
             {
@@ -1635,10 +1645,10 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(KilledEvent E)
         {
-            Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
-            Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
             if (E.Reason == "nothin personnel")
             {
+                Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
+                Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
                 /*
                 SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
                 WeGoAgain = true;

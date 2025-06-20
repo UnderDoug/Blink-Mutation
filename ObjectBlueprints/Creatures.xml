@@ -10,6 +10,10 @@
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
   </object>
   
+  <object Name="Snapjaw" Load="Merge">
+    <part Name="AI_UD_Blinker" BlinkLevel="19" BaseRange="8" />
+  </object>
+  
   <!-- 
       Prickle-Pigs
    -->
