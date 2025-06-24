@@ -1,11 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-
 using XRL;
+using XRL.UI;
+using XRL.UI.ObjectFinderClassifiers;
 using XRL.World;
 using XRL.World.Parts.Mutation;
-using XRL.UI.ObjectFinderClassifiers;
-
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -33,6 +32,8 @@ namespace UD_Blink_Mutation
              && (player.GetStartingMutations().Contains("Quills") 
                 || player.GetStartingMutationClasses().Contains("UD_QuillsPlus")
                 || player.GetStartingMutationClasses().Contains("Quills"));
+
+            WorldCreationProgress.StepProgress("Quenching carbide...");
 
             Debug.Header(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
 
