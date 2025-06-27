@@ -16,6 +16,7 @@ using XRL.World;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
+using XRL.World.Encounters.EncounterBuilders;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -578,7 +579,7 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(4, $"Getting blinkPath...", Indent: 1, Toggle: getDoDebug());
-            List<Cell> blinkPath = GetBlinkPath(Blinker, Direction, Range);
+            List<Cell> blinkPath = Event.NewCellList(GetBlinkCellsInDirection(Blinker, Direction, Range));
 
             if (blinkPath.Count < 1)
             {
@@ -770,31 +771,42 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
+            if (Destination.HasObjectWithPart(nameof(StairsDown)))
+            {
+                foreach (GameObject potentialAir in Destination.LoopObjectsWithPart(nameof(StairsDown)))
+                {
+                    if (potentialAir.TryGetPart(out StairsDown stairsDown) && stairsDown.PullDown && stairsDown.IsValidForPullDown(Blinker))
+                    {
+                        Debug.CheckNah(4, $"{nameof(Destination)} empty space for {nameof(Blinker)}", Indent: indent, Toggle: getDoDebug());
+                        return false;
+                    }
+                }
+            }
+
             return true;
         }
 
-        public static List<Cell> GetBlinkPath(GameObject Blinker, string Direction, int Range)
+        public static IEnumerable<Cell> GetBlinkCellsInDirection(GameObject Blinker, string Direction, int Range)
         {
-            List<Cell> blinkPath = new();
-            if (Blinker == null || Direction == null || Range < 1)
-                return blinkPath;
-
-            Cell origin = Blinker.CurrentCell;
-            Cell cell = origin;
-
-            for (int i = 1; i <= Range; i++)
+            if (Blinker != null && Direction != null && Range > 1)
             {
-                cell = cell.GetCellFromDirection(Direction, BuiltOnly: false);
-                if (cell != null && !blinkPath.Contains(cell))
+                Cell origin = Blinker.CurrentCell;
+                Cell currentCell = origin;
+
+                for (int i = 1; i <= Range; i++)
                 {
-                    blinkPath.Add(cell);
-                }
-                else
-                {
-                    break;
+                    currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: false);
+                    if (currentCell != null)
+                    {
+                        yield return currentCell;
+                    }
+                    else
+                    {
+                        yield break;
+                    }
                 }
             }
-            return blinkPath;
+            yield break;
         }
 
         public static bool Blink(GameObject Blinker, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, bool Silent = false)
@@ -1137,6 +1149,7 @@ namespace XRL.World.Parts.Mutation
             if (IsBornThisWay(Blinker) && blink != null)
             {
                 AddPrickleBallAnimation(Blinker);
+                prickleBallAnimation = blink.PrickleBallAnimation;
             }
 
             Cell origin = Blinker.CurrentCell;
@@ -1233,9 +1246,10 @@ namespace XRL.World.Parts.Mutation
                 }
             }
 
-            if (IsBornThisWay(Blinker))
+            if (IsBornThisWay(Blinker) && prickleBallAnimation != null && RemovePrickleBallAnimation(Blinker, prickleBallAnimation))
             {
-                RemovePrickleBallAnimation(Blinker, prickleBallAnimation);
+                Debug.CheckYeh(4, $"Animation Removed",
+                    Indent: Debug.LastIndent + 1, Toggle: getDoDebug());
             }
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)

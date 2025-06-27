@@ -121,6 +121,7 @@
     <part Name="Metal" />
     <tag Name="DynamicObjectsTable:TradeGoods" />
     <tag Name="Gender" Value="plural" />
+    <tag Name="InventoryGigantifierAlwaysAllow" />
     <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWKW" />
     <stag Name="Badass" />
@@ -149,9 +150,10 @@
        3: Gems
        
    -->
-  <object Name="BaseMasterEmerald" Inherits="Polished Emerald">
-    <part Name="Render" DisplayName="[master emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" />
-    <part Name="Physics" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="-5" />
+  <object Name="BaseChaosEmerald" Inherits="Polished Emerald">
+    <part Name="Render" DisplayName="[chaos emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" />
+    <part Name="Physics" Category="Artifacts" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="5" />
+    <part Name="Suspensor" PercentageForce="200" ChargeUse="0" IsEMPSensitive="false" />
     <part Name="Armor" AV="6" DV="6" Willpower="8" SpeedBonus="40" WornOn="Floating Nearby" />
     <part Name="LightSource" Lit="true" Radius="5" />
     <part Name="Commerce" Value="2200" />
@@ -164,9 +166,9 @@
     <removetag Name="Gift" />
     <tag Name="Mods" Value="None" />
     <tag Name="Tier" Value="8" />
-    <tag Name="NoEffects" />
     <part Name="Examiner" Complexity="8" Difficulty="3" Unknown="Rough Emerald" Alternate="Polished Emerald" />
-    <part Name="ItemElements" Elements="might::10" />
+    <part Name="ItemElements" Elements="jewels::10;;might::10;;time::10;;chance::10;;stars::8;;scholarship::5;;travel::5;;glass::5;;circuitry::2" />
+    <part Name="FloatingNearbyOnEquip" MaxSlots="7" />
     <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
     <part Name="MutationOnEquip" ClassName="Telepathy" />
     <part Name="EquipStatBoost" Boosts="AcidResistance:20;ColdResistance:20;HeatResistance:20;ElectricResistance:20" IsTechScannable="false" />
@@ -175,12 +177,13 @@
     <part Name="SolarArray" ChargeRate="5" />
     <part Name="BroadcastPowerReceiver" />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" />
-    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="MasterEmerald" FlightSourceDescription="{{Y|Master}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
+    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="ChaosEmerald" FlightSourceDescription="{{Y|Chaos}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_glass" />
     <xtagGrammar Proper="true" />
     <tag Name="IndefiniteArticle" Value="the" />
+    <tag Name="NoEffects" />
     <part Name="ModSturdy" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
@@ -190,58 +193,44 @@
     <stag Name="Movement" />
     <stag Name="Precious" />
     <tag Name="BaseObject" Value="*noinherit" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <tag Name="NoSparkingQuest" />
   </object>
-  <object Name="Green Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{G|Emerald}}" />
+  <object Name="Green Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{G|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Red Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{R|Emerald}}" ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{R|Emerald}}" />
+  <object Name="Red Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{R|Emerald}}" ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{R|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yRYr" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Blue Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{B|Emerald}}" ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{B|Emerald}}" />
+  <object Name="Blue Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{B|Emerald}}" ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{B|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yBYb" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Yellow Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{W|Emerald}}" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{W|Emerald}}" />
+  <object Name="Yellow Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{W|Emerald}}" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{W|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yWYw" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Cyan Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{C|Emerald}}" ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{C|Emerald}}" />
+  <object Name="Cyan Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{C|Emerald}}" ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{C|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yCYc" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Pink Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{M|Emerald}}" ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{M|Emerald}}" />
+  <object Name="Pink Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{M|Emerald}}" ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{M|Emerald}}" />
     <tag Name="EquipmentFrameColors" Value="yMYm" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
-  <object Name="Orange Master Emerald" Inherits="BaseMasterEmerald">
-    <part Name="Render" DisplayName="{{Y|Master}} {{O|Emerald}}" ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Master}} {{O|Emerald}}" />
+  <object Name="Orange Chaos Emerald" Inherits="BaseChaosEmerald">
+    <part Name="Render" DisplayName="{{Y|Chaos}} {{O|Emerald}}" ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
+    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{O|Emerald}}" />
     <part Name="ModExtradimensional" />
     <tag Name="EquipmentFrameColors" Value="yOYo" />
-    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
-    <tag Name="NoSparkingQuest" Value="*noinherit" />
   </object>
   
 </objects>
