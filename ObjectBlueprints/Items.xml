@@ -125,6 +125,7 @@
     <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWKW" />
     <stag Name="Badass" />
+    <tag Name="DisplayNameSingular" Value="{{badass|badass}} {{W|earring}}" />
   </object>
   
   <object Name="Gold Ring" Inherits="BaseBracelet">
@@ -154,7 +155,7 @@
     <part Name="Render" DisplayName="[chaos emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" />
     <part Name="Physics" Category="Artifacts" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="5" />
     <part Name="Suspensor" PercentageForce="200" ChargeUse="0" IsEMPSensitive="false" />
-    <part Name="Armor" AV="6" DV="6" Willpower="8" SpeedBonus="40" WornOn="Floating Nearby" />
+    <part Name="Armor" AV="2" DV="2" WornOn="Floating Nearby" />
     <part Name="LightSource" Lit="true" Radius="5" />
     <part Name="Commerce" Value="2200" />
     <stat Name="Hitpoints" Value="2500" />
@@ -169,22 +170,17 @@
     <part Name="Examiner" Complexity="8" Difficulty="3" Unknown="Rough Emerald" Alternate="Polished Emerald" />
     <part Name="ItemElements" Elements="jewels::10;;might::10;;time::10;;chance::10;;stars::8;;scholarship::5;;travel::5;;glass::5;;circuitry::2" />
     <part Name="FloatingNearbyOnEquip" MaxSlots="7" />
-    <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
     <part Name="MutationOnEquip" ClassName="Telepathy" />
-    <part Name="EquipStatBoost" Boosts="AcidResistance:20;ColdResistance:20;HeatResistance:20;ElectricResistance:20" IsTechScannable="false" />
-    <part Name="EquipIntProperties" Props="AllMutationLevelModifier:1;CyberneticsLicenses:6;FreeCyberneticsLicenses:6" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="5" World="*" />
-    <part Name="SolarArray" ChargeRate="5" />
-    <part Name="BroadcastPowerReceiver" />
-    <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" />
-    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="ChaosEmerald" FlightSourceDescription="{{Y|Chaos}} {{G|Emerald}}" NameForStatus="GravityNegationLattice" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="5" World="*" IsEMPSensitive="false" />
+    <part Name="SolarArray" ChargeRate="5" IsEMPSensitive="false" />
+    <part Name="BroadcastPowerReceiver" IsEMPSensitive="false" />
+    <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" IsEMPSensitive="false" />
+    <part Name="ChaosEmeraldSetBonus" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
-    <tag Name="EquipSound" Value="sfx_equip_material_generic_glass" />
+    <tag Name="EquipSound" Value="sfx_equip_material_generic_gemstone" />
     <xtagGrammar Proper="true" />
-    <tag Name="IndefiniteArticle" Value="the" />
     <tag Name="NoEffects" />
-    <part Name="ModSturdy" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
     <part Name="TakenAccomplishment" Text="You acquired a most powerful relic, =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonphrases.prized.!random&gt; relic. =player.Subjective= took the gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.refname=. " />
@@ -197,39 +193,54 @@
     <tag Name="NoSparkingQuest" />
   </object>
   <object Name="Green Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{G|Emerald}}" />
+    <part Name="Render" DisplayName="{{G|Green}} {{Y|Chaos}} {{G|Emerald}}" ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Emerald" Alternate="Polished Emerald" />
+    <part Name="Mod_UD_ImprovedMutationEntry" EntryName="Regeneration" Tier="10" IsEMPSensitive="false" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
   </object>
   <object Name="Red Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{R|Emerald}}" ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{R|Emerald}}" />
+    <part Name="Render" DisplayName="{{R|Red}} {{Y|Chaos}} {{R|Emerald}}" ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Jasper" Alternate="Polished Jasper" />
+    <part Name="EquipIntProperties" Props="AllMutationLevelModifier:1;CyberneticsLicenses:6;FreeCyberneticsLicenses:6" IsEMPSensitive="false" />
+    <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Jasper" />
     <tag Name="EquipmentFrameColors" Value="yRYr" />
   </object>
   <object Name="Blue Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{B|Emerald}}" ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{B|Emerald}}" />
+    <part Name="Render" DisplayName="{{B|Blue}} {{Y|Chaos}} {{B|Emerald}}" ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
+    <part Name="Armor" SpeedBonus="40" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yBYb" />
   </object>
   <object Name="Yellow Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{W|Emerald}}" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{W|Emerald}}" />
+    <part Name="Render" DisplayName="{{W|Yellow}} {{Y|Chaos}} {{W|Emerald}}" ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
+    <part Name="EquipStatBoost" Boosts="AcidResistance:20;ColdResistance:20;HeatResistance:20;ElectricResistance:20" IsEMPSensitive="false" IsTechScannable="false" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Topaz" />
     <tag Name="EquipmentFrameColors" Value="yWYw" />
   </object>
   <object Name="Cyan Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{C|Emerald}}" ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{C|Emerald}}" />
+    <part Name="Render" DisplayName="{{C|Cyan}} {{Y|Chaos}} {{C|Emerald}}" ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
+    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="ChaosEmerald" FlightSourceDescription="{{Y|Chaos}} {{c|Emerald}}" NameForStatus="GravityNegationLattice" IsEMPSensitive="false" />
+    <part Name="RulesDescription" Text="Grants its wielder perfect flight" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yCYc" />
   </object>
   <object Name="Pink Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{M|Emerald}}" ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{M|Emerald}}" />
+    <part Name="Render" DisplayName="{{M|Pink}} {{Y|Chaos}} {{M|Emerald}}" ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Amethyst" Alternate="Polished Amethyst" />
+    <part Name="Armor" Willpower="8" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Amethyst" />
     <tag Name="EquipmentFrameColors" Value="yMYm" />
   </object>
   <object Name="Orange Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{Y|Chaos}} {{O|Emerald}}" ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
-    <part Name="MechanicalWings" FlightSourceDescription="{{Y|Chaos}} {{O|Emerald}}" />
-    <part Name="ModExtradimensional" />
+    <part Name="Render" DisplayName="{{O|Orange}} {{Y|Chaos}} {{O|Emerald}}" ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
+    <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
+    <part Name="ModExtradimensional" IsEMPSensitive="false" />
+    <part Name="UniqueWithAlternative" Alternative="Polished Topaz" />
     <tag Name="EquipmentFrameColors" Value="yOYo" />
   </object>
   
