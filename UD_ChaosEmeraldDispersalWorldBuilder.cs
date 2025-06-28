@@ -15,6 +15,7 @@ using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using XRL.Language;
+using System;
 
 namespace XRL.World.WorldBuilders
 {
@@ -56,6 +57,8 @@ namespace XRL.World.WorldBuilders
             { "Orange", null },
         };
 
+        public static Dictionary<string, GameObject> ChaosEmeralds = new();
+
         public override void OnAfterBuild(JoppaWorldBuilder Builder)
         {
             Debug.Header(4, $"{nameof(UD_ChaosEmeraldDispersalWorldBuilder)}", $"{nameof(OnAfterBuild)}", Toggle: doDebug);
@@ -91,22 +94,53 @@ namespace XRL.World.WorldBuilders
                 { "Pink", GameObject.Create("Pink Chaos Emerald") },
                 { "Orange", GameObject.Create("Orange Chaos Emerald") },
             };
+            List<string> emeraldColors = new()
+            {
+                "Green",
+                "Red",
+                "Blue",
+                "Yellow",
+                "Cyan",
+                "Pink",
+                "Orange",
+            };
 
-            Location2D parasang;
-            string zoneID;
-            string emeraldName;
-            string emeraldSecret;
+            string tombTopEmerald = emeraldColors.GetRandomElement();
+            emeraldColors.Remove(tombTopEmerald);
+            string tombLocation = "JoppaWorld.53.3.0.1.0";
+
+            string moonstairEmerald = emeraldColors.GetRandomElement();
+            emeraldColors.Remove(moonstairEmerald);
+
             foreach ((string color, GameObject emeraldObject) in  chaosEmeralds)
             {
                 Debug.LoopItem(4, $"{nameof(color)}", $"{color} {emeraldObject.DebugName}",
                     Indent: indent + 2, Toggle: doDebug);
 
-                emeraldName = $"the {color} {emeraldObject?.ShortDisplayNameStripped}";
-                emeraldSecret = $"${emeraldObject.Blueprint}".Replace(" ", "");
-                parasang = Builder.getLocationOfTier(2, 8);
-                parasang = Location2D.Get(parasang.X * 3 + 1, parasang.Y * 3 + 1);
-                zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, Stat.Random(60, 99));
+                string emeraldName = $"the {color} {emeraldObject?.ShortDisplayNameStripped}";
+                string emeraldSecret = $"${emeraldObject.Blueprint}".Replace(" ", "");
 
+                bool isTombTopEmerald = color == tombTopEmerald;
+                bool isMoonstairEmerald = color == moonstairEmerald;
+
+                int zoneTier = !isMoonstairEmerald ? Stat.RollCached("2d4") : 8;
+
+                int zMin = Math.Abs(50 - (zoneTier * 5));
+                if (zMin < 11 && !1.in10())
+                {
+                    zMin = 11;
+                }
+                int zMax = Math.Abs(zMin + (23 - (zoneTier * 2)));
+
+                Location2D parasang = Builder.getLocationOfTier(zoneTier);
+                parasang = Location2D.Get(parasang.X * 3 + 1, parasang.Y * 3 + 1);
+
+                int locationZ = Stat.Random(zMin, zMax);
+                string zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ);
+                if (isTombTopEmerald)
+                {
+                    zoneID = tombLocation;
+                }
                 Debug.LoopItem(4, $"{nameof(zoneID)}", $"{zoneID}",
                     Indent: indent + 3, Toggle: doDebug);
 
@@ -116,13 +150,24 @@ namespace XRL.World.WorldBuilders
 
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: doDebug);
-
+                
+                if (isTombTopEmerald)
+                {
+                    SecretRevealer secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
+                    secretRevealer.id = secretID;
+                    secretRevealer.text = $"the location of {emeraldObject.DisplayName}";
+                    secretRevealer.message = $"You have discovered {secretRevealer.text}!";
+                    secretRevealer.category = "Artifacts";
+                    secretRevealer.adjectives = "artifact";
+                }
                 if (ChaosEmeraldLocations.ContainsKey(color))
                 {
                     ChaosEmeraldLocations[color] = zoneID;
                 }
             }
-            
+
+            ChaosEmeralds = chaosEmeralds;
+
             Debug.Entry(4,
                 $"x {nameof(UD_ChaosEmeraldDispersalWorldBuilder)}."
                 + $"{nameof(HideChaosEmeralds)}("
@@ -135,13 +180,25 @@ namespace XRL.World.WorldBuilders
         [WishCommand(Command = "go chaos emerald")]
         public static void GoChaosEmerald(string Color)
         {
-            if (!Color.IsNullOrEmpty() && ChaosEmeraldLocations.ContainsKey(Color))
+            if (!Color.IsNullOrEmpty() && ChaosEmeraldLocations.ContainsKey(Grammar.MakeTitleCase(Color)))
             {
                 Zone Z = The.ZoneManager.GetZone(ChaosEmeraldLocations[Grammar.MakeTitleCase(Color)]);
                 The.Player.Physics.CurrentCell.RemoveObject(The.Player.Physics.ParentObject);
                 Z.GetEmptyCells().GetRandomElement().AddObject(The.Player);
                 The.ZoneManager.SetActiveZone(Z);
                 The.ZoneManager.ProcessGoToPartyLeader();
+            }
+        }
+
+        [WishCommand(Command = "take chaos emeralds")]
+        public static void TakeChaosEmeralds()
+        {
+            if (!ChaosEmeralds.IsNullOrEmpty())
+            {
+                foreach ((string _, GameObject chaosEmerald) in ChaosEmeralds)
+                {
+                    The.Player.ReceiveObject(The.ZoneManager.PullCachedObject(chaosEmerald.ID, false));
+                }
             }
         }
     }

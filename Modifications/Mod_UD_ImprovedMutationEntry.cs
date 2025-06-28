@@ -18,7 +18,7 @@ namespace XRL.World.Parts
 
         public string ClassName => MutationEntry?.Class;
 
-        public string TrackingProperty => $"Equipped{ClassName ?? EntryName.Replace(" ", "")}";
+        public string TrackingProperty => $"{ParentObject.ID}:{ParentObject?.Blueprint}::{ClassName ?? EntryName.Replace(" ", "")}";
 
         public Guid mutationMod;
 
