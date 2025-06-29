@@ -171,11 +171,11 @@
     <part Name="ItemElements" Elements="jewels::10;;might::10;;time::10;;chance::10;;stars::8;;scholarship::5;;travel::5;;glass::5;;circuitry::2" />
     <part Name="FloatingNearbyOnEquip" MaxSlots="7" />
     <part Name="MutationOnEquip" ClassName="Telepathy" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="15" World="*" IsEMPSensitive="false" />
     <part Name="SolarArray" ChargeRate="15" IsEMPSensitive="false" />
-    <part Name="BroadcastPowerReceiver" IsEMPSensitive="false" />
-    <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="120" IsEMPSensitive="false" />
-    <part Name="ChaosEmeraldSetBonus" />
+    <part Name="BroadcastPowerReceiver" ChargeRate="25" IsEMPSensitive="false" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="40" World="*" IsEMPSensitive="false" />
+    <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="100" IsEMPSensitive="false" />
+    <part Name="ChaosEmeraldSetPiece" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_gemstone" />
@@ -198,7 +198,6 @@
     <part Name="Render" DisplayName="{{G|Green}} {{Y|Chaos}} {{y-G-Y-G-Y-G-g alternation|Emerald}}" 
           ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Emerald" Alternate="Polished Emerald" />
-    <part Name="Mod_UD_ImprovedMutationEntry" EntryName="Regeneration" Tier="10" IsEMPSensitive="false" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
   </object>
@@ -215,7 +214,6 @@
     <part Name="Render" DisplayName="{{B|Blue}} {{Y|Chaos}} {{y-B-Y-B-Y-B-b alternation|Emerald}}" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
-    <part Name="Armor" SpeedBonus="40" />
     <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yBYb" />
   </object>
@@ -223,7 +221,6 @@
     <part Name="Render" DisplayName="{{W|Yellow}} {{Y|Chaos}} {{y-W-Y-W-Y-W-w alternation|Emerald}}" 
           ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
-    <part Name="EquipStatBoost" Boosts="AcidResistance:25;ColdResistance:25;HeatResistance:25;ElectricResistance:25" IsEMPSensitive="false" IsTechScannable="false" />
     <part Name="UniqueWithAlternative" Alternative="Polished Topaz" />
     <tag Name="EquipmentFrameColors" Value="yWYw" />
   </object>
@@ -231,8 +228,6 @@
     <part Name="Render" DisplayName="{{C|Cyan}} {{Y|Chaos}} {{y-C-Y-C-Y-C-c alternation|Emerald}}" 
           ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
-    <part Name="MechanicalWings" ChargeUse="5" Level="6" IsBootSensitive="false" IsRealityDistortionBased="true" RequiresOngoingEffort="false" CrashBreakChance="0" Type="ChaosEmerald" FlightSourceDescription="{{Y|Chaos}} {{c|Emerald}}" NameForStatus="GravityNegationLattice" IsEMPSensitive="false" />
-    <part Name="RulesDescription" Text="Grants its wielder perfect flight" />
     <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yCYc" />
   </object>
@@ -240,7 +235,6 @@
     <part Name="Render" DisplayName="{{M|Pink}} {{Y|Chaos}} {{y-M-Y-M-Y-M-m alternation|Emerald}}" 
           ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Amethyst" Alternate="Polished Amethyst" />
-    <part Name="Armor" Willpower="8" />
     <part Name="UniqueWithAlternative" Alternative="Polished Amethyst" />
     <tag Name="EquipmentFrameColors" Value="yMYm" />
   </object>

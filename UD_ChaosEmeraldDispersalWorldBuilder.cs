@@ -198,6 +198,7 @@ namespace XRL.World.WorldBuilders
                 foreach ((string _, GameObject chaosEmerald) in ChaosEmeralds)
                 {
                     The.Player.ReceiveObject(The.ZoneManager.PullCachedObject(chaosEmerald.ID, false));
+                    chaosEmerald.MakeUnderstood();
                 }
             }
         }
