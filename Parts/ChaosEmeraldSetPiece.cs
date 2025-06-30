@@ -63,9 +63,12 @@ namespace XRL.World.Parts
                 {
                     ChaosEmeraldSetBonus.BonusActive = true;
                 }
-                if (ChaosEmeraldSetBonus.SetPieces == 0 && ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive))
+                if (ChaosEmeraldSetBonus.SetPieces == 0)
                 {
-                    ChaosEmeraldSetBonus.BonusActive = false;
+                    if (ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive))
+                    {
+                        ChaosEmeraldSetBonus.BonusActive = false;
+                    }
                     E.Actor.RemovePart(ChaosEmeraldSetBonus);
                 }
                 ChaosEmeraldSetBonus = null;

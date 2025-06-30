@@ -841,151 +841,254 @@ namespace UD_Blink_Mutation
             return Body.GetEquippedObjects(filter);
         }
 
-        public static T DrawRandomElement<T>(this List<T> Bag, T ExceptForElement = null, List<T> ExceptForElements = null)
+        public static T DrawRandomToken<T>(this List<T> Bag, T ExceptForToken = null, List<T> ExceptForTokens = null)
             where T : class
         {
-            return Bag.DrawSeededElement(Guid.Empty, ExceptForElement, ExceptForElements);
+            return Bag.DrawSeededToken((string)null, null, null, ExceptForToken, ExceptForTokens);
         }
-        public static T DrawSeededElement<T>(this List<T> Bag, Guid Seed, T ExceptForElement = null, List<T> ExceptForElements = null)
+        public static T DrawSeededToken<T>(this List<T> Bag, string Seed, int? Stepper = null, string Context = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
             where T : class
         {
             if (Bag.IsNullOrEmpty()) return null;
             List<T> drawBag = new();
             drawBag.AddRange(Bag);
-            ExceptForElements ??= new();
-            if (drawBag.Contains(ExceptForElement)) drawBag.Remove(ExceptForElement);
-            foreach (T exceptForElement in ExceptForElements)
+            ExceptForTokens ??= new();
+            if (drawBag.Contains(ExceptForToken))
             {
-                if (drawBag.Contains(exceptForElement)) drawBag.Remove(exceptForElement);
+                drawBag.Remove(ExceptForToken);
             }
-            if (drawBag.IsNullOrEmpty()) return null;
-            T output = null;
-            if (Seed != Guid.Empty)
+            foreach (T exceptForToken in ExceptForTokens)
             {
-                string seed = Seed.ToString();
+                if (drawBag.Contains(exceptForToken))
+                {
+                    drawBag.Remove(exceptForToken);
+                }
+            }
+            if (drawBag.IsNullOrEmpty())
+            {
+                return null;
+            }
+            T token = null;
+            if (!Seed.IsNullOrEmpty())
+            {
+                string stepper = null;
+                string context = null;
+                if (!Context.IsNullOrEmpty())
+                {
+                    context = $"-{Context}";
+                }
+                if (Stepper != null)
+                {
+                    stepper = $"-{Stepper}";
+                }
+                string seed = $"{Seed}{context}{stepper}";
                 int low = 0;
                 int high = (drawBag.Count - 1) * 7;
                 int roll = Stat.SeededRandom(seed, low, high) % (drawBag.Count - 1);
-                output = drawBag.ElementAt(roll);
+
+                int indent = Debug.LastIndent;
+                Debug.Divider(4, HONLY, Count: 25, Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(Seed)}: {Seed}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(Stepper)}: {Stepper}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(Context)}: {Context}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(seed)}: {seed}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(low)}: {low}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(drawBag.Count)} - 1: {drawBag.Count - 1}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(high)}: {high}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Entry(4, $"{nameof(roll)}: {roll}", Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+                Debug.Divider(4, HONLY, Count: 25, Indent: indent + 1, Toggle: getDoDebug(nameof(DrawSeededToken)));
+
+                Debug.LastIndent = indent;
+                token = drawBag.ElementAt(roll);
             }
-            output ??= drawBag.GetRandomElement();
-            Bag.Remove(output);
-            return output;
+            token ??= drawBag.GetRandomElement();
+            Bag.Remove(token);
+            return token;
         }
-        public static T DrawElement<T>(this List<T> Bag, T Element)
+        public static T DrawSeededToken<T>(this List<T> Bag, Guid Seed, int? Stepper = null, string Context = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
             where T : class
         {
-            T output = (!Bag.IsNullOrEmpty() || Bag.Remove(Element)) ? Element : null;
-            return output;
+            return Bag.DrawSeededToken(Seed.ToString(), Stepper, Context, ExceptForToken, ExceptForTokens);
+        }
+        public static T DrawToken<T>(this List<T> Bag, T Token)
+            where T : class
+        {
+            T token = (!Bag.IsNullOrEmpty() || Bag.Remove(Token)) ? Token : null;
+            return token;
         }
 
-        public static T DrawRandomElement<T>(this Dictionary<string, List<T>> Bag, string FromSubBag = "", T ExceptForElement = null, List<T> ExceptForElements = null)
+        public static T DrawRandomToken<T>(this Dictionary<string, List<T>> Bag, string FromPocket = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
             where T : class
         {
-            return Bag.DrawSeededElement(Guid.Empty, FromSubBag, ExceptForElement, ExceptForElements);
+            return Bag.DrawSeededToken((string)null, null, null, FromPocket, ExceptForToken, ExceptForTokens);
         }
-        public static T DrawSeededElement<T>(this Dictionary<string, List<T>> Bag, Guid Seed, string FromSubBag = "", T ExceptForElement = null, List<T> ExceptForElements = null)
+        public static T DrawSeededToken<T>(this Dictionary<string, List<T>> Bag, string Seed, int? Stepper = null, string Context = null, string FromPocket = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
             where T : class
         {
             List<T> drawBag = new();
-            ExceptForElements ??= new();
-            bool haveTargetedSubBag = FromSubBag != "" && Bag.ContainsKey(FromSubBag);
-            if (haveTargetedSubBag)
+            ExceptForTokens ??= new();
+            bool haveTargetPocket = !FromPocket.IsNullOrEmpty() && Bag.ContainsKey(FromPocket);
+            if (haveTargetPocket)
             {
-                drawBag = Bag[FromSubBag];
+                drawBag = Bag[FromPocket];
             }
             else
             {
-                foreach ((_, List<T> subBag) in Bag)
+                foreach ((_, List<T> pocket) in Bag)
                 {
-                    foreach (T element in subBag)
+                    foreach (T element in pocket)
                     {
-                        if (!drawBag.Contains(element)) drawBag.Add(element);
+                        drawBag.TryAdd(element);
                     }
                 }
             }
 
-            T output = drawBag.DrawSeededElement(Seed, ExceptForElement, ExceptForElements);
+            T token = drawBag.DrawSeededToken(Seed, Stepper, Context, ExceptForToken, ExceptForTokens);
 
-            if (haveTargetedSubBag)
+            if (haveTargetPocket)
             {
-                if (Bag[FromSubBag].Contains(output)) Bag[FromSubBag].Remove(output);
+                if (Bag[FromPocket].Contains(token))
+                {
+                    Bag[FromPocket].Remove(token);
+                }
             }
             else
             {
-                foreach ((_, List<T> subBag) in Bag)
+                foreach ((_, List<T> pocket) in Bag)
                 {
-                    if (subBag.Contains(output)) subBag.Remove(output);
+                    if (pocket.Contains(token))
+                    {
+                        pocket.Remove(token);
+                    }
                 }
             }
-            return output;
+            return token;
         }
-        public static T DrawElement<T>(this Dictionary<string, List<T>> Bag, T Element, string FromSubBag = "")
+        public static T DrawSeededToken<T>(this Dictionary<string, List<T>> Bag, Guid Seed, int? Stepper = null, string Context = null, string FromPocket = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
+            where T : class
+        {
+            return Bag.DrawSeededToken(Seed.ToString(), Stepper, Context, FromPocket, ExceptForToken, ExceptForTokens);
+        }
+        public static T DrawToken<T>(this Dictionary<string, List<T>> Bag, T Token, string FromPocket = null)
             where T : class
         {
             List<T> drawBag = new();
-            bool haveTargetedSubBag = FromSubBag != "" && Bag.ContainsKey(FromSubBag);
-            if (haveTargetedSubBag)
+            bool haveTargetPocket = !FromPocket.IsNullOrEmpty() && Bag.ContainsKey(FromPocket);
+            if (haveTargetPocket)
             {
-                drawBag = Bag[FromSubBag];
+                drawBag = Bag[FromPocket];
             }
             else
             {
-                foreach ((_, List<T> subBag) in Bag)
+                foreach ((_, List<T> pocket) in Bag)
                 {
-                    foreach (T element in subBag)
+                    foreach (T element in pocket)
                     {
-                        if (!drawBag.Contains(element)) drawBag.Add(element);
+                        drawBag.TryAdd(element);
                     }
                 }
             }
 
-            T output = (!drawBag.IsNullOrEmpty() && drawBag.Contains(Element)) ? Element : null;
+            T token = (!drawBag.IsNullOrEmpty() && drawBag.Contains(Token)) ? Token : null;
 
-            if (haveTargetedSubBag)
+            if (haveTargetPocket)
             {
-                if (Bag[FromSubBag].Contains(output)) Bag[FromSubBag].Remove(output);
+                if (Bag[FromPocket].Contains(token))
+                {
+                    Bag[FromPocket].Remove(token);
+                }
             }
             else
             {
-                foreach ((_, List<T> subBag) in Bag)
+                foreach ((_, List<T> pocket) in Bag)
                 {
-                    if (subBag.Contains(output)) subBag.Remove(output);
+                    if (pocket.Contains(token))
+                    {
+                        pocket.Remove(token);
+                    }
                 }
             }
-            return output;
+            return token;
         }
-        public static bool Contains<T>(this Dictionary<string, List<T>> Bag, T Element, out string Key, string FromSubBag = "")
+        public static bool Contains<T>(this Dictionary<string, List<T>> Bag, T Token, out string Key, string InPocket = null)
             where T : class
         {
-            List<T> peekBag = new();
-            bool haveTargetedSubBag = FromSubBag != "" && Bag.ContainsKey(FromSubBag);
-            bool haveElement = false;
+            bool haveToken = false;
             Key = null;
-            if (haveTargetedSubBag)
+            if (!Bag.IsNullOrEmpty())
             {
-                peekBag = Bag[FromSubBag];
-            }
-            else
-            {
-                foreach ((string key, List<T> subBag) in Bag)
+                bool haveTargetPocket = !InPocket.IsNullOrEmpty() && Bag.ContainsKey(InPocket);
+                foreach ((string key, List<T> pocket) in Bag)
                 {
-                    foreach (T element in subBag)
+                    if (haveTargetPocket && InPocket != key)
                     {
-                        if (peekBag.Contains(element))
+                        continue;
+                    }
+                    foreach (T token in pocket)
+                    {
+                        if (token == Token)
                         {
                             Key = key;
-                            haveElement = true;
+                            haveToken = true;
+                            break;
                         }
                     }
                 }
             }
-            return haveElement;
+            return haveToken;
         }
-        public static bool Contains<T>(this Dictionary<string, List<T>> Bag, T Element, string FromSubBag = "")
+        public static bool Contains<T>(this Dictionary<string, List<T>> Bag, T Token, string FromPocket = null)
             where T : class
         {
-            return Bag.Contains(Element, out _, FromSubBag);
+            return Bag.Contains(Token, out _, FromPocket);
+        }
+        public static IEnumerable<T> GetContents<T>(this Dictionary<string, List<T>> Bag, string FromPocket = null)
+            where T : class
+        {
+            if (!Bag.IsNullOrEmpty())
+            {
+                bool haveTargetPocket = !FromPocket.IsNullOrEmpty() && Bag.ContainsKey(FromPocket);
+                foreach ((string key, List<T> pocket) in Bag)
+                {
+                    if (haveTargetPocket && FromPocket != key)
+                    {
+                        continue;
+                    }
+                    foreach (T token in pocket)
+                    {
+                        yield return token;
+                    }
+                }
+            }
+            yield break;
+        }
+        public static IEnumerable<string> GetContentsAsString<T>(this Dictionary<string, List<T>> Bag, string FromPocket = null, bool WithKey = false)
+            where T : class
+        {
+            if (!Bag.IsNullOrEmpty())
+            {
+                bool haveTargetPocket = !FromPocket.IsNullOrEmpty() && Bag.ContainsKey(FromPocket);
+                foreach ((string key, List<T> pocket) in Bag)
+                {
+                    if (haveTargetPocket && FromPocket != key)
+                    {
+                        continue;
+                    }
+                    if (WithKey)
+                    {
+                        yield return "@" + key;
+                    }
+                    foreach (T token in pocket)
+                    {
+                        if (token is string elementString)
+                        {
+                            yield return elementString;
+                        }
+                        else yield break;
+                    }
+                }
+            }
+            yield break;
         }
 
         public static GameObjectBlueprint GetGameObjectBlueprint(this GameObject GameObject)

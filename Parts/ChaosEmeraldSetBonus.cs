@@ -1,11 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using System.Windows.Forms;
-using UD_Blink_Mutation;
+
 using UnityEngine;
-using UnityEngine.Rendering;
-using UnityEngine.UIElements;
+
 using XRL.Core;
 using XRL.Rules;
 using XRL.UI;
@@ -14,11 +12,13 @@ using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
 using XRL.World.Parts.Skill;
 using XRL.World.Tinkering;
+
+using UD_Blink_Mutation;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
-using DialogResult = XRL.UI.DialogResult;
 
 namespace XRL.World.Parts
 {
@@ -27,7 +27,7 @@ namespace XRL.World.Parts
     {
         private static bool doDebug => true;
 
-        public static string COMMAND_NAME_POWER_UP => $"CommandToggle{nameof(ChaosEmeraldSetBonus)}PowerUp";
+        public const string COMMAND_NAME_POWER_UP = "Command_UD_ChaosEmeraldSetBonus_PowerUp";
 
         public bool BonusActive;
 
@@ -54,7 +54,7 @@ namespace XRL.World.Parts
 
         public string FlightEvent => $"Activate{Type}Flight";
 
-        public string FlightActivatedAbilityClass => "Items";
+        public string FlightActivatedAbilityClass => "Metaphysical Phenomena";
 
         public bool _FlightFlying;
         public bool FlightFlying
@@ -77,12 +77,7 @@ namespace XRL.World.Parts
             set => _FlightSourceDescription = value;
         }
 
-        public string _Type = $"ChaosEmeralds";
-        public string Type
-        {
-            get =>_Type;
-            set => _Type = value;
-        }
+        public string Type => $"ChaosEmeralds";
 
         public GameObject FlightUser => GetActivePartFirstSubject();
 
@@ -91,7 +86,7 @@ namespace XRL.World.Parts
             mutationModBlink = Guid.Empty;
             mutationModRegeneration = Guid.Empty;
             PowerUpActivatedAbilityID = Guid.Empty;
-            _FlightActivatedAbilityID = Guid.Empty;
+            FlightActivatedAbilityID = Guid.Empty;
             BonusActive = false;
             WorksOnSelf = true;
             IsEMPSensitive = false;
@@ -210,7 +205,7 @@ namespace XRL.World.Parts
             string description = SetPiece switch
             {
                 1 => $"+15 to all resistances per Chaos Emerald ({15 * SetPieces}).",
-                2 => $"+20 QN && +35 MS per Chaos Emerald ({20 * SetPieces} && {35 * SetPieces}).",
+                2 => $"+10 QN && +20 MS per Chaos Emerald ({10 * SetPieces} && {20 * SetPieces}).",
                 3 => $"+1 to all mutation levels && +6 to cybernetics license tier.",
                 4 => $"Grants Improved {nameof(Regeneration)} at Tier 10.",
                 5 => $"+3 Willpower, +1 per Chaos Emerald ({3 + SetPieces}).",
@@ -277,6 +272,9 @@ namespace XRL.World.Parts
 
                 int chaosEmeraldsCount = GetEquippedChaosEmeraldsCount(Wielder);
                 int currentChaosEmerald = 1;
+
+                Wielder.RegisterEvent(ChaosEmeraldSetBonus, GetPsychicGlimmerEvent.ID, Serialize: true);
+
                 if (chaosEmeraldsCount > 0)
                 {
                     // 1/7 Emeralds
@@ -321,9 +319,7 @@ namespace XRL.World.Parts
                 }
 
                 // Always and scales off Emerald Count
-                Wielder.RegisterEvent(ChaosEmeraldSetBonus, GetPsychicGlimmerEvent.ID, Serialize: true);
-                Wielder.SyncMutationLevelAndGlimmer();
-
+                
                 ChaosEmeraldSetBonus.mutationModBlink = AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldsCount);
 
                 ChaosEmeraldSetBonus.SetStatShifterDisplayName();
@@ -366,13 +362,13 @@ namespace XRL.World.Parts
 
                 ChaosEmeraldSetBonus.PowerUpActivatedAbilityID = ChaosEmeraldSetBonus.AddActivatedAbilityPowerUp(Wielder);
 
+                ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
+
                 Wielder.UnregisterEvent(ChaosEmeraldSetBonus, GetPsychicGlimmerEvent.ID);
                 if (Sync)
                 {
                     Wielder.SyncMutationLevelAndGlimmer();
                 }
-
-                ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
 
                 unGranted = true;
                 Debug.LastIndent = indent;
@@ -465,9 +461,10 @@ namespace XRL.World.Parts
         {
             Debug.Entry(4, $"{nameof(ApplySpeedBoosts)}({nameof(ChaosEmeraldsCount)}: {ChaosEmeraldsCount}) called...", 
                 Indent: 1, Toggle: doDebug);
-            int resistanceAmount = ChaosEmeraldsCount * 15;
-            return ChaosEmeraldSetBonus.StatShifter.SetStatShift("Speed", ChaosEmeraldsCount * 20)
-                && ChaosEmeraldSetBonus.StatShifter.SetStatShift("MoveSpeed", ChaosEmeraldsCount * -35);
+            int speedFactor = ChaosEmeraldSetBonus.PoweredUp ? 20 : 10;
+            int moveSpeedFactor = ChaosEmeraldSetBonus.PoweredUp ? -35 : -20;
+            return ChaosEmeraldSetBonus.StatShifter.SetStatShift("Speed", ChaosEmeraldsCount * speedFactor)
+                && ChaosEmeraldSetBonus.StatShifter.SetStatShift("MoveSpeed", ChaosEmeraldsCount * moveSpeedFactor);
         }
         public static void UnapplySpeedBoosts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus)
         {
@@ -524,7 +521,7 @@ namespace XRL.World.Parts
                     AddMyActivatedAbility(
                         Name: PowerUpAbilityName,
                         Command: COMMAND_NAME_POWER_UP,
-                        Class: "Equipment",
+                        Class: "Metaphysical Transformation",
                         Description: null,
                         Icon: "&#214",
                         DisabledMessage: null,
@@ -570,9 +567,9 @@ namespace XRL.World.Parts
                 Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: 1, Toggle: doDebug);
 
                 Flight.AbilitySetup(Creature, Creature, this);
-                Creature.RegisterPartEvent(this, FlightEvent);
 
                 ApplyPowerUpShifts(this);
+                ApplySpeedBoosts(this, SetPieces);
 
                 ToggledOn = true;
             }
@@ -581,17 +578,32 @@ namespace XRL.World.Parts
                 Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilityTeardown)}() called...", Indent: 1, Toggle: doDebug);
 
                 Flight.AbilityTeardown(Creature, Creature, this);
-                Creature.UnregisterPartEvent(this, FlightEvent);
+
                 UnapplyPowerUpShifts(this);
+                ApplySpeedBoosts(this, SetPieces);
 
                 ToggledOn = false;
             }
 
             return (bool)ToggledOn;
         }
-        public void CollectStats(Templates.StatCollector stats)
+        public void CollectStatsPowerUp(Templates.StatCollector stats)
+        {
+            stats.Set("MaxChaosEmeralds", MaxSetPieces);
+            stats.Set("QuicknessBoost", $"{10.Signed()} to {20.Signed()} per Chaos Emerald ({(20 * SetPieces).Signed()})");
+            stats.Set("MoveSpeedBoost", $"{20.Signed()} to {35.Signed()} per Chaos Emerald ({(35 * SetPieces).Signed()})");
+            stats.Set("StrengthBonus", 10.Signed());
+            stats.Set("AgilityBonus", 10.Signed());
+            stats.Set("ToughnessBonus", 10.Signed());
+            stats.Set("IntelligenceBonus", 10.Signed());
+            stats.Set("ChargeForRounds", PowerUpAbilityTurns);
+        }
+        public void CollectStatsFlight(Templates.StatCollector stats)
         {
             stats.Set("CrashChance", Flight.GetMoveFallChance(FlightUser, this));
+        }
+        public void CollectStatsSwoop(Templates.StatCollector stats)
+        {
             stats.Set("SwoopCrashChance", Flight.GetSwoopFallChance(FlightUser, this));
         }
         public override bool IsActivePartEngaged()
@@ -609,7 +621,7 @@ namespace XRL.World.Parts
             {
                 if (FlightUser != null && FlightUser.IsPlayer())
                 {
-                    Popup.ShowFail($"{ParentObject.The}{ParentObject.ShortDisplayName}{ParentObject.Is} unresponsive.");
+                    Popup.ShowFail($"{ParentObject.Poss(FlightSourceDescription)} are unresponsive.");
                 }
                 return false;
             }
@@ -635,6 +647,14 @@ namespace XRL.World.Parts
         public override void TurnTick(long TimeTick, int Amount)
         {
             bool haveSufficientCharge = !(LowestEmeraldCharge < 100);
+            if (haveSufficientCharge)
+            {
+                EnableMyActivatedAbility(PowerUpActivatedAbilityID);
+            }
+            else
+            {
+                DisableMyActivatedAbility(PowerUpActivatedAbilityID);
+            }
             if (PoweredUp)
             {
                 if (haveSufficientCharge)
@@ -652,18 +672,9 @@ namespace XRL.World.Parts
                 if (anounceTurnsLeft 
                     && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
                 {
-                    ParentObject.EmitMessage($"=pronoun.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
+                    ParentObject.EmitMessage($"=pronouns.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
                 }
-            }
-            haveSufficientCharge = !(LowestEmeraldCharge < 100);
-            if (haveSufficientCharge)
-            {
-                EnableMyActivatedAbility(PowerUpActivatedAbilityID);
-            }
-            else
-            {
-                DisableMyActivatedAbility(PowerUpActivatedAbilityID);
-            }
+            }            
             SyncPowerUpAbilityName();
 
             base.TurnTick(TimeTick, Amount);
@@ -677,6 +688,7 @@ namespace XRL.World.Parts
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == CommandEvent.ID
                 || ID == BeforeAbilityManagerOpenEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
                 || ID == AIGetPassiveAbilityListEvent.ID
@@ -719,6 +731,48 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
+            if (E.Command == COMMAND_NAME_POWER_UP)
+            {
+                GameObject actor = ParentObject;
+
+                ToggleMyActivatedAbility(PowerUpActivatedAbilityID, null, Silent: true, null);
+                Debug.Entry(3, "Power Up Toggled", Toggle: doDebug);
+
+                Debug.Entry(3, "Proceeding to Power Up Ability Effects", Toggle: doDebug);
+                ActivatedAbilityPowerUpToggled(actor, IsMyActivatedAbilityToggledOn(PowerUpActivatedAbilityID));
+            }
+            if (E.Command == FlightEvent)
+            {
+                if (FlightUser.IsActivatedAbilityToggledOn(FlightActivatedAbilityID))
+                {
+                    if (FlightUser.IsPlayer() && currentCell != null && FlightUser.GetEffectCount(typeof(Flying)) <= 1)
+                    {
+                        List<GameObject> cellObjects = Event.NewGameObjectList(currentCell.GetObjectsWithPart(nameof(StairsDown)));
+                        if (!cellObjects.IsNullOrEmpty())
+                        {
+                            foreach (GameObject cellObject in cellObjects)
+                            {
+                                StairsDown stairsDown = cellObject.GetPart<StairsDown>();
+                                if (stairsDown != null
+                                    && stairsDown.IsLongFall()
+                                    && Popup.WarnYesNo($"It looks like a long way down {cellObject.t()} you're above. Are you sure you want to stop flying?") != DialogResult.Yes)
+                                {
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    Flight.StopFlying(FlightUser, FlightUser, this);
+                }
+                else
+                {
+                    if (!TryFly())
+                    {
+                        return ParentObject.Fail(ParentObject.Poss(FlightSourceDescription) + " are unresponsive!");
+                    }
+                    Flight.StartFlying(FlightUser, FlightUser, this);
+                }
+            }
             if (E.Command == nameof(ChaosEmeraldSetPiece))
             {
                 int indent = Debug.LastIndent;
@@ -728,36 +782,27 @@ namespace XRL.World.Parts
                     $"{nameof(Event)} E) for: " +
                     $"{ParentObject?.DebugName ?? NULL}",
                     Indent: indent, Toggle: doDebug);
-                /*
-                if (ParentObject.Equipped != null)
-                {
-                    if (E.HasFlag("UnGrant") || !CheckEquipped(ParentObject.Equipped))
-                    {
-                        if (UnGrantBonus(ParentObject.Equipped))
-                        {
-                            BonusActive = false;
-                        }
-                    }
-                    else
-                    {
-                        if (GrantBonus(ParentObject.Equipped))
-                        {
-                            BonusActive = true;
-                        }
-                    }
-                }
-                */
+                
                 Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
         {
-            DescribeMyActivatedAbility(FlightActivatedAbilityID, CollectStats, FlightUser);
-            ActivatedAbilityEntry activatedAbilityEntry = FlightUser?.GetActivatedAbilityByCommand(Flight.SWOOP_ATTACK_COMMAND_NAME);
-            if (activatedAbilityEntry != null)
+            ActivatedAbilityEntry powerUpActivatedAbilityEntry = ParentObject?.GetActivatedAbilityByCommand(COMMAND_NAME_POWER_UP);
+            if (powerUpActivatedAbilityEntry != null)
             {
-                DescribeMyActivatedAbility(activatedAbilityEntry.ID, CollectStats, FlightUser);
+                DescribeMyActivatedAbility(powerUpActivatedAbilityEntry.ID, CollectStatsPowerUp, ParentObject);
+            }
+            ActivatedAbilityEntry flightActivatedAbilityEntry = FlightUser?.GetActivatedAbilityByCommand(FlightEvent);
+            if (flightActivatedAbilityEntry != null)
+            {
+                DescribeMyActivatedAbility(flightActivatedAbilityEntry.ID, CollectStatsFlight, FlightUser);
+            }
+            ActivatedAbilityEntry swoopActivatedAbilityEntry = FlightUser?.GetActivatedAbilityByCommand(Flight.SWOOP_ATTACK_COMMAND_NAME);
+            if (swoopActivatedAbilityEntry != null)
+            {
+                DescribeMyActivatedAbility(swoopActivatedAbilityEntry.ID, CollectStatsSwoop, FlightUser);
             }
             return base.HandleEvent(E);
         }
@@ -772,7 +817,10 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIGetPassiveAbilityListEvent E)
         {
-            if (!FlightFlying && E.Actor == FlightUser && Flight.EnvironmentAllowsFlight(E.Actor) && Flight.IsAbilityAIUsable(this, E.Actor))
+            if (!FlightFlying 
+                && E.Actor == FlightUser 
+                && Flight.EnvironmentAllowsFlight(E.Actor) 
+                && Flight.IsAbilityAIUsable(this, E.Actor))
             {
                 E.Add(FlightEvent);
             }
@@ -780,9 +828,19 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
-            if (!FlightFlying && FlightUser == E.Actor && Flight.EnvironmentAllowsFlight(E.Actor) && Flight.IsAbilityAIUsable(this, E.Actor))
+            if (!FlightFlying 
+                && FlightUser == E.Actor 
+                && Flight.EnvironmentAllowsFlight(E.Actor) 
+                && Flight.IsAbilityAIUsable(this, E.Actor))
             {
                 E.Add(FlightEvent);
+            }
+            if (!PoweredUp
+                && ParentObject == E.Actor
+                && PowerUpActivatedAbilityID != Guid.Empty
+                && IsMyActivatedAbilityAIUsable(PowerUpActivatedAbilityID))
+            {
+                E.Add(COMMAND_NAME_POWER_UP);
             }
             return base.HandleEvent(E);
         }
@@ -852,46 +910,7 @@ namespace XRL.World.Parts
         }
         public override bool FireEvent(Event E)
         {
-            if (E.ID == COMMAND_NAME_POWER_UP)
-            {
-                GameObject actor = ParentObject;
-
-                ToggleMyActivatedAbility(PowerUpActivatedAbilityID, null, Silent: true, null);
-                Debug.Entry(3, "Power Up Toggled", Toggle: doDebug);
-
-                Debug.Entry(3, "Proceeding to Power Up Ability Effects", Toggle: doDebug);
-                ActivatedAbilityPowerUpToggled(actor, IsMyActivatedAbilityToggledOn(PowerUpActivatedAbilityID));
-            }
-            if (E.ID == FlightEvent)
-            {
-                if (FlightUser.IsActivatedAbilityToggledOn(FlightActivatedAbilityID))
-                {
-                    if (FlightUser.IsPlayer() && currentCell != null && FlightUser.GetEffectCount(typeof(Flying)) <= 1)
-                    {
-                        int i = 0;
-                        for (int count = currentCell.Objects.Count; i < count; i++)
-                        {
-                            GameObject gameObject = currentCell.Objects[i];
-                            StairsDown stairsDown = gameObject.GetPart<StairsDown>();
-                            if (stairsDown != null 
-                                && stairsDown.IsLongFall() 
-                                && Popup.WarnYesNo($"It looks like a long way down {gameObject.the}{gameObject.ShortDisplayName} you're above. Are you sure you want to stop flying?") != DialogResult.Yes)
-                            {
-                                return false;
-                            }
-                        }
-                    }
-                    Flight.StopFlying(ParentObject, FlightUser, this);
-                }
-                else
-                {
-                    if (!TryFly())
-                    {
-                        return false;
-                    }
-                    Flight.StartFlying(ParentObject, FlightUser, this);
-                }
-            }
+            
             return base.FireEvent(E);
         }
         public override bool HandleEvent(EffectAppliedEvent E)
@@ -907,11 +926,11 @@ namespace XRL.World.Parts
                 int animationFrame = (int)Math.Floor(frame / 15.0);
                 string foregroundColor = animationFrame switch
                 {
-                    0 => "W",
-                    1 => "Y",
-                    2 => "W",
-                    3 => "Y",
-                    _ => "W",
+                    0 => "&W",
+                    1 => "&Y",
+                    2 => "&W",
+                    3 => "&Y",
+                    _ => "&W",
                 };
                 string detailColor = animationFrame switch
                 {
@@ -921,10 +940,32 @@ namespace XRL.World.Parts
                     3 => "W",
                     _ => "Y",
                 };
-                E.ApplyColors($"&{foregroundColor}", detailColor, int.MaxValue, int.MaxValue);
-                if (frame == 0 || frame == 14 || frame == 29 || frame == 44)
+                E.ApplyColors(foregroundColor, detailColor, int.MaxValue, int.MaxValue);
+
+                List<string> symbolsBag = new()
                 {
-                    TransformationParticles(ParentObject, Stat.RandomCosmetic(6, 12), Color1: foregroundColor, Color2: detailColor);
+                    "\u0015",   // §
+                    "\u00A7",   // º
+                    "\u0009",   // ○
+                    "\u00FB",   // √
+                    "\u0021",   // !
+                };
+                List<string> colorsBag = new()
+                {
+                    "W",
+                    "W",
+                    "Y",
+                    "Y",
+                    "y",
+                    "O",
+                };
+                string Symbol1 = symbolsBag.DrawRandomToken();
+                string Color1 = colorsBag.DrawRandomToken();
+                string Symbol2 = symbolsBag.DrawRandomToken();
+                string Color2 = colorsBag.DrawRandomToken(ExceptForToken: Color1);
+                if (frame == 9 || frame == 19 || frame == 29 || frame == 39 || frame == 49 || frame == 59)
+                {
+                    TransformationParticles(ParentObject, Stat.RandomCosmetic(2, 4), Symbol1: Symbol1, Color1: Color1, Symbol2: Symbol2, Color2: Color2);
                 }
             }
             return base.Render(E);
@@ -932,8 +973,8 @@ namespace XRL.World.Parts
         public static void TransformationParticles(GameObject Transformer, int Count = 8, int Life = 8, string Symbol1 = ".", string Color1 = "W", string Symbol2 = "\u00B1", string Color2 = "Y")
         {
             Cell from = Transformer.CurrentCell;
-            Cell to = from.GetCellFromDirection("D", false);
-            float angle = (float)Math.Atan2(from.Y - to.Y, from.X - to.X);
+            Cell to = from.GetCellFromDirection("N", false);
+            float angle = (float)Math.Atan2(to.X - from.X, to.Y - from.Y);
 
             for (int i = 0; i < Count; i++)
             {

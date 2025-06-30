@@ -29,4 +29,23 @@
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y"  State="ToggleOn" />
   </ability>
+  <ability Command="Command_UD_ChaosEmeraldSetBonus_PowerUp">
+    <description>
+      <p>You draw on the power of the <stat Name="MaxChaosEmeralds" /> Chaos Emeralds to undergo a Super Transformation.</p>
+      <br />
+			<p>While transformed, you gain a boost to the Quickness and Move Speed bonuses granted by the Chaos Emeralds, a boost to your physical stats and intelligence, and the abilitiy to fly, however you draw power from each of the Chaos Emeralds every turn until they are depleated or you deactivate the transformation.</p>
+      <br />
+      <!-- Need statlines about speed boosts -->
+      <statline Name="QuicknessBoost" DisplayName="Quickness boost" />
+      <statline Name="MoveSpeedBoost" DisplayName="Move Speed boost" />
+      <statline Name="StrengthBonus" DisplayName="Strength bonus" />
+      <statline Name="AgilityBonus" DisplayName="Agility bonus" />
+      <statline Name="ToughnessBonus" DisplayName="Toughness bonus" />
+      <statline Name="IntelligenceBonus" DisplayName="Intelligence bonus" />
+      <statline Name="ChargeForRounds" DisplayName="Rounds available from current charge" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="w" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="W" Detail="Y"  State="ToggleOn" />
+  </ability>
 </activatedabilities>
