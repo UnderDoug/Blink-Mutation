@@ -43,6 +43,7 @@ namespace XRL.World.Parts
 
         public int LowestEmeraldCharge => GetLowestEmeraldCharge();
         public int PowerUpAbilityTurns => Math.Max(0, (int)Math.Floor(LowestEmeraldCharge / 100f));
+        private int RunningPowerUpTurns = 0;
 
         public static string PowerUpAbilityName => "Super Transformation";
 
@@ -360,7 +361,7 @@ namespace XRL.World.Parts
 
                 Wielder.UnregisterEvent(ChaosEmeraldSetBonus, ApplyEffectEvent.ID);
 
-                ChaosEmeraldSetBonus.PowerUpActivatedAbilityID = ChaosEmeraldSetBonus.AddActivatedAbilityPowerUp(Wielder);
+                ChaosEmeraldSetBonus.RemoveActivatedAbilityPowerUp(Wielder);
 
                 ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
 
@@ -515,7 +516,7 @@ namespace XRL.World.Parts
         }
         public virtual Guid AddActivatedAbilityPowerUp(GameObject Creature, bool Force = false, bool Silent = false)
         {
-            if ((Creature.HasBodyPart("Hand", false) && PowerUpActivatedAbilityID == Guid.Empty) || Force)
+            if (PowerUpActivatedAbilityID == Guid.Empty || Force)
             {
                 PowerUpActivatedAbilityID =
                     AddMyActivatedAbility(
@@ -539,7 +540,7 @@ namespace XRL.World.Parts
         public virtual bool RemoveActivatedAbilityPowerUp(GameObject Creature, bool Force = false)
         {
             bool removed = false;
-            if ((!Creature.HasBodyPart("Hand", false) && PowerUpActivatedAbilityID != Guid.Empty) || Force)
+            if (PowerUpActivatedAbilityID != Guid.Empty || Force)
             {
                 if (removed = RemoveMyActivatedAbility(ref PowerUpActivatedAbilityID, Creature))
                 {
@@ -653,7 +654,8 @@ namespace XRL.World.Parts
             }
             else
             {
-                DisableMyActivatedAbility(PowerUpActivatedAbilityID);
+                DisableMyActivatedAbility(PowerUpActivatedAbilityID); 
+                ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
             }
             if (PoweredUp)
             {
@@ -668,13 +670,14 @@ namespace XRL.World.Parts
                 {
                     ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
                 }
-                bool anounceTurnsLeft = TimeTick % (ParentObject.Stat("Speed") / 100) == 0;
-                if (anounceTurnsLeft 
+                bool turnsAnnounced = RunningPowerUpTurns == PowerUpAbilityTurns;
+                RunningPowerUpTurns = PowerUpAbilityTurns;
+                if (!turnsAnnounced 
                     && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
                 {
                     ParentObject.EmitMessage($"=pronouns.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
                 }
-            }            
+            }
             SyncPowerUpAbilityName();
 
             base.TurnTick(TimeTick, Amount);
@@ -922,7 +925,7 @@ namespace XRL.World.Parts
         {
             if (PoweredUp)
             {
-                int frame = XRLCore.CurrentFrame % 60;
+                int frame = XRLCore.CurrentFrame;
                 int animationFrame = (int)Math.Floor(frame / 15.0);
                 string foregroundColor = animationFrame switch
                 {
@@ -942,30 +945,31 @@ namespace XRL.World.Parts
                 };
                 E.ApplyColors(foregroundColor, detailColor, int.MaxValue, int.MaxValue);
 
-                List<string> symbolsBag = new()
-                {
-                    "\u0015",   // §
-                    "\u00A7",   // º
-                    "\u0009",   // ○
-                    "\u00FB",   // √
-                    "\u0021",   // !
-                };
-                List<string> colorsBag = new()
-                {
-                    "W",
-                    "W",
-                    "Y",
-                    "Y",
-                    "y",
-                    "O",
-                };
-                string Symbol1 = symbolsBag.DrawRandomToken();
-                string Color1 = colorsBag.DrawRandomToken();
-                string Symbol2 = symbolsBag.DrawRandomToken();
-                string Color2 = colorsBag.DrawRandomToken(ExceptForToken: Color1);
                 if (frame == 9 || frame == 19 || frame == 29 || frame == 39 || frame == 49 || frame == 59)
                 {
-                    TransformationParticles(ParentObject, Stat.RandomCosmetic(2, 4), Symbol1: Symbol1, Color1: Color1, Symbol2: Symbol2, Color2: Color2);
+                    List<string> colorsBag = new()
+                    {
+                        "W",
+                        "W",
+                        "Y",
+                        "Y",
+                        "y",
+                        "O",
+                    };
+                    string Color1 = colorsBag.DrawRandomToken();
+                    string Color2 = colorsBag.DrawRandomToken(ExceptForToken: Color1);
+                    TransformationParticles(
+                        Transformer: ParentObject, 
+                        Count: Stat.RandomCosmetic(3, 5), 
+                        Life: 2, 
+                        Symbol1: ".", 
+                        Color1: Color1, 
+                        Symbol2: "\u00B0", 
+                        Color2: Color2);
+                }
+                if (frame == 0)
+                {
+                    PlayWorldSound("Sounds/Interact/sfx_interact_torch_light", Stat.RandomCosmetic(4,6)/10f, Delay: Stat.RandomCosmetic(1,2)/10f);
                 }
             }
             return base.Render(E);
@@ -974,7 +978,7 @@ namespace XRL.World.Parts
         {
             Cell from = Transformer.CurrentCell;
             Cell to = from.GetCellFromDirection("N", false);
-            float angle = (float)Math.Atan2(to.X - from.X, to.Y - from.Y);
+            float angle = (float)Math.Atan2(0, -1);
 
             for (int i = 0; i < Count; i++)
             {

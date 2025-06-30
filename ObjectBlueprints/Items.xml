@@ -180,14 +180,12 @@
     <tag Name="EquipmentFrameColors" Value="yGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_gemstone" />
     <xtagGrammar Proper="true" />
-    <tag Name="IndefiniteArticle" Value="the" />
-    <tag Name="DefiniteArticle" Value="the" />
     <tag Name="NoEffects" />
     <part Name="NoRust" />
     <part Name="NoBreak" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
-    <part Name="TakenAccomplishment" Text="You &lt;spice.commonPhrases.retrieve.!random&gt; a most &lt;spice.elements.!random.adjectives&gt; relic, =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonPhrases.prized.!random&gt; relic. =player.Subjective= took the &lt;spice.commonPhrases.strange.!random&gt; gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.refname=." />
+    <part Name="TakenAccomplishment" Text="You &lt;spice.commonPhrases.retrieve.!random&gt; a most &lt;spice.elements.!random.adjectives&gt; relic, =this.the= =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.the= =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonPhrases.prized.!random&gt; relic. =player.Subjective= took the &lt;spice.commonPhrases.strange.!random&gt; gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.the= =this.refname=." />
     <stag Name="Floating" />
     <stag Name="Travel" />
     <stag Name="Movement" />
@@ -234,14 +232,14 @@
     <tag Name="EquipmentFrameColors" Value="yCYc" />
   </object>
   <object Name="Pink Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{M|Pink}} {{Y|Chaos}} {{M-Y-m-Y-M-y-M  alternation|Emerald}}" 
+    <part Name="Render" DisplayName="{{M|Pink}} {{Y|Chaos}} {{M-Y-m-Y-M-y-M alternation|Emerald}}" 
           ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Amethyst" Alternate="Polished Amethyst" />
     <part Name="UniqueWithAlternative" Alternative="Polished Amethyst" />
     <tag Name="EquipmentFrameColors" Value="yMYm" />
   </object>
   <object Name="Orange Chaos Emerald" Inherits="BaseChaosEmerald">
-    <part Name="Render" DisplayName="{{O|Orange}} {{Y|Chaos}} {{O-Y-o-Y-O-y-O  alternation|Emerald}}" 
+    <part Name="Render" DisplayName="{{O|Orange}} {{Y|Chaos}} {{O-Y-o-Y-O-y-O alternation|Emerald}}" 
           ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
     <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
     <part Name="ModExtradimensional" IsEMPSensitive="false" />

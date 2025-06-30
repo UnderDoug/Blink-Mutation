@@ -199,6 +199,10 @@ namespace XRL.World.WorldBuilders
                 {
                     The.Player.ReceiveObject(The.ZoneManager.PullCachedObject(chaosEmerald.ID, false));
                     chaosEmerald.MakeUnderstood();
+                    if (chaosEmerald.TryGetPart(out SecretRevealer secretRevealer))
+                    {
+                        chaosEmerald.RemovePart(secretRevealer);
+                    }
                 }
             }
         }

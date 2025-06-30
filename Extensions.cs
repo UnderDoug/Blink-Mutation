@@ -52,6 +52,9 @@ namespace UD_Blink_Mutation
             if (MethodName == nameof(GetMovementsPerTurn))
                 return false;
 
+            if (MethodName == nameof(DrawSeededToken))
+                return false;
+
             return doDebug;
         }
 
