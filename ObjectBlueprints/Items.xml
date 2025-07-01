@@ -171,9 +171,9 @@
     <part Name="ItemElements" Elements="jewels::10;;might::10;;time::10;;chance::10;;stars::8;;scholarship::5;;travel::5;;glass::5;;circuitry::2" />
     <part Name="FloatingNearbyOnEquip" MaxSlots="7" />
     <part Name="MutationOnEquip" ClassName="Telepathy" />
-    <part Name="SolarArray" ChargeRate="15" IsEMPSensitive="false" />
-    <part Name="BroadcastPowerReceiver" ChargeRate="25" IsEMPSensitive="false" />
-    <part Name="ZeroPointEnergyCollector" ChargeRate="40" World="*" IsEMPSensitive="false" />
+    <part Name="SolarArray" ChargeRate="10" IsEMPSensitive="false" />
+    <part Name="BroadcastPowerReceiver" ChargeRate="20" IsEMPSensitive="false" />
+    <part Name="ZeroPointEnergyCollector" ChargeRate="20" World="*" IsEMPSensitive="false" />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="100" IsEMPSensitive="false" />
     <part Name="ChaosEmeraldSetPiece" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
@@ -185,7 +185,7 @@
     <part Name="NoBreak" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
-    <part Name="TakenAccomplishment" Text="You &lt;spice.commonPhrases.retrieve.!random&gt; a most &lt;spice.elements.!random.adjectives&gt; relic, =this.the= =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.the= =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonPhrases.prized.!random&gt; relic. =player.Subjective= took the &lt;spice.commonPhrases.strange.!random&gt; gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.the= =this.refname=." />
+    <part Name="TakenAccomplishment" Text="You =ud_spice:commonPhrases.retrieve.!random= a most =ud_spice:elements.!random.adjectives.!random= relic, =this.the= =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.the= =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonPhrases.prized.!random&gt; relic. =player.Subjective= took the &lt;spice.commonPhrases.strange.!random&gt; gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.the= =this.refname=." />
     <stag Name="Floating" />
     <stag Name="Travel" />
     <stag Name="Movement" />

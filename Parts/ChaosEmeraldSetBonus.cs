@@ -10,8 +10,6 @@ using XRL.UI;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
-using XRL.World.Parts.Skill;
-using XRL.World.Tinkering;
 
 using UD_Blink_Mutation;
 
@@ -26,6 +24,26 @@ namespace XRL.World.Parts
     public class ChaosEmeraldSetBonus : IActivePart, IFlightSource
     {
         private static bool doDebug => true;
+        private static bool getDoDebug(object what = null)
+        {
+            List<object> doList = new()
+            {
+                'V',    // Vomit
+            };
+            List<object> dontList = new()
+            {
+                'X',    // Trace
+                "TT",   // TurnTick
+            };
+
+            if (what != null && doList.Contains(what))
+                return true;
+
+            if (what != null && dontList.Contains(what))
+                return false;
+
+            return doDebug;
+        }
 
         public const string COMMAND_NAME_POWER_UP = "Command_UD_ChaosEmeraldSetBonus_PowerUp";
 
@@ -44,6 +62,9 @@ namespace XRL.World.Parts
         public int LowestEmeraldCharge => GetLowestEmeraldCharge();
         public int PowerUpAbilityTurns => Math.Max(0, (int)Math.Floor(LowestEmeraldCharge / 100f));
         private int RunningPowerUpTurns = 0;
+
+        [SerializeField]
+        private bool CoolingOff = false;
 
         public static string PowerUpAbilityName => "Super Transformation";
 
@@ -565,8 +586,9 @@ namespace XRL.World.Parts
 
             if ((bool)ToggledOn)
             {
-                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: 1, Toggle: doDebug);
+                DrawChargeFromChaosEmeralds();
 
+                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: 1, Toggle: doDebug);
                 Flight.AbilitySetup(Creature, Creature, this);
 
                 ApplyPowerUpShifts(this);
@@ -637,6 +659,28 @@ namespace XRL.World.Parts
             }
         }
 
+        public bool DrawChargeFromChaosEmeralds()
+        {
+            bool haveSufficientCharge = !(LowestEmeraldCharge < 100);
+            Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(DrawChargeFromChaosEmeralds)}() {nameof(haveSufficientCharge)}: {haveSufficientCharge}", 
+                Indent: 3, Toggle: getDoDebug("TT"));
+            if (haveSufficientCharge)
+            {
+                foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
+                {
+                    chaosEmerald.UseCharge(100);
+                    Debug.LoopItem(4, $"{nameof(chaosEmerald)}: {chaosEmerald.DebugName}", 
+                        Indent: 4, Toggle: getDoDebug("TT"));
+                }
+            }
+            else
+            {
+                Debug.CheckNah(4, $"Charge Insufficient", 
+                    Indent: 4, Toggle: getDoDebug("TT"));
+            }
+            return haveSufficientCharge;
+        }
+
         public override bool AllowStaticRegistration()
         {
             return true;
@@ -644,43 +688,6 @@ namespace XRL.World.Parts
         public override bool WantTurnTick()
         {
             return true;
-        }
-        public override void TurnTick(long TimeTick, int Amount)
-        {
-            bool haveSufficientCharge = !(LowestEmeraldCharge < 100);
-            if (haveSufficientCharge)
-            {
-                EnableMyActivatedAbility(PowerUpActivatedAbilityID);
-            }
-            else
-            {
-                DisableMyActivatedAbility(PowerUpActivatedAbilityID); 
-                ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
-            }
-            if (PoweredUp)
-            {
-                if (haveSufficientCharge)
-                {
-                    foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
-                    {
-                        chaosEmerald.UseCharge(100);
-                    }
-                }
-                else
-                {
-                    ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
-                }
-                bool turnsAnnounced = RunningPowerUpTurns == PowerUpAbilityTurns;
-                RunningPowerUpTurns = PowerUpAbilityTurns;
-                if (!turnsAnnounced 
-                    && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
-                {
-                    ParentObject.EmitMessage($"=pronouns.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
-                }
-            }
-            SyncPowerUpAbilityName();
-
-            base.TurnTick(TimeTick, Amount);
         }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
@@ -702,6 +709,57 @@ namespace XRL.World.Parts
                 || ID == BodyPositionChangedEvent.ID
                 || ID == MovementModeChangedEvent.ID
                 || ID == EffectAppliedEvent.ID;
+        }
+        public override void TurnTick(long TimeTick, int Amount)
+        {
+            Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(TurnTick)}({nameof(TimeTick)}: {TimeTick}, {nameof(Amount)}: {Amount})", 
+                Indent: 1, Toggle: getDoDebug("TT"));
+            if (CoolingOff && PowerUpAbilityTurns > 5)
+            {
+                CoolingOff = false;
+            }
+            if (!CoolingOff && !IsMyActivatedAbilityUsable(PowerUpActivatedAbilityID))
+            {
+                Debug.CheckYeh(4, $"!{nameof(CoolingOff)}", $"{!CoolingOff}", Indent: 2, Toggle: getDoDebug("TT"));
+                if (!IsMyActivatedAbilityUsable(PowerUpActivatedAbilityID))
+                {
+                    Debug.CheckYeh(4, $"Enabling {nameof(PowerUpActivatedAbilityID)}", Indent: 3, Toggle: getDoDebug("TT"));
+                    EnableMyActivatedAbility(PowerUpActivatedAbilityID);
+                }
+            }
+            else
+            {
+                Debug.CheckNah(4, $"!{nameof(CoolingOff)}", $"{!CoolingOff}", Indent: 2, Toggle: getDoDebug("TT"));
+            }
+            if (PoweredUp)
+            {
+                Debug.CheckYeh(4, $"{nameof(PoweredUp)}", $"{PoweredUp}", Indent: 2, Toggle: getDoDebug("TT"));
+                if (!DrawChargeFromChaosEmeralds())
+                {
+                    Debug.CheckNah(4, $"Deactivating {PowerUpAbilityName}", Indent: 3, Toggle: getDoDebug("TT"));
+
+                    ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
+
+                    CoolingOff = !ActivatedAbilityPowerUpToggled(ParentObject, PoweredUp)
+                        && DisableMyActivatedAbility(PowerUpActivatedAbilityID);
+                }
+                bool turnsAnnounced = RunningPowerUpTurns == PowerUpAbilityTurns;
+                RunningPowerUpTurns = PowerUpAbilityTurns;
+                if (!turnsAnnounced
+                    && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
+                {
+                    Debug.CheckYeh(4, $"Announce Turns Remaining: {PowerUpAbilityTurns}", Indent: 3, Toggle: getDoDebug("TT"));
+                    ParentObject.EmitMessage($"=pronouns.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
+                }
+            }
+            else
+            {
+                Debug.CheckYeh(4, $"{nameof(PoweredUp)}", $"{PoweredUp}", Indent: 2, Toggle: getDoDebug("TT"));
+                RunningPowerUpTurns = 0;
+            }
+            SyncPowerUpAbilityName();
+
+            base.TurnTick(TimeTick, Amount);
         }
         public override bool HandleEvent(ApplyEffectEvent E)
         {
@@ -742,7 +800,7 @@ namespace XRL.World.Parts
                 Debug.Entry(3, "Power Up Toggled", Toggle: doDebug);
 
                 Debug.Entry(3, "Proceeding to Power Up Ability Effects", Toggle: doDebug);
-                ActivatedAbilityPowerUpToggled(actor, IsMyActivatedAbilityToggledOn(PowerUpActivatedAbilityID));
+                ActivatedAbilityPowerUpToggled(actor, PoweredUp);
             }
             if (E.Command == FlightEvent)
             {
@@ -967,9 +1025,10 @@ namespace XRL.World.Parts
                         Symbol2: "\u00B0", 
                         Color2: Color2);
                 }
-                if (frame == 0)
+                if (frame == 9 || frame == 39)
                 {
-                    PlayWorldSound("Sounds/Interact/sfx_interact_torch_light", Stat.RandomCosmetic(4,6)/10f, Delay: Stat.RandomCosmetic(1,2)/10f);
+                    string powerUpSFX = true || CoinToss() ? "Sounds/Interact/sfx_interact_jetpack_activate" : "Sounds/Interact/sfx_interact_torch_light";
+                    PlayWorldSound(powerUpSFX, Stat.RandomCosmetic(14,18)/10f, Delay: Stat.RandomCosmetic(1,2)/10f, SourceCell: currentCell);
                 }
             }
             return base.Render(E);
@@ -989,7 +1048,8 @@ namespace XRL.World.Parts
                     ? $"&{Color1}{((Stat.RandomCosmetic(1, 4) < 4) ? Symbol1 : Symbol2)}" 
                     : $"&{Color2}{((Stat.RandomCosmetic(1, 4) < 4) ? Symbol2 : Symbol1)}"
                     ;
-                XRLCore.ParticleManager.Add(particle, from.X, from.Y, xDel, yDel, Life, 0f, 0f, 0L);
+                int fromX = CoinToss() ? from.X : from.X + Stat.RandomCosmetic(-1, 1);
+                XRLCore.ParticleManager.Add(particle, fromX, from.Y, xDel, yDel, Life);
             }
         }
     }

@@ -30,7 +30,7 @@
     <part Name="Body" Anatomy="TailedBiped" />
     <part Name="Description" Short="A small trembling spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
     <part Name="Corpse" CorpseChance="80" CorpseBlueprint="Prickle Pig Corpse" />
-    <stat Name="Hitpoints" sValue="5,2d4,1d(t*10)" />
+    <stat Name="Hitpoints" sValue="5,2d4,(t-1)d12+((t-1)*10)" />
     <stat Name="Level" Value="8" />
     <stat Name="Speed" Value="110" />
     <part Name="Swarmer" />
@@ -67,7 +67,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
     <tag Name="Subtype" Value="Speed Ball" />
-    <mutation Name="UD_Blink" DisplayName="Blink" Level="5" BaseRange="5" TileColor="B" Shouts="false" PhysicalFeatures="false" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="5" BaseRange="5" TileColor="B" Shouts="false" DoNani="false" PhysicalFeatures="false" />
     <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   
@@ -77,7 +77,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
     <part Name="Description" Short="A small stout spheroid =verb:scratch:afterpronoun= around =pronouns.possessive= surroundings seemingly searching for something... {{G|valuable}}. Possessed of =pronouns.reflexive=, =pronouns.subjective= =verb:pay:afterpronoun= little mind to would-be threats, unless, of course, they would serve as a perfect opportunity to show off =pronouns.possessive= {{R|martial}} {{Y|prowess}}." />
-    <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="R" Shouts="false" PhysicalFeatures="false" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="R" Shouts="false" DoNani="false" PhysicalFeatures="false" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="4" />
     <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <part Name="AISelfPreservation" Threshold="20" />
@@ -97,7 +97,10 @@
           RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 
           ColorString="&amp;K" TileColor="&amp;K" DetailColor="r" />
     <part Name="Description" Short="A small disaffected spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
-    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="K" Shouts="true" PhysicalFeatures="false" />
+    <mutation Name="UD_Blink" DisplayName="Blink" 
+              Level="10" TileColor="K"
+              Shouts="true" Shout="=object.t= =verb:aren't:afterpronoun= even good enough to be my fake!" ShoutColor="r"
+              PhysicalFeatures="false" />
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
     <intproperty Name="RapidLevel_Blink" Value="6" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="6" />
@@ -118,7 +121,9 @@
     <part Name="Description" Short="A small jittery spheroid =verb:whir:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{w|fleshier}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{r|{{W|m}}arv{{Y|e}}l}} of {{r|{{W|e}}ngin{{Y|e}}ering}}- Yosh! Those blue prickle pigs had better watch out, lest they find themselves equally {{c|mechanized}}." />
     <builder Name="Roboticized" ChanceOneIn="1" />
     <tag Name="Gender" Value="neuter" />
-    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b" Shouts="true" PhysicalFeatures="false" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b"
+              Shouts="true" Shout="TARGET: =object.T=" ShoutColor="b"
+              DoNani="false" PhysicalFeatures="false" />
     <intproperty Name="RapidLevel_UD_Blink" Value="9" />
     <intproperty Name="RapidLevel_Blink" Value="9" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="8" />

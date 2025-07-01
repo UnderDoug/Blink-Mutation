@@ -3,6 +3,7 @@ using Genkit;
 using Qud.API;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using UD_Blink_Mutation;
@@ -55,13 +56,16 @@ namespace XRL.World.Parts.Mutation
         public static readonly string BASE_TILE_COLOR = "&m";
 
         public static readonly string BASE_SHOUT = "psssh...nothin personnel...kid...";
-        public static readonly string BASE_SHOUT_COLOR = "&m";
+        public static readonly string BASE_SHOUT_COLOR = "m";
+
+        public static readonly string BASE_NANI = "Nani!?";
+        public static readonly string BASE_NANI_COLOR = "r";
 
         public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
 
         // Flags
         public bool BornThisWay => IsBornThisWay(ParentObject);
-        public string BornWith => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
+        public string MutationDescBornWithString => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
         public bool IsAnimatedBall => 
             IsBornThisWay(ParentObject)
@@ -161,6 +165,8 @@ namespace XRL.World.Parts.Mutation
         public string ShoutColor;
 
         public bool DoNani;
+        public string Nani;
+        public string NaniColor;
 
         public bool PhysicalFeatures;
 
@@ -174,6 +180,8 @@ namespace XRL.World.Parts.Mutation
             Shouts = true;
             Shout = GetShout();
             ShoutColor = GetShoutColor();
+            Nani = GetNani();
+            NaniColor = GetNaniColor();
             DoNani = true;
             PhysicalFeatures = false;
             ColorChange = true;
@@ -281,14 +289,23 @@ namespace XRL.World.Parts.Mutation
         }
         public string GetShoutColor()
         {
-            return ShoutColor ?? TileColor ?? BASE_SHOUT;
+            return ShoutColor ?? TileColor?.Replace("&", "") ?? BASE_SHOUT_COLOR;
+        }
+
+        public string GetNani()
+        {
+            return Nani ?? BASE_NANI;
+        }
+        public string GetNaniColor()
+        {
+            return NaniColor ?? BASE_NANI_COLOR;
         }
 
         public override string GetDescription()
         {
             StringBuilder SB = Event.NewStringBuilder();
 
-            SB.Append(BornWith);
+            SB.Append(MutationDescBornWithString);
             SB.AppendLine().Append("Possessed of great speed, you can ").AppendRule("move faster than perceptible").Append(".");
 
             return Event.FinalizeString(SB);
@@ -296,7 +313,7 @@ namespace XRL.World.Parts.Mutation
 
         public override void CollectStats(Templates.StatCollector stats, int Level)
         {
-            stats.Set("BornWith", BornWith, changes: false);
+            stats.Set("BornWith", MutationDescBornWithString, changes: false);
             stats.Set("BlinkRange", GetBlinkRange(Level, BaseRange));
             stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
@@ -870,7 +887,13 @@ namespace XRL.World.Parts.Mutation
 
             Debug.Entry(4, $"Checking blinker has {nameof(UD_Blink)}...", Indent: 1, Toggle: getDoDebug());
             bool hasBlink = Blinker.TryGetPart(out UD_Blink blink);
-            bool Shouts = hasBlink && blink.Shouts;
+            bool shouts = hasBlink && blink.Shouts;
+            bool doNani = hasBlink && blink.DoNani;
+
+            string shout = blink?.Shout;
+            string shoutColor = blink?.ShoutColor;
+            string nani = blink?.Nani;
+            string naniColor = blink?.NaniColor;
 
             Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
@@ -966,10 +989,10 @@ namespace XRL.World.Parts.Mutation
                 string didVerb = "teleport behind";
                 string didExtra = "";
                 string didEndMark = "!";
-                string didColor = "m";
+                string didColor = shoutColor;
 
-                string message = "psssh...nothin personnel...kid...";
-                string messageColor = "m";
+                string message = shout;
+                string messageColor = shoutColor;
                 float floatLength = 8.0f;
 
 
@@ -991,8 +1014,8 @@ namespace XRL.World.Parts.Mutation
                     Debug.Entry(4, $"Checking {nameof(attacked)}...", Indent: 2, Toggle: getDoDebug());
                     if (!attacked)
                     {
-                        message = "nani!?";
-                        messageColor = "r";
+                        message = doNani ? nani : "!?";
+                        messageColor = naniColor;
                     }
                     else
                     {
@@ -1007,12 +1030,12 @@ namespace XRL.World.Parts.Mutation
                 else
                 {
                     Debug.CheckNah(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
-                    message = "nani!?";
-                    messageColor = "r";
+                    message = doNani ? nani : "!?";
+                    messageColor = naniColor;
 
                     didVerb = "teleport in front of";
                     didEndMark = "!?";
-                    didColor = "r";
+                    didColor = naniColor;
                 }
 
 
@@ -1033,7 +1056,7 @@ namespace XRL.World.Parts.Mutation
                 Indent: 2, Toggle: getDoDebug());
                 Blinker.EmitMessage(message, null, messageColor);
 
-                if (ObnoxiousYelling && Shouts)
+                if (ObnoxiousYelling && shouts)
                 {
                     Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
                         Indent: 2, Toggle: getDoDebug());
@@ -1057,7 +1080,7 @@ namespace XRL.World.Parts.Mutation
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
-                        Color: "m"
+                        Color: shoutColor
                         );
                 }
                 else if (Blinker.TryGetPart(out AI_UD_Blinker aIBlink))
@@ -1067,7 +1090,7 @@ namespace XRL.World.Parts.Mutation
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
-                        Color: "m"
+                        Color: shoutColor
                         );
                 }
             }

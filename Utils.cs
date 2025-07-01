@@ -1,24 +1,21 @@
-﻿using System;
+﻿using ConsoleLib.Console;
+using HistoryKit;
+using Kobold;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using ConsoleLib.Console;
-
-using Kobold;
-
 using XRL;
-using XRL.UI;
+using XRL.Language;
 using XRL.Rules;
+using XRL.UI;
 using XRL.World;
 using XRL.World.Anatomy;
+using XRL.World.ObjectBuilders;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
-using XRL.World.Tinkering;
-using XRL.World.ObjectBuilders;
-using XRL.Language;
-
-using XRL.World.Text.Delegates;
 using XRL.World.Text.Attributes;
-
+using XRL.World.Text.Delegates;
+using XRL.World.Tinkering;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 
@@ -64,6 +61,22 @@ namespace UD_Blink_Mutation
                 }
             }
             return output;
+        }
+
+        [VariableReplacer]
+        public static string ud_spice(DelegateContext Context)
+        {
+            string output = "";
+            if (!Context.Parameters.IsNullOrEmpty())
+            {
+                output = HistoricStringExpander.ExpandString($"<spice.{Context.Parameters[0]}>").StartReplace().ToString();
+            }
+            return output;
+        }
+
+        public static bool CoinToss()
+        {
+            return Stat.RandomCosmetic(0, 99) % 2 == 0;
         }
 
         public static bool RegisterGameLevelEventHandlers()

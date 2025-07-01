@@ -57,6 +57,17 @@ namespace XRL.World.WorldBuilders
             { "Orange", null },
         };
 
+        public static List<string> EmeraldColors = new()
+        {
+            "Green",
+            "Red",
+            "Blue",
+            "Yellow",
+            "Cyan",
+            "Pink",
+            "Orange",
+        };
+
         public static Dictionary<string, GameObject> ChaosEmeralds = new();
 
         public override void OnAfterBuild(JoppaWorldBuilder Builder)
@@ -94,16 +105,8 @@ namespace XRL.World.WorldBuilders
                 { "Pink", GameObject.Create("Pink Chaos Emerald") },
                 { "Orange", GameObject.Create("Orange Chaos Emerald") },
             };
-            List<string> emeraldColors = new()
-            {
-                "Green",
-                "Red",
-                "Blue",
-                "Yellow",
-                "Cyan",
-                "Pink",
-                "Orange",
-            };
+
+            List<string> emeraldColors = new(EmeraldColors);
 
             string tombTopEmerald = emeraldColors.GetRandomElement();
             emeraldColors.Remove(tombTopEmerald);
@@ -117,7 +120,7 @@ namespace XRL.World.WorldBuilders
                 Debug.LoopItem(4, $"{nameof(color)}", $"{color} {emeraldObject.DebugName}",
                     Indent: indent + 2, Toggle: doDebug);
 
-                string emeraldName = $"the {color} {emeraldObject?.ShortDisplayNameStripped}";
+                string emeraldName = $"{emeraldObject?.T(AsIfKnown: true)}";
                 string emeraldSecret = $"${emeraldObject.Blueprint}".Replace(" ", "");
 
                 bool isTombTopEmerald = color == tombTopEmerald;
@@ -151,6 +154,9 @@ namespace XRL.World.WorldBuilders
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: doDebug);
                 
+                The.Game.SetObjectGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject)}:{color}", emeraldObject);
+                The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
+
                 if (isTombTopEmerald)
                 {
                     SecretRevealer secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
@@ -178,30 +184,54 @@ namespace XRL.World.WorldBuilders
         }
 
         [WishCommand(Command = "go chaos emerald")]
-        public static void GoChaosEmerald(string Color)
+        public static void GoChaosEmerald(string color)
         {
-            if (!Color.IsNullOrEmpty() && ChaosEmeraldLocations.ContainsKey(Grammar.MakeTitleCase(Color)))
+            if (!color.IsNullOrEmpty())
             {
-                Zone Z = The.ZoneManager.GetZone(ChaosEmeraldLocations[Grammar.MakeTitleCase(Color)]);
-                The.Player.Physics.CurrentCell.RemoveObject(The.Player.Physics.ParentObject);
-                Z.GetEmptyCells().GetRandomElement().AddObject(The.Player);
-                The.ZoneManager.SetActiveZone(Z);
-                The.ZoneManager.ProcessGoToPartyLeader();
+                string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}");
+                if (!zoneID.IsNullOrEmpty())
+                {
+                    Zone Z = The.ZoneManager.GetZone(zoneID);
+                    The.Player.Physics.CurrentCell.RemoveObject(The.Player.Physics.ParentObject);
+                    Cell landingCell = Z.GetFirstObjectWithPart(nameof(ChaosEmeraldSetPiece))?.CurrentCell;
+                    if (landingCell != null)
+                    {
+                        landingCell = landingCell.GetAdjacentCells(5).GetRandomElementCosmetic();
+                    }
+                    landingCell ??= Z.GetEmptyCells().GetRandomElement();
+                    if (landingCell != null)
+                    {
+                        landingCell.AddObject(The.Player);
+                        The.ZoneManager.SetActiveZone(Z);
+                        The.ZoneManager.ProcessGoToPartyLeader();
+                    }
+                    else
+                    {
+                        Popup.Show("Something went very wrong trying that! Check Player.log!", "Big Oops!");
+                    }
+                }
             }
         }
 
         [WishCommand(Command = "take chaos emeralds")]
         public static void TakeChaosEmeralds()
         {
-            if (!ChaosEmeralds.IsNullOrEmpty())
+            if (!EmeraldColors.IsNullOrEmpty())
             {
-                foreach ((string _, GameObject chaosEmerald) in ChaosEmeralds)
+                foreach (string color in EmeraldColors)
                 {
-                    The.Player.ReceiveObject(The.ZoneManager.PullCachedObject(chaosEmerald.ID, false));
-                    chaosEmerald.MakeUnderstood();
-                    if (chaosEmerald.TryGetPart(out SecretRevealer secretRevealer))
+                    if (The.Game.GetObjectGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject)}:{color}") is GameObject chaosEmerald)
                     {
-                        chaosEmerald.RemovePart(secretRevealer);
+                        chaosEmerald = The.ZoneManager.PullCachedObject(chaosEmerald.ID, false) ?? chaosEmerald;
+                        if (chaosEmerald != null)
+                        {
+                            The.Player.ReceiveObject(chaosEmerald);
+                            chaosEmerald.MakeUnderstood();
+                            if (chaosEmerald.TryGetPart(out SecretRevealer secretRevealer))
+                            {
+                                chaosEmerald.RemovePart(secretRevealer);
+                            }
+                        }
                     }
                 }
             }
