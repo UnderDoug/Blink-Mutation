@@ -1,10 +1,12 @@
 ﻿using Genkit;
 using System.Collections.Generic;
+using System;
 
 using XRL;
 using XRL.Rules;
 using XRL.UI;
 using XRL.Wish;
+using XRL.Language;
 using XRL.World;
 using XRL.World.Parts;
 using XRL.World.ZoneBuilders;
@@ -14,8 +16,6 @@ using UD_Blink_Mutation;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
-using XRL.Language;
-using System;
 
 namespace XRL.World.WorldBuilders
 {
@@ -154,7 +154,7 @@ namespace XRL.World.WorldBuilders
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: doDebug);
                 
-                The.Game.SetObjectGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject)}:{color}", emeraldObject);
+                The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}", int.Parse(emeraldObject.ID));
                 The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
 
                 if (isTombTopEmerald)
@@ -188,6 +188,7 @@ namespace XRL.World.WorldBuilders
         {
             if (!color.IsNullOrEmpty())
             {
+                color = Grammar.MakeTitleCase(color);
                 string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}");
                 if (!zoneID.IsNullOrEmpty())
                 {
@@ -210,6 +211,19 @@ namespace XRL.World.WorldBuilders
                         Popup.Show("Something went very wrong trying that! Check Player.log!", "Big Oops!");
                     }
                 }
+                else
+                {
+                    string validColors = "";
+                    foreach (string validColor in EmeraldColors)
+                    {
+                        if (!validColors.IsNullOrEmpty())
+                        {
+                            validColors += ", ";
+                        }
+                        validColors += validColor;
+                    }
+                    Popup.Show($"{color} doesn't seem to match any Emerald locations! Valid colors are (case-insensitive): {validColors}", "Uh-Oh!");
+                }
             }
         }
 
@@ -220,16 +234,16 @@ namespace XRL.World.WorldBuilders
             {
                 foreach (string color in EmeraldColors)
                 {
-                    if (The.Game.GetObjectGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject)}:{color}") is GameObject chaosEmerald)
+                    if (The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}") is int chaosEmeraldID)
                     {
-                        chaosEmerald = The.ZoneManager.PullCachedObject(chaosEmerald.ID, false) ?? chaosEmerald;
-                        if (chaosEmerald != null)
+                        GameObject chaosEmeraldObject = The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false) ?? GameObject.FindByID(chaosEmeraldID);
+                        if (chaosEmeraldObject != null)
                         {
-                            The.Player.ReceiveObject(chaosEmerald);
-                            chaosEmerald.MakeUnderstood();
-                            if (chaosEmerald.TryGetPart(out SecretRevealer secretRevealer))
+                            The.Player.ReceiveObject(chaosEmeraldObject);
+                            chaosEmeraldObject.MakeUnderstood();
+                            if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
                             {
-                                chaosEmerald.RemovePart(secretRevealer);
+                                chaosEmeraldObject.RemovePart(secretRevealer);
                             }
                         }
                     }

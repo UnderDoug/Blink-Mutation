@@ -232,17 +232,18 @@ namespace XRL.World.Parts.Mutation
         {
             return BaseRange + (int)Math.Min(9, Math.Floor(Level / 2.0));
         }
-        public static int GetBlinkRange(GameObject Blinker)
+        public static int GetBlinkRange(GameObject Blinker, int Level = 0, int BaseRange = 3, string Context = null)
         {
             if (Blinker.TryGetPart(out UD_Blink blink))
             {
-                return GetBlinkRange(blink.Level, blink.BaseRange);
+                Level = Level == 0 ? blink.Level : Level;
+                BaseRange = BaseRange == 0 ? blink.BaseRange : BaseRange;
             }
-            return 0;
+            return (Level > 0) ? GetBlinkRangeEvent.GetFor(Blinker, blink, GetBlinkRange(Level, BaseRange), Context) : -1;
         }
         public int GetBlinkRange()
         {
-            return GetBlinkRange(Level, BaseRange);
+            return GetBlinkRange(ParentObject, Level, BaseRange, nameof(UD_Blink));
         }
 
         public static string GetColdSteelDamage(int Level)
@@ -890,9 +891,9 @@ namespace XRL.World.Parts.Mutation
             bool shouts = hasBlink && blink.Shouts;
             bool doNani = hasBlink && blink.DoNani;
 
-            string shout = blink?.Shout;
+            string shout = GameText.VariableReplace(blink?.Shout, Blinker, Kid);
             string shoutColor = blink?.ShoutColor;
-            string nani = blink?.Nani;
+            string nani = GameText.VariableReplace(blink?.Nani, Blinker, Kid);
             string naniColor = blink?.NaniColor;
 
             Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
@@ -942,6 +943,21 @@ namespace XRL.World.Parts.Mutation
                 }
             }
 
+            Debug.Entry(4, $"Checking {nameof(BeforeBlinkEvent)}...", Indent: 1, Toggle: getDoDebug());
+            if (!BeforeBlinkEvent.Check(Blinker, blink, out string eventBlockReason, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path))
+            {
+                Debug.CheckNah(4, $"{nameof(BeforeBlinkEvent)} blocked Blink: {nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}", 
+                    Indent: 2, Toggle: getDoDebug());
+                if (Blinker.IsPlayer())
+                {
+                    if (!Silent && !eventBlockReason.IsNullOrEmpty())
+                    {
+                        Popup.ShowFail(eventBlockReason);
+                    }
+                    return false;
+                }
+            }
+
             bool isNani = false;
             bool doNothinPersonnel = false;
             Debug.Entry(4, $"Initialized {nameof(isNani)} ({isNani}) and {nameof(doNothinPersonnel)} ({doNothinPersonnel})...", 
@@ -986,8 +1002,8 @@ namespace XRL.World.Parts.Mutation
             if (doNothinPersonnel)
             {
                 Debug.CheckYeh(4, $"{nameof(doNothinPersonnel)}", $"{doNothinPersonnel}", Indent: 2, Toggle: getDoDebug());
-                string didVerb = "teleport behind";
-                string didExtra = "";
+                string didVerb = "teleport";
+                string didExtra = "behind";
                 string didEndMark = "!";
                 string didColor = shoutColor;
 
@@ -1033,17 +1049,17 @@ namespace XRL.World.Parts.Mutation
                     message = doNani ? nani : "!?";
                     messageColor = naniColor;
 
-                    didVerb = "teleport in front of";
+                    didExtra = "in front of";
                     didEndMark = "!?";
                     didColor = naniColor;
                 }
 
+                didExtra = $"{didExtra} {Kid.t()}";
 
                 Debug.Entry(4, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
                     Indent: 2, Toggle: getDoDebug());
-                blink.DidXToY(
+                blink.DidX(
                     Verb: didVerb, 
-                    Object: Kid,
                     Extra: didExtra, 
                     EndMark: didEndMark, 
                     SubjectOverride: null, 
@@ -1052,12 +1068,25 @@ namespace XRL.World.Parts.Mutation
                     ColorAsBadFor: isNani ? Blinker : Kid
                     );
 
-                Debug.Entry(4, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
-                Indent: 2, Toggle: getDoDebug());
-                Blinker.EmitMessage(message, null, messageColor);
+                
+                if (shouts || isNani)
+                {
+                    Debug.CheckYeh(4, $"{nameof(shouts)}: {shouts} or {nameof(isNani)}: {isNani}",
+                        Indent: 2, Toggle: getDoDebug());
+                    Debug.Entry(4, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
+                        Indent: 3, Toggle: getDoDebug());
+                    Blinker.EmitMessage(message, null, messageColor);
+                }
+                else
+                {
+                    Debug.CheckNah(4, $"{nameof(shouts)}: {shouts}, {nameof(isNani)}: {isNani}",
+                        Indent: 2, Toggle: getDoDebug());
+                }
 
                 if (ObnoxiousYelling && shouts)
                 {
+                    Debug.CheckYeh(4, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                        Indent: 2, Toggle: getDoDebug());
                     Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
                         Indent: 2, Toggle: getDoDebug());
                     Blinker.ParticleText(
@@ -1068,6 +1097,11 @@ namespace XRL.World.Parts.Mutation
                         floatLength: floatLength
                         );
                 }
+                else
+                {
+                    Debug.CheckNah(4, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                        Indent: 2, Toggle: getDoDebug());
+                }
             }
             else
             {
@@ -1076,7 +1110,7 @@ namespace XRL.World.Parts.Mutation
                 if (blink != null)
                 {
                     blink.DidX(
-                        Verb: "blunk",
+                        Verb: Blinker.IsPlayerControlled() ? "blunk" : "blink",
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
@@ -1086,7 +1120,7 @@ namespace XRL.World.Parts.Mutation
                 else if (Blinker.TryGetPart(out AI_UD_Blinker aIBlink))
                 {
                     aIBlink.DidX(
-                        Verb: "blunk",
+                        Verb: Blinker.IsPlayerControlled() ? "blunk" : "blink",
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
@@ -1098,6 +1132,8 @@ namespace XRL.World.Parts.Mutation
                 $"{nameof(UD_Blink)}." +
                 $"{nameof(Blink)}() [{TICK}] Blunk",
                 Indent: 0, Toggle: getDoDebug());
+
+            AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
             return Blinker.CurrentCell == Destination;
         }
         public static bool Blink(GameObject Blinker, string Direction, bool IsNothinPersonnelKid = false, bool Silent = false)

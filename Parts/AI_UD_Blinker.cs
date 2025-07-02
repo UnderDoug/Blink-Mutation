@@ -36,7 +36,7 @@ namespace XRL.World.Parts
         public int BaseCooldown = 60;
         public int BlinkLevel = 5;
         public int BaseRange = 3;
-        public int Range => HasBlink ? BlinkMutation.GetBlinkRange() : UD_Blink.GetBlinkRange(BlinkLevel, BaseRange);
+        public int Range => UD_Blink.GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
 
         public bool IsNothinPersonnelKid => HasBlink ? BlinkMutation.IsNothinPersonnelKid : ParentObject != null && !ParentObject.IsFleeing();
         public bool WeGoAgain => HasBlink && BlinkMutation.WeGoAgain;

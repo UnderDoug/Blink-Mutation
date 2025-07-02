@@ -21,7 +21,11 @@ using Debug = UD_Blink_Mutation.Debug;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class ChaosEmeraldSetBonus : IActivePart, IFlightSource
+    public class ChaosEmeraldSetBonus 
+        : IActivePart
+        , IFlightSource
+        , IModEventHandler<GetBlinkRangeEvent>
+        , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => true;
         private static bool getDoDebug(object what = null)
@@ -708,7 +712,8 @@ namespace XRL.World.Parts
                 || ID == TravelSpeedEvent.ID
                 || ID == BodyPositionChangedEvent.ID
                 || ID == MovementModeChangedEvent.ID
-                || ID == EffectAppliedEvent.ID;
+                || ID == EffectAppliedEvent.ID
+                || ID == GetBlinkRangeEvent.ID;
         }
         public override void TurnTick(long TimeTick, int Amount)
         {
@@ -977,6 +982,22 @@ namespace XRL.World.Parts
         public override bool HandleEvent(EffectAppliedEvent E)
         {
             CheckFlightOperation();
+            return base.HandleEvent(E);
+        }
+        public virtual bool HandleEvent(GetBlinkRangeEvent E)
+        {
+            if (PoweredUp)
+            {
+                E.Range *= 2;
+            }
+            return base.HandleEvent(E);
+        }
+        public virtual bool HandleEvent(AfterBlinkEvent E)
+        {
+            if (PoweredUp)
+            {
+                StunningForce.Concussion(E.Destination, E.Blinker, Level: 10, Distance: 5, E.Blinker.GetPhase());
+            }
             return base.HandleEvent(E);
         }
         public override bool Render(RenderEvent E)

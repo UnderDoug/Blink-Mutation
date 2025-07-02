@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 using XRL;
-
+using XRL.World.Parts.Mutation;
 using static UD_Blink_Mutation.Const;
 
 namespace UD_Blink_Mutation
@@ -64,6 +64,26 @@ namespace UD_Blink_Mutation
         private static void SetIntOption(string ID, int Value)
         {
             SetStringOption(ID, $"{Value}");
+        }
+
+        public static bool doDebug = true;
+        public static Dictionary<string, bool> classDoDebug = new()
+        {
+            // General
+            { nameof(UD_Blink), false },
+
+            // Events
+            { nameof(GetBlinkRangeEvent), true },
+            { nameof(BeforeBlinkEvent), true },
+            { nameof(AfterBlinkEvent), true },
+        };
+
+        public static bool getClassDoDebug(string Class)
+        {
+            if (classDoDebug.ContainsKey(Class))
+                return classDoDebug[Class];
+
+            return doDebug;
         }
 
         // Debug Settings
