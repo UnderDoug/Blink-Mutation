@@ -895,17 +895,18 @@ namespace XRL.World.Parts
             {
                 approxChargePower += chaosEmerald.QueryCharge();
             }
-            approxChargePower *= PerEmeraldChargeCost;
+            approxChargePower /= PerEmeraldChargeCost;
             approxChargePower *= SuperBeamDamageTypes.Count;
 
+            string beamProjectileDamage = "";
             if (SuperBeamProjectile.TryGetPart(out Projectile superBeamProjectilePart))
             {
-                string beamProjectileDamage = $"{superBeamProjectilePart.BasePenetration.ToString().Pens()} {superBeamProjectilePart.BaseDamage.Damage()}";
+                beamProjectileDamage = $"{superBeamProjectilePart.BasePenetration.ToString().Pens()} {superBeamProjectilePart.BaseDamage.Damage()}";
 
-                stats.Set("BeamProjectileDamage", beamProjectileDamage);
             }
-
+            stats.Set("BeamProjectileDamage", beamProjectileDamage);
             stats.Set("ApproxChargePower", approxChargePower);
+            stats.Set("MaxChaosEmeralds", MaxSetPieces);
         }
         public void CollectStatsFlight(Templates.StatCollector stats)
         {
@@ -1163,6 +1164,11 @@ namespace XRL.World.Parts
             {
                 DescribeMyActivatedAbility(powerUpActivatedAbilityEntry.ID, CollectStatsPowerUp, ParentObject);
             }
+            ActivatedAbilityEntry superBeamActivatedAbilityEntry = ParentObject?.GetActivatedAbilityByCommand(COMMAND_NAME_SUPER_BEAM);
+            if (superBeamActivatedAbilityEntry != null)
+            {
+                DescribeMyActivatedAbility(superBeamActivatedAbilityEntry.ID, CollectStatsSuperBeam, ParentObject);
+            }
             ActivatedAbilityEntry flightActivatedAbilityEntry = FlightUser?.GetActivatedAbilityByCommand(FlightEvent);
             if (flightActivatedAbilityEntry != null)
             {
@@ -1210,6 +1216,15 @@ namespace XRL.World.Parts
                 && IsMyActivatedAbilityAIUsable(PowerUpActivatedAbilityID))
             {
                 E.Add(COMMAND_NAME_POWER_UP);
+            }
+            Statistic hitpoints = E.Actor.GetStat("Hitpoints");
+            if (PoweredUp
+                && ParentObject == E.Actor
+                && SuperBeamActivatedAbilityID != Guid.Empty
+                && IsMyActivatedAbilityAIUsable(SuperBeamActivatedAbilityID)
+                && hitpoints.Penalty < (hitpoints.BaseValue * 0.2f))
+            {
+                E.Add(COMMAND_NAME_SUPER_BEAM);
             }
             return base.HandleEvent(E);
         }
