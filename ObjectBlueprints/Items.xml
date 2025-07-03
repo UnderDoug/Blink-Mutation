@@ -194,6 +194,11 @@
     <tag Name="ExcludeFromDynamicEncounters" />
     <tag Name="NoSparkingQuest" />
   </object>
+  <object Name="ProjectileSuperTransformationBeam" Inherits="ProjectileIrisdualBeam">
+    <part Name="Render" DisplayName="{{supertransformation|flash of chaos}}" ColorString="&amp;W" />
+    <part Name="Projectile" ColorString="&amp;W" PassByVerb="zoop" />
+    <part Name="TreatAsSolid" Message="The chaos consumes =subject.t=!" />
+  </object>
   <object Name="Green Chaos Emerald" Inherits="BaseChaosEmerald">
     <part Name="Render" DisplayName="{{G|Green}} {{Y|Chaos}} {{G-Y-g-Y-G-y-G alternation|Emerald}}" 
           ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />

@@ -108,16 +108,14 @@ namespace XRL.World.WorldBuilders
 
             List<string> emeraldColors = new(EmeraldColors);
 
-            string tombTopEmerald = emeraldColors.GetRandomElement();
-            emeraldColors.Remove(tombTopEmerald);
+            string tombTopEmerald = emeraldColors.DrawRandomToken(ExceptForToken: "Orange");
             string tombLocation = "JoppaWorld.53.3.0.1.0";
 
-            string moonstairEmerald = emeraldColors.GetRandomElement();
-            emeraldColors.Remove(moonstairEmerald);
+            string moonstairEmerald = emeraldColors.DrawRandomToken();
 
             foreach ((string color, GameObject emeraldObject) in  chaosEmeralds)
             {
-                Debug.LoopItem(4, $"{nameof(color)}", $"{color} {emeraldObject.DebugName}",
+                Debug.LoopItem(4, $"{nameof(color)}", $"[{color}] ({emeraldObject.ID}) {emeraldObject.DebugName}",
                     Indent: indent + 2, Toggle: doDebug);
 
                 string emeraldName = $"{emeraldObject?.T(AsIfKnown: true)}";
@@ -146,6 +144,9 @@ namespace XRL.World.WorldBuilders
                 }
                 Debug.LoopItem(4, $"{nameof(zoneID)}", $"{zoneID}",
                     Indent: indent + 3, Toggle: doDebug);
+                
+                The.Game.SetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}", int.Parse(emeraldObject.ID));
+                The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
 
                 The.ZoneManager.AdjustZoneGenerationTierTo(zoneID);
                 The.ZoneManager.AddZonePostBuilder(zoneID, nameof(PlaceRelicBuilder), "Relic", The.ZoneManager.CacheObject(emeraldObject));
@@ -153,9 +154,9 @@ namespace XRL.World.WorldBuilders
 
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: doDebug);
-                
-                The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}", int.Parse(emeraldObject.ID));
-                The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
+
+                Debug.LoopItem(4, $"{nameof(emeraldObject)}.{nameof(emeraldObject.ID)}", $"{int.Parse(emeraldObject.ID)}",
+                    Indent: indent + 3, Toggle: doDebug);
 
                 if (isTombTopEmerald)
                 {
@@ -234,9 +235,13 @@ namespace XRL.World.WorldBuilders
             {
                 foreach (string color in EmeraldColors)
                 {
-                    if (The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}") is int chaosEmeraldID)
+                    int chaosEmeraldID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}");
+                    if (chaosEmeraldID != 0)
                     {
-                        GameObject chaosEmeraldObject = The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false) ?? GameObject.FindByID(chaosEmeraldID);
+                        GameObject chaosEmeraldObject = The.Player.CurrentZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString()) 
+                            ?? The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false) 
+                            ?? GameObject.FindByID(chaosEmeraldID);
+                        
                         if (chaosEmeraldObject != null)
                         {
                             The.Player.ReceiveObject(chaosEmeraldObject);
@@ -246,8 +251,20 @@ namespace XRL.World.WorldBuilders
                                 chaosEmeraldObject.RemovePart(secretRevealer);
                             }
                         }
+                        else
+                        {
+                            Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
+                        }
+                    }
+                    else
+                    {
+                        Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldID)} is {chaosEmeraldID}!");
                     }
                 }
+            }
+            else
+            {
+                Popup.Show($"Something went very wrong trying that! {nameof(EmeraldColors)} is {NULL} for some reason...", "Big Oops!");
             }
         }
     }

@@ -2152,5 +2152,14 @@ namespace UD_Blink_Mutation
             return default;
         }
 
+        public static string Pens(this string String)
+        {
+            return "\u001a".Color("c") + String;
+        }
+        public static string Damage(this string String)
+        {
+            return "\u0003".Color("r") + String;
+        }
+
     } //!-- public static class Extensions
 }

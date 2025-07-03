@@ -1,21 +1,22 @@
-﻿using System;
+﻿using Qud.UI;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
-
+using UD_Blink_Mutation;
 using UnityEngine;
-
 using XRL.Core;
+using XRL.EditorFormats.Screen;
 using XRL.Rules;
 using XRL.UI;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
-
-using UD_Blink_Mutation;
-
+using static HarmonyLib.Code;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
+using static XRL.World.Parts.Mutation.BaseMutation;
 using Debug = UD_Blink_Mutation.Debug;
 
 namespace XRL.World.Parts
@@ -50,6 +51,7 @@ namespace XRL.World.Parts
         }
 
         public const string COMMAND_NAME_POWER_UP = "Command_UD_ChaosEmeraldSetBonus_PowerUp";
+        public const string COMMAND_NAME_SUPER_BEAM = "Command_UD_ChaosEmeraldSetBonus_SuperBeam";
 
         public bool BonusActive;
 
@@ -59,18 +61,49 @@ namespace XRL.World.Parts
         public Guid mutationModBlink;
         public Guid mutationModRegeneration;
         public Guid PowerUpActivatedAbilityID;
+        public Guid SuperBeamActivatedAbilityID;
 
         public bool PoweredUp => IsMyActivatedAbilityToggledOn(PowerUpActivatedAbilityID, ParentObject);
         public static int PowerUpStatShiftAmount => 10;
 
+        public static int PerEmeraldChargeCost => 100;
         public int LowestEmeraldCharge => GetLowestEmeraldCharge();
-        public int PowerUpAbilityTurns => Math.Max(0, (int)Math.Floor(LowestEmeraldCharge / 100f));
+        public int PowerUpAbilityTurns => Math.Max(0, (int)Math.Floor(LowestEmeraldCharge / (float)PerEmeraldChargeCost));
         private int RunningPowerUpTurns = 0;
 
         [SerializeField]
         private bool CoolingOff = false;
 
-        public static string PowerUpAbilityName => "Super Transformation";
+        public static string PowerUpAbilityName => "Super Transformation".Color("supertransformation");
+
+
+        public int BlinkCapOverride = -1;
+
+        public static string SuperBeamAbilityName => "Super Chaos Beam".Color("supertransformation");
+
+        [NonSerialized]
+        private static GameObject _SuperBeamProjectile;
+        public GameObject SuperBeamProjectile
+        {
+            get
+            {
+                if (!GameObject.Validate(ref _SuperBeamProjectile))
+                {
+                    _SuperBeamProjectile = GameObject.CreateUnmodified("ProjectileSuperTransformationBeam");
+                }
+                return _SuperBeamProjectile;
+            }
+        }
+
+        public static List<string> SuperBeamDamageTypes = new() 
+        { 
+            "Acid", 
+            "Electric", 
+            "Heat", "Cold", 
+            "Poison", 
+            "Umbral", 
+            "Cosmic",
+        };
 
         public int FlightLevel => 10;
 
@@ -536,8 +569,12 @@ namespace XRL.World.Parts
             ActivatedAbilityEntry activatedAbilityEntry = MyActivatedAbility(PowerUpActivatedAbilityID);
             if (activatedAbilityEntry != null)
             {
-                activatedAbilityEntry.DisplayName = $"{PowerUpAbilityName} ({PowerUpAbilityTurns} turns)";
+                activatedAbilityEntry.DisplayName = $"{GetPowerUpAbilityName(PoweredUp)} ({PowerUpAbilityTurns} turns)";
             }
+        }
+        public string GetPowerUpAbilityName(bool Colored = false)
+        {
+            return Colored ? PowerUpAbilityName : PowerUpAbilityName.Strip();
         }
         public virtual Guid AddActivatedAbilityPowerUp(GameObject Creature, bool Force = false, bool Silent = false)
         {
@@ -545,18 +582,12 @@ namespace XRL.World.Parts
             {
                 PowerUpActivatedAbilityID =
                     AddMyActivatedAbility(
-                        Name: PowerUpAbilityName,
+                        Name: GetPowerUpAbilityName(PoweredUp),
                         Command: COMMAND_NAME_POWER_UP,
                         Class: "Metaphysical Transformation",
-                        Description: null,
                         Icon: "&#214",
-                        DisabledMessage: null,
                         Toggleable: true,
-                        DefaultToggleState: false,
                         ActiveToggle: true,
-                        IsAttack: false,
-                        IsRealityDistortionBased: false,
-                        IsWorldMapUsable: false,
                         Silent: Silent
                         );
             }
@@ -595,8 +626,26 @@ namespace XRL.World.Parts
                 Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: 1, Toggle: doDebug);
                 Flight.AbilitySetup(Creature, Creature, this);
 
+                AddActivatedAbilitySuperBeam(Creature);
+
                 ApplyPowerUpShifts(this);
                 ApplySpeedBoosts(this, SetPieces);
+
+                if (Creature.TryGetPart(out UD_Blink blink))
+                {
+                    BlinkCapOverride = blink.CapOverride;
+                    int capOverride = 0;
+                    foreach (LevelCalculation levelCalculation in blink.GetLevelCalculations())
+                    {
+                        if (!levelCalculation.reason.EndsWith(" due to your level."))
+                        {
+                            capOverride += levelCalculation.bonus;
+                        }
+                    }
+                    blink.CapOverride = capOverride > blink.Level ? capOverride : -1;
+                }
+
+                Creature.RequirePart<NephalVFX>();
 
                 ToggledOn = true;
             }
@@ -605,15 +654,228 @@ namespace XRL.World.Parts
                 Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilityTeardown)}() called...", Indent: 1, Toggle: doDebug);
 
                 Flight.AbilityTeardown(Creature, Creature, this);
+                RemoveActivatedAbilitySuperBeam(Creature, Force: true);
 
                 UnapplyPowerUpShifts(this);
                 ApplySpeedBoosts(this, SetPieces);
+
+                if (Creature.TryGetPart(out UD_Blink blink))
+                {
+                    blink.CapOverride = BlinkCapOverride;
+                }
+
+                if (Creature.TryGetPart(out NephalVFX nephalVFX))
+                {
+                    Creature.RemovePart(nephalVFX);
+                }
 
                 ToggledOn = false;
             }
 
             return (bool)ToggledOn;
         }
+        public bool DeactivateActivatedAbilityPowerUp()
+        {
+            ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
+
+            return CoolingOff = !ActivatedAbilityPowerUpToggled(ParentObject, PoweredUp)
+                && DisableMyActivatedAbility(PowerUpActivatedAbilityID);
+        }
+
+        public virtual Guid AddActivatedAbilitySuperBeam(GameObject Creature, bool Force = false, bool Silent = false)
+        {
+            if (SuperBeamActivatedAbilityID == Guid.Empty || Force)
+            {
+                SuperBeamActivatedAbilityID =
+                    AddMyActivatedAbility(
+                        Name: SuperBeamAbilityName,
+                        Command: COMMAND_NAME_SUPER_BEAM,
+                        Class: "Metaphysical Ability",
+                        Icon: "~",
+                        IsAttack: true,
+                        Silent: Silent
+                        );
+            }
+            return SuperBeamActivatedAbilityID;
+        }
+        public virtual bool RemoveActivatedAbilitySuperBeam(GameObject Creature, bool Force = false)
+        {
+            bool removed = false;
+            if (SuperBeamActivatedAbilityID != Guid.Empty || Force)
+            {
+                if (removed = RemoveMyActivatedAbility(ref SuperBeamActivatedAbilityID, Creature))
+                {
+                    SuperBeamActivatedAbilityID = Guid.Empty;
+                }
+            }
+            return removed;
+        }
+        public bool FireSuperBeam(GameObject Creature = null)
+        {
+            Creature ??= ParentObject;
+
+            Debug.Entry(4, $"{nameof(FireSuperBeam)}({nameof(Creature)}", $"{Creature?.DebugName ?? NULL})", 
+                Indent: 1, Toggle: doDebug);
+
+            if (Creature == null || !PoweredUp || !IsMyActivatedAbilityUsable(SuperBeamActivatedAbilityID))
+            {
+                return false;
+            }
+            if (ParentObject.OnWorldMap())
+            {
+                ParentObject.Fail("You cannot do that on the world map.");
+                return false;
+            }
+
+            List<Cell> beamCells = PickLine(
+                Length: 999, 
+                VisLevel: AllowVis.Any, 
+                Filter: GO => GO.HasPart<Combat>() && GO.PhaseMatches(ParentObject),
+                IgnoreSolid: true, 
+                IgnoreLOS: true, 
+                Attacker: Creature, 
+                Projectile: SuperBeamProjectile, 
+                Label: SuperBeamAbilityName, 
+                Snap: true);
+
+            if (beamCells == null || beamCells.Count <= 0)
+            {
+                return false;
+            }
+            if (beamCells.Count > 1000)
+            {
+                beamCells.RemoveRange(1000, beamCells.Count - 1000);
+            }
+            Cell originCell = beamCells[0];
+            Cell destinationCell = beamCells.Last();
+            float angle = (float)Math.Atan2(destinationCell.X - originCell.X, destinationCell.Y - originCell.Y).toDegrees();
+            beamCells.RemoveAt(0);
+
+            bool isVisible = Creature.IsVisible();
+            bool renderNotDelayed = false;
+
+            if (isVisible)
+            {
+                FadeToBlack.SetTileMode();
+                FadeToBlack.FadeOut(1f, new Color(0f, 0f, 0f, 0.25f));
+                PlayWorldSound("Sounds/Creatures/Ability/sfx_creature_girshNephilim_irisdualBeam_windup", CostMultiplier: 0.2f, CostMaximum: 20);
+                CombatJuice.playPrefabAnimation(Creature, "Particles/BeamWarmUp", async: true);
+                renderNotDelayed = renderNotDelayed || !The.Core.RenderDelay(1000);
+                MissileWeaponVFXConfiguration VFXConfig = null;
+
+                if (SuperBeamProjectile.HasTagOrProperty("ProjectileVFX") && beamCells.Count > 1)
+                {
+                    string projectileConfiguration = SuperBeamProjectile.GetPropertyOrTag("ProjectileVFXConfiguration");
+                    VFXConfig ??= MissileWeaponVFXConfiguration.next();
+                    VFXConfig.addStep(1, beamCells[0].Location);
+                    VFXConfig.addStep(1, beamCells[^1].Location);
+                    VFXConfig.setPathProjectileVFX(1, SuperBeamProjectile.GetPropertyOrTag("ProjectileVFX"), projectileConfiguration);
+                }
+                if (VFXConfig != null)
+                {
+                    CombatJuice.missileWeaponVFX(VFXConfig, Async: true);
+                    CombatJuice.cameraShake(1.5f, Async: true);
+                }
+            }
+            PlayBeamSound(beamCells);
+
+            List<GameObject> wretchedSouls = Event.NewGameObjectList();
+            Projectile projectilePart = SuperBeamProjectile.GetPart<Projectile>();
+            int chargeDrawn = DrainChaosEmeralds() / PerEmeraldChargeCost;
+            foreach (Cell beamCell in beamCells)
+            {
+                foreach (GameObject wretchedSoul in beamCell.GetObjects(GO => GO != Creature && GO.IsReal))
+                {
+                    int projectilePenetrations = Stat.RollDamagePenetrations(Stats.GetCombatAV(wretchedSoul), projectilePart.BasePenetration, projectilePart.BasePenetration);
+                    int damageAmount = 0;
+
+                    for (int i = 0; i < projectilePenetrations; i++)
+                    {
+                        damageAmount += projectilePart.BaseDamage.RollCached();
+                    }
+                    if (damageAmount > 0)
+                    {
+                        wretchedSoul.TakeDamage(
+                            Amount: ref damageAmount, 
+                            Attacker: Creature,
+                            Message: "");
+                    }
+                    foreach (string damageType in SuperBeamDamageTypes)
+                    {
+                        int elementalDamage = chargeDrawn + Stat.Random(-15, 15);
+
+                        wretchedSoul.TakeDamage(
+                            Amount: ref elementalDamage,
+                            Attacker: Creature,
+                            Attributes: damageType,
+                            Message: "");
+
+                        damageAmount += elementalDamage;
+                    }
+                    if (damageAmount > 0)
+                    {
+                        string preposition = damageAmount + " damage from";
+                        wretchedSoul.Physics.DidXToY(
+                            Verb: "take",
+                            Preposition: preposition, 
+                            Object: SuperBeamProjectile, 
+                            ColorAsBadFor: wretchedSoul, 
+                            UseVisibilityOf: Creature);
+                    }
+                }
+            }
+
+            if (isVisible)
+            {
+                renderNotDelayed = renderNotDelayed || !The.Core.RenderDelay(1500);
+                FadeToBlack.FadeIn(0.5f, new Color(0f, 0f, 0f, 0.25f));
+                if (renderNotDelayed || !The.Core.RenderDelay(500))
+                {
+                    CombatJuice.StopPrefabAnimation("Particles/BeamWarmUp");
+                }
+            }
+
+            return true;
+        }
+        public void PlayBeamSound(List<Cell> BeamCells)
+        {
+            Cell cell = ParentObject.CurrentCell;
+            Cell playerCell = The.PlayerCell;
+            if (playerCell != null && cell.ParentZone == playerCell.ParentZone)
+            {
+                int previousCostAtPoint = int.MaxValue;
+                int previousBeamCellToPlayer = int.MaxValue;
+                foreach (Cell beamCell in  BeamCells)
+                {
+                    int costAtPoint = Zone.SoundMap.GetCostAtPoint(beamCell.Location);
+                    int beamCellToPlayer = beamCell.PathDistanceTo(playerCell);
+                    if (costAtPoint < previousCostAtPoint)
+                    {
+                        cell = beamCell;
+                        previousCostAtPoint = costAtPoint;
+                        previousBeamCellToPlayer = beamCell.PathDistanceTo(playerCell);
+                    }
+                    else if (costAtPoint == previousCostAtPoint && beamCellToPlayer < previousBeamCellToPlayer)
+                    {
+                        cell = beamCell;
+                        previousBeamCellToPlayer = beamCell.PathDistanceTo(playerCell);
+                    }
+                }
+            }
+            cell.PlayWorldSound("sfx_creature_girshNephilim_irisdualBeam_attack", CostMultiplier: 0.5f, CostMaximum: 20);
+        }
+        public int DrainChaosEmeralds()
+        {
+            int totalCharge = 0;
+            foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
+            {
+                int charge = chaosEmerald.QueryCharge();
+                totalCharge += charge;
+                chaosEmerald.UseCharge(charge);
+            }
+            return totalCharge;
+        }
+
         public void CollectStatsPowerUp(Templates.StatCollector stats)
         {
             stats.Set("MaxChaosEmeralds", MaxSetPieces);
@@ -624,6 +886,26 @@ namespace XRL.World.Parts
             stats.Set("ToughnessBonus", 10.Signed());
             stats.Set("IntelligenceBonus", 10.Signed());
             stats.Set("ChargeForRounds", PowerUpAbilityTurns);
+        }
+
+        public void CollectStatsSuperBeam(Templates.StatCollector stats)
+        {
+            int approxChargePower = 0;
+            foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
+            {
+                approxChargePower += chaosEmerald.QueryCharge();
+            }
+            approxChargePower *= PerEmeraldChargeCost;
+            approxChargePower *= SuperBeamDamageTypes.Count;
+
+            if (SuperBeamProjectile.TryGetPart(out Projectile superBeamProjectilePart))
+            {
+                string beamProjectileDamage = $"{superBeamProjectilePart.BasePenetration.ToString().Pens()} {superBeamProjectilePart.BaseDamage.Damage()}";
+
+                stats.Set("BeamProjectileDamage", beamProjectileDamage);
+            }
+
+            stats.Set("ApproxChargePower", approxChargePower);
         }
         public void CollectStatsFlight(Templates.StatCollector stats)
         {
@@ -663,16 +945,20 @@ namespace XRL.World.Parts
             }
         }
 
-        public bool DrawChargeFromChaosEmeralds()
+        public bool DrawChargeFromChaosEmeralds(int Charge = 0)
         {
-            bool haveSufficientCharge = !(LowestEmeraldCharge < 100);
+            if (Charge == 0)
+            {
+                Charge = PerEmeraldChargeCost;
+            }
+            bool haveSufficientCharge = !(LowestEmeraldCharge < Charge);
             Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(DrawChargeFromChaosEmeralds)}() {nameof(haveSufficientCharge)}: {haveSufficientCharge}", 
                 Indent: 3, Toggle: getDoDebug("TT"));
             if (haveSufficientCharge)
             {
                 foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
                 {
-                    chaosEmerald.UseCharge(100);
+                    chaosEmerald.UseCharge(Charge);
                     Debug.LoopItem(4, $"{nameof(chaosEmerald)}: {chaosEmerald.DebugName}", 
                         Indent: 4, Toggle: getDoDebug("TT"));
                 }
@@ -703,6 +989,7 @@ namespace XRL.World.Parts
         {
             return base.WantEvent(ID, Cascade)
                 || ID == CommandEvent.ID
+                || ID == GetDisplayNameEvent.ID
                 || ID == BeforeAbilityManagerOpenEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
                 || ID == AIGetPassiveAbilityListEvent.ID
@@ -713,7 +1000,8 @@ namespace XRL.World.Parts
                 || ID == BodyPositionChangedEvent.ID
                 || ID == MovementModeChangedEvent.ID
                 || ID == EffectAppliedEvent.ID
-                || ID == GetBlinkRangeEvent.ID;
+                || ID == GetBlinkRangeEvent.ID
+                || ID == AfterBlinkEvent.ID;
         }
         public override void TurnTick(long TimeTick, int Amount)
         {
@@ -739,22 +1027,18 @@ namespace XRL.World.Parts
             if (PoweredUp)
             {
                 Debug.CheckYeh(4, $"{nameof(PoweredUp)}", $"{PoweredUp}", Indent: 2, Toggle: getDoDebug("TT"));
-                if (!DrawChargeFromChaosEmeralds())
+                if (!DrawChargeFromChaosEmeralds(PerEmeraldChargeCost))
                 {
-                    Debug.CheckNah(4, $"Deactivating {PowerUpAbilityName}", Indent: 3, Toggle: getDoDebug("TT"));
-
-                    ToggleMyActivatedAbility(PowerUpActivatedAbilityID, ParentObject, SetState: false);
-
-                    CoolingOff = !ActivatedAbilityPowerUpToggled(ParentObject, PoweredUp)
-                        && DisableMyActivatedAbility(PowerUpActivatedAbilityID);
+                    Debug.CheckNah(4, $"Deactivating {GetPowerUpAbilityName(false)}", Indent: 3, Toggle: getDoDebug("TT"));
+                    DeactivateActivatedAbilityPowerUp();
                 }
                 bool turnsAnnounced = RunningPowerUpTurns == PowerUpAbilityTurns;
                 RunningPowerUpTurns = PowerUpAbilityTurns;
                 if (!turnsAnnounced
                     && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
                 {
-                    Debug.CheckYeh(4, $"Announce Turns Remaining: {PowerUpAbilityTurns}", Indent: 3, Toggle: getDoDebug("TT"));
-                    ParentObject.EmitMessage($"=pronouns.Possessive= {PowerUpAbilityName} will run out of power in {PowerUpAbilityTurns} turns!");
+                    Debug.CheckYeh(4, $"Announce Turns Remaining: {GetPowerUpAbilityName(false)}", Indent: 3, Toggle: getDoDebug("TT"));
+                    ParentObject.EmitMessage($"=pronouns.Possessive= {GetPowerUpAbilityName(true)} will run out of power in {PowerUpAbilityTurns} turns!");
                 }
             }
             else
@@ -782,6 +1066,14 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+        public override bool HandleEvent(GetDisplayNameEvent E)
+        {
+            if (PoweredUp)
+            {
+                E.AddAdjective("Super".Color("W"));
+            }
+            return base.HandleEvent(E);
+        }
         public override bool HandleEvent(GetPsychicGlimmerEvent E)
         {
             if (SetPieces > 0)
@@ -806,6 +1098,17 @@ namespace XRL.World.Parts
 
                 Debug.Entry(3, "Proceeding to Power Up Ability Effects", Toggle: doDebug);
                 ActivatedAbilityPowerUpToggled(actor, PoweredUp);
+            }
+            if (E.Command == COMMAND_NAME_SUPER_BEAM)
+            {
+                GameObject actor = ParentObject;
+
+                Debug.Entry(3, "Super Beam Ability Activated", Toggle: doDebug);
+                if (FireSuperBeam(actor))
+                {
+                    DeactivateActivatedAbilityPowerUp();
+                    SyncPowerUpAbilityName();
+                }
             }
             if (E.Command == FlightEvent)
             {
@@ -996,7 +1299,19 @@ namespace XRL.World.Parts
         {
             if (PoweredUp)
             {
-                StunningForce.Concussion(E.Destination, E.Blinker, Level: 10, Distance: 5, E.Blinker.GetPhase());
+                int indent = Debug.LastIndent;
+
+                Debug.Entry(4,
+                    $"{nameof(ChaosEmeraldSetPiece)}." +
+                    $"{nameof(HandleEvent)}(" +
+                    $"{nameof(AfterBlinkEvent)} E) for: " +
+                    $"{ParentObject?.DebugName ?? NULL} in " +
+                    $"{nameof(Cell)}: [{E.Destination?.Location}]",
+                    Indent: indent, Toggle: doDebug);
+
+                StunningForce.Concussion(E.Destination ?? E.Blinker.CurrentCell, E.Blinker, Level: 20, Distance: 1, E.Blinker.GetPhase());
+
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }

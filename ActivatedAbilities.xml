@@ -27,15 +27,16 @@
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y"  State="ToggleOn" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y" State="ToggleOn" />
   </ability>
   <ability Command="Command_UD_ChaosEmeraldSetBonus_PowerUp">
     <description>
-      <p>You draw on the power of the <stat Name="MaxChaosEmeralds" /> Chaos Emeralds to undergo a Super Transformation.</p>
+      <p>You draw on the power of the <stat Name="MaxChaosEmeralds" /> Chaos Emeralds to undergo a {{supertransformation|Super Transformation}}.</p>
       <br />
-			<p>While transformed, you gain a boost to the Quickness and Move Speed bonuses granted by the Chaos Emeralds, a boost to your physical stats and intelligence, and the abilitiy to fly, however you draw power from each of the Chaos Emeralds every turn until they are depleated or you deactivate the transformation.</p>
+      <p>While transformed, you gain a boost to the Quickness and Move Speed bonuses granted by the Chaos Emeralds, a boost to your physical stats and intelligence, and gain the abilitiy to fly. Every turn, you draw power from each of the Chaos Emeralds until they are depleated or you deactivate the transformation.</p>
       <br />
-      <!-- Need statlines about speed boosts -->
+      <p>You also gain access to an {{supertransformation|unreasonably}} {{supertransformation|powerful}} beam attack that empties the chaos emeralds of the remainder of their charge and deals damage based on the total amount of charge drawn.</p>
+      <br />
       <statline Name="QuicknessBoost" DisplayName="Quickness boost" />
       <statline Name="MoveSpeedBoost" DisplayName="Move Speed boost" />
       <statline Name="StrengthBonus" DisplayName="Strength bonus" />
@@ -46,6 +47,20 @@
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="w" Detail="y" />
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="W" Detail="Y"  State="ToggleOn" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="W" Detail="Y" State="ToggleOn" />
+  </ability>
+  <ability Command="Command_UD_ChaosEmeraldSetBonus_SuperBeam">
+    <description>
+      <p>You draw on the combined power of the <stat Name="MaxChaosEmeralds" /> Chaos Emeralds and focus their metaphysical energy into an {{supertransformation|unreasonably}} {{supertransformation|powerful}} beam attack.</p>
+      <br />
+			<p>The beam's range is only limited by the size of the zone, targets needs not be visible to the user, and the beam is not blocked by physical objects.</p>
+      <br />
+			<p>Every object in every cell in the beam's path will be subject to its immense destructive capabilities.</p>
+      <br />
+      <statline Name="BeamProjectileDamage" DisplayName="Beam attack" />
+      <statline Name="ApproxChargePower" DisplayName="Approximate power from charge draw" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/abil_gaze.bmp" Foreground="W" Detail="Y" />
   </ability>
 </activatedabilities>

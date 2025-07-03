@@ -4,5 +4,6 @@
     <shader Name="coldsteel" Type="sequence" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
     <shader Name="nothinpersonnel" Type="alternation" Colors="m-m-m-m-y-y-y-y-y-y" ShowInPicker="true" />
     <shader Name="badass" Type="distribution" Colors="m-m-K" ShowInPicker="true" />
+    <shader Name="supertransformation" Type="alternation" Colors="Y-W-Y-W-Y-O-Y-W-Y-W-Y" ShowInPicker="false" />
   </shaders>
 </colors>

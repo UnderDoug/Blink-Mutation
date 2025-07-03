@@ -906,7 +906,7 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(4, $"Getting {nameof(Direction)} if null...", Indent: 1, Toggle: getDoDebug());
             Direction ??= GetBlinkDirection(Blinker, BlinkRange, IsNothinPersonnelKid, Kid, IsRetreat);
 
-            if (Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
+            if (!blink.IsMyActivatedAbilityCoolingDown(blink.BlinkActivatedAbilityID, Blinker) && Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
             {
                 Debug.CheckNah(4, $"{nameof(Direction)}", $"{Direction ?? NULL}", Indent: 2, Toggle: getDoDebug());
                 return false;
@@ -1530,7 +1530,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Command == COMMAND_UD_BLINK && ParentObject == E.Actor)
             {
-                if (GameObject.Validate(E.Actor))
+                if (GameObject.Validate(E.Actor) && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor))
                 {
                     int blinkRange = GetBlinkRange();
                     bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
@@ -1779,7 +1779,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.ID == COMMAND_UD_COLDSTEEL_ABILITY)
             {
-                IsNothinPersonnelKid = IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
+                IsNothinPersonnelKid = !IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
             }
             if (E.ID == COMMAND_UD_BLINK_ABILITY)
             {
