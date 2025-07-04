@@ -53,7 +53,7 @@ namespace XRL.World.Parts
 
                 if (RecentlyBlunk && TimeTick - StoredTurnTickForBlunk > BlunkTurnThreshold)
                 {
-                    ParentObject.Think($"I could look for a more worthy opponent");
+                    ParentObject.Think($"I could Blink again.");
                     StoredTurnTickForBlunk = TimeTick;
                     RecentlyBlunk = false;
                 }

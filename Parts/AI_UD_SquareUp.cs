@@ -388,7 +388,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DebugAI_SquareUpDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 GameObject currentTarget = ParentObject?.Target;
 

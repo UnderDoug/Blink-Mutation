@@ -50,10 +50,47 @@
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the Blink mutation will be displayed when [{{W|l}}]ooking at anything with the relevant parts.
+      When enabled, internal debug information relating to the Blink mutation will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|Blink}}:
       {{W|General}}: Mutation Level information.
+      {{W|State}}: Current internal flags used to determine different actions happening.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+	
+  <option
+        ID="Option_UD_Blink_DebugIncludeAI_SquareUpDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_SquareUP internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, internal debug information relating to the AI_SquareUp AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+
+      {{M|AI_SquareUP}}:
+      {{W|Target}}: Current target and squared up target information.
+      {{W|State}}: Current internal flags used to determine different actions happening.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+	
+  <option
+        ID="Option_UD_Blink_DebugIncludeChaosEmeraldSetBonusDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show ChaosEmeraldSetBonus internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, internal debug information relating to the Chaos Emerald Set Bonus part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+
+      {{M|ChaosEmeraldSetBonus}}:
+      {{W|General}}: Values relating to number of pieces, some of the multipliers used, and the strength of some associated abilities.
+      {{W|Set Description}}: literally the set description as though looking at one of the set piece items.
       {{W|State}}: Current internal flags used to determine different actions happening.
 
       The default is {{w|Disabled}}.
@@ -90,6 +127,48 @@
       At higher levels, the short cooldown and the cooldown being refreshed when dealing damage results in a fair amount of on-screen visual clutter during fights.
       
       It's worth trying for a bit and turning off if you find it too obnoxious.
+
+      The default is {{w|Enabled}}.
+    </helptext>
+  </option>
+  
+  <option
+        ID="Option_UD_Blink_AllowWeGoAgain"
+        DisplayText="Enable refreshing the cooldown on Blink when successfully dealing damage with Cold Steel."
+        Category="Mod: UD Blink Mutation"
+        Type="Checkbox"
+        Default="Yes"
+    >
+    <helptext>
+      When enabled, blink won't go on cooldown if the blinker successfully deals damage with their Cold Steel.
+      
+      This allows for some, frankly, quite cool fights but makes creatures with blink a bit more dangerous since they can repeatedly blink back and forth through their targets and deal guaranteed damage every time.
+      
+      The energy cost (action cost) of dealing damage with Cold Steel is 1.25x that of a standard action to increase the risk of using blink this way.
+
+      The default is {{w|Enabled}}.
+    </helptext>
+  </option>
+  
+  <option
+        ID="Option_UD_Blink_GenerateChaosEmeralds"
+        DisplayText="Enable the addition of the famed 7 Chaos Emeralds to the game by this mod ({{r|new save}})."
+        Category="Mod: UD Blink Mutation"
+        Type="Checkbox"
+        Default="Yes"
+    >
+    <helptext>
+      When enabled, 7 powerful relics, The Chaos Emeralds, will be hidden throughout Qud during world generation ({{r|requires a new save}}), the locations of which can be traded for in all the places you can learn about rare and powerful relics.
+
+      These items were added as an homage to the Sonic The Hedgehog franchise and aren't really designed to be particularly balanced.
+
+      For their sheer power they might feel really strong, but for the effort of sourcing them all in a single run they might feel underwhelming.
+      
+      They are GameUnique and cannot be replicated once they're generated. {{K|Disabling this option will allow for wishing for them directly by their blueprint.}}
+      
+      {{K|Alternatively, you can wish for "go chaos emerald [color]" to be taken to the location of a given chaos emerald, or wish for "take chaos emerald [color]" to directly be given that chaos emerald. The wish "take chaos emeralds" will plant all 7 directly in your inventory.}}
+      
+      {{K|Replace "[color]" entirely with one of green, red, blue, yellow, cyan, pink, or orange: "go chaos emerald red".}}
 
       The default is {{w|Enabled}}.
     </helptext>

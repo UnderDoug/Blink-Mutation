@@ -1,13 +1,14 @@
 ﻿using ConsoleLib.Console;
-using Genkit;
-using Qud.API;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using UD_Blink_Mutation;
+
+using Genkit;
+using Qud.API;
 using UnityEngine;
+
 using XRL.Core;
 using XRL.Language;
 using XRL.Rules;
@@ -17,7 +18,8 @@ using XRL.World;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
-using XRL.World.Encounters.EncounterBuilders;
+
+using UD_Blink_Mutation;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -85,15 +87,12 @@ namespace XRL.World.Parts.Mutation
         }
 
         public bool WeGoAgain = false;
-        public double WeGoAgainEnergyFactor = 0.5;
+        public float WeGoAgainEnergyFactor = 1.25f;
 
         public bool IsSteelCold = false;
 
         // Containers
-        [NonSerialized]
         public Guid BlinkActivatedAbilityID = Guid.Empty;
-
-        [NonSerialized]
         public Guid ColdSteelActivatedAbilityID = Guid.Empty;
 
         public AnimatedMaterialGeneric PrickleBallAnimation => NewPrickleBallAnimationPart();
@@ -557,52 +556,55 @@ namespace XRL.World.Parts.Mutation
             Path = null;
             Cell origin = Blinker.CurrentCell;
 
-            Debug.Entry(4,
+            int indent = Debug.LastIndent;
+            Debug.Entry(1,
                 $"{nameof(UD_Blink)}." +
                 $"{nameof(TryGetBlinkDestination)}()",
-                Indent: 0, Toggle: getDoDebug());
+                Indent: indent, Toggle: getDoDebug());
 
-            Debug.LoopItem(4, $"{nameof(Blinker)}", $"{Blinker?.DebugName ?? NULL}",
-                Good: Blinker != null, Indent: 1, Toggle: getDoDebug());
+            Debug.LoopItem(3, $"{nameof(Blinker)}", $"{Blinker?.DebugName ?? NULL}",
+                Good: Blinker != null, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(Direction)}", $"{(!Direction.IsNullOrEmpty() ? Direction : NULL)}",
-                Good: !Direction.IsNullOrEmpty(), Indent: 1, Toggle: getDoDebug());
+                Good: !Direction.IsNullOrEmpty(), Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(Range)}", $"{Range}",
-                Good: Range > 0, Indent: 1, Toggle: getDoDebug());
+                Good: Range > 0, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(IsNothinPersonnelKid)}", $"{IsNothinPersonnelKid}",
-                Good: IsNothinPersonnelKid, Indent: 1, Toggle: getDoDebug());
+                Good: IsNothinPersonnelKid, Indent: indent + 1, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"Getting initial values if any are null/default...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Getting initial values if any are null/default...", Indent: indent + 1, Toggle: getDoDebug());
 
             if (Range < 1)
             {
-                Debug.LoopItem(4, $"Range less than 1, getting range...", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(4, $"Range less than 1, getting range...", Indent: indent + 2, Toggle: getDoDebug());
                 Range = GetBlinkRange(Blinker);
 
                 Debug.LoopItem(4,  $"{nameof(Range)}", $"{Range}",
-                    Good: Range > 0, Indent: 3, Toggle: getDoDebug());
+                    Good: Range > 0, Indent: indent + 3, Toggle: getDoDebug());
             }
             if (Direction == null || Range < 1)
             {
-                Debug.CheckNah(4, $"Direction null or Range less than 1 Aborting...", Indent: 2, Toggle: getDoDebug());
+                Debug.CheckNah(2, $"Direction null or Range less than 1 Aborting...", Indent: indent + 2, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(Direction)}", $"{(!Direction.IsNullOrEmpty() ? Direction : NULL)}",
-                    Good: !Direction.IsNullOrEmpty(), Indent: 3, Toggle: getDoDebug());
+                    Good: !Direction.IsNullOrEmpty(), Indent: indent + 3, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(Range)}", $"{Range}",
-                    Good: Range > 0, Indent: 3, Toggle: getDoDebug());
+                    Good: Range > 0, Indent: indent + 3, Toggle: getDoDebug());
 
+                Debug.LastIndent = indent;
                 return false;
             }
 
-            Debug.Entry(4, $"Getting blinkPath...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Getting blinkPath...", Indent: indent + 1, Toggle: getDoDebug());
             List<Cell> blinkPath = Event.NewCellList(GetBlinkCellsInDirection(Blinker, Direction, Range));
 
             if (blinkPath.Count < 1)
             {
-                Debug.CheckNah(4, $"blinkPath.Count < 1, Aborting...", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"blinkPath.Count < 1, Aborting...", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
@@ -616,15 +618,17 @@ namespace XRL.World.Parts.Mutation
             PathCache = new();
             BlinkPath BlinkPath = new();
             FindPath previousPath = null;
-            Debug.Entry(4, $"Validating blinkPath and acquiring destinations and target...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Validating blinkPath and acquiring destinations and target...", Indent: indent + 1, Toggle: getDoDebug());
             for (int i = cellCount - 1; i >= 0; --i)
             {
                 thisCell = blinkPath[i];
                 string iteration = $"{iterationCounter}".PadLeft(padding, ' ');
-                Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
-                Debug.LoopItem(4, $"{iteration}: (i:{i}) [{thisCell?.Location}]", Indent: 1, Toggle: getDoDebug());
+                Debug.Divider(3, HONLY, 45, Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"{iteration}: (i:{i}) [{thisCell?.Location}]", 
+                    Indent: indent + 1, Toggle: getDoDebug());
 
-                Debug.LoopItem(4, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", 
+                    Indent: indent + 2, Toggle: getDoDebug());
 
                 FindPath path = new(
                     StartCell: origin, 
@@ -634,77 +638,77 @@ namespace XRL.World.Parts.Mutation
                     MaxWeight: 10,
                     IgnoreCreatures: true);
 
-                Debug.LoopItem(4, $"Removing origin step from path...", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"Removing origin step from path...", Indent: indent + 2, Toggle: getDoDebug());
                 if (path.Steps.Contains(origin))
                 {
-                    Debug.CheckYeh(4, $"{nameof(origin)} found in {nameof(path)}.Steps", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(origin)} found in {nameof(path)}.Steps", Indent: indent + 3, Toggle: getDoDebug());
                     path.Steps.Remove(origin);
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"{nameof(origin)} not found in {nameof(path)}.Steps", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckNah(4, $"{nameof(origin)} not found in {nameof(path)}.Steps", Indent: indent + 3, Toggle: getDoDebug());
                 }
                 Debug.LoopItem(4, $"{nameof(path)}.Steps no longer contains [{origin?.Location}]", $"{!path.Steps.Contains(origin)}",
-                    Good: !path.Steps.Contains(origin), Indent: 2, Toggle: getDoDebug());
+                    Good: !path.Steps.Contains(origin), Indent: indent + 2, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
-                    Good: path.Steps.Count <= Range, Indent: 3, Toggle: getDoDebug());
+                    Good: path.Steps.Count <= Range, Indent: indent + 3, Toggle: getDoDebug());
 
-                Debug.LoopItem(4, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: 1, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: indent + 1, Toggle: getDoDebug());
                 if (Destination != null && (!IsNothinPersonnelKid || Kid != null))
                 {
-                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination?.Location}]", Indent: 3, Toggle: getDoDebug());
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid?.DebugName}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination?.Location}]", Indent: indent + 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid?.DebugName}", Indent: indent + 3, Toggle: getDoDebug());
                     if (IsNothinPersonnelKid)
                     {
                         PathCache[previousiteration].KidDestination = KidDestination ??= thisCell;
                         PathCache[previousiteration].Path = Path = path;
-                        Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: 4, Toggle: getDoDebug());
+                        Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: indent + 4, Toggle: getDoDebug());
                     }
-                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination?.Location}]", Indent: 3, Toggle: getDoDebug());
+                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination?.Location}]", Indent: indent + 3, Toggle: getDoDebug());
                     PathCache[previousiteration].Selected = true;
                     break;
                 }
                 else
                 {
                     Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                        Good: Destination != null, Indent: 3, Toggle: getDoDebug());
+                        Good: Destination != null, Indent: indent + 3, Toggle: getDoDebug());
                     Debug.LoopItem(4, $"{nameof(Kid)}", $"{Kid?.DebugName ?? NULL}",
-                        Good: Kid != null, Indent: 3, Toggle: getDoDebug());
+                        Good: Kid != null, Indent: indent + 3, Toggle: getDoDebug());
                 }
                 
-                Debug.LoopItem(4, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: indent + 2, Toggle: getDoDebug());
                 if (IsNothinPersonnelKid && (Kid = FindKidInCell(Blinker, thisCell)) != null)
                 {
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: indent + 3, Toggle: getDoDebug());
                     if (previousCellIsValid)
                     {
                         BlinkPath.KidDestination = KidDestination ??= previousCell;
                         BlinkPath.Path = Path = previousPath;
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: 3, Toggle: getDoDebug());
+                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: indent + 3, Toggle: getDoDebug());
                     }
                     else
                     {
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"previousCell invalid", Indent: 3, Toggle: getDoDebug());
+                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"previousCell invalid", Indent: indent + 3, Toggle: getDoDebug());
                     }
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"{nameof(Kid)}", $"{NULL}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckNah(4, $"{nameof(Kid)}", $"{NULL}", Indent: indent + 3, Toggle: getDoDebug());
                 }
 
-                Debug.LoopItem(4, $"Checking validity of this cell...", Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"Checking validity of this cell...", Indent: indent + 2, Toggle: getDoDebug());
                 if (previousCellIsValid = IsValidDestinationCell(Blinker, thisCell, Range, path.Steps.Count))
                 {
                     BlinkPath.Destination = Destination ??= thisCell;
                     BlinkPath.Path = Path ??= path;
                     if (Path == path)
                     {
-                        Debug.LoopItem(4, $"Path is soft set to PathCache[{iterationCounter}]", Indent: 3, Toggle: getDoDebug());
+                        Debug.LoopItem(4, $"Path is soft set to PathCache[{iterationCounter}]", Indent: indent + 3, Toggle: getDoDebug());
                     }
                 }
                 Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                    Good: Destination != null, Indent: 3, Toggle: getDoDebug());
+                    Good: Destination != null, Indent: indent + 3, Toggle: getDoDebug());
 
                 if (i == 0) BlinkPath.Selected = true;
                 PathCache.TryAdd(iterationCounter, BlinkPath);
@@ -713,19 +717,20 @@ namespace XRL.World.Parts.Mutation
                 previousPath = path;
                 previousiteration = iterationCounter++;
                 
-                Debug.LoopItem(4, $"End {iteration}: (i:{i}) ////", Indent: 1, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"End {iteration}: (i:{i}) ////", Indent: indent + 1, Toggle: getDoDebug());
             }
-            Debug.Divider(4, HONLY, 45, Indent: 1, Toggle: getDoDebug());
+            Debug.Divider(3, HONLY, 45, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                Good: Destination != null, Indent: 1, Toggle: getDoDebug());
+                Good: Destination != null, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(Kid)}", $"{Kid?.DebugName ?? NULL}",
-                Good: Kid != null, Indent: 1, Toggle: getDoDebug());
+                Good: Kid != null, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination?.Location}]",
-                Good: KidDestination != null, Indent: 1, Toggle: getDoDebug());
+                Good: KidDestination != null, Indent: indent + 1, Toggle: getDoDebug());
 
+            Debug.LastIndent = indent;
             return Destination != null || (Kid != null && KidDestination != null);
         }
         public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination)
@@ -748,29 +753,33 @@ namespace XRL.World.Parts.Mutation
         }
         public static bool IsValidDestinationCell(GameObject Blinker, Cell Destination, int Range, int Steps)
         {
-            int indent = Debug.LastIndent + 1;
+            int indent = Debug.LastIndent;
 
             if (Blinker == null)
             {
-                Debug.CheckNah(4, $"{nameof(Blinker)} is null", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Blinker)} is null", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
             if (Destination == null)
             {
-                Debug.CheckNah(4, $"{nameof(Destination)} is null", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Destination)} is null", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
             if (Range < 1)
             {
-                Debug.CheckNah(4, $"{nameof(Range)} is 0 or less", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Range)} is 0 or less", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
             if (Steps < 1)
             {
-                Debug.CheckNah(4, $"{nameof(Steps)} is less than 1", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Steps)} is less than 1", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
@@ -778,15 +787,17 @@ namespace XRL.World.Parts.Mutation
             int factoredRange = (int)(Range * speedFactor);
             if (factoredRange < Steps)
             {
-                Debug.CheckNah(4, 
+                Debug.CheckNah(3, 
                     $"{nameof(Range)} x {nameof(speedFactor)} ({factoredRange}) is less than {nameof(Steps)} ({Steps})", 
-                    Indent: indent, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
             if (Destination.IsSolidFor(Blinker))
             {
-                Debug.CheckNah(4, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: indent, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
@@ -796,12 +807,13 @@ namespace XRL.World.Parts.Mutation
                 {
                     if (potentialAir.TryGetPart(out StairsDown stairsDown) && stairsDown.PullDown && stairsDown.IsValidForPullDown(Blinker))
                     {
-                        Debug.CheckNah(4, $"{nameof(Destination)} empty space for {nameof(Blinker)}", Indent: indent, Toggle: getDoDebug());
+                        Debug.CheckNah(4, $"{nameof(Destination)} empty space for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug());
+                        Debug.LastIndent = indent;
                         return false;
                     }
                 }
             }
-
+            Debug.LastIndent = indent;
             return true;
         }
 
@@ -830,64 +842,69 @@ namespace XRL.World.Parts.Mutation
 
         public static bool Blink(GameObject Blinker, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, bool Silent = false)
         {
-            Debug.Entry(4,
+            int indent = Debug.LastIndent;
+            Debug.Entry(1,
                 $"{nameof(UD_Blink)}." +
                 $"{nameof(Blink)}()",
-                Indent: 0, Toggle: getDoDebug());
+                Indent: indent, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"Checking for {nameof(Blinker)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking for {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
 
             if (Blinker == null)
             {
-                Debug.CheckNah(4, $"{nameof(Blinker)} is null", Indent: 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Blinker)} is null", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
             
             string verb = "blink";
 
-            Debug.Entry(4, $"Checking for being on the world map...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking for being on the world map...", Indent: indent + 1, Toggle: getDoDebug());
             if (Blinker.OnWorldMap())
             {
                 if (!Silent)
                 {
                     Blinker.Fail($"You cannot {verb} on the world map.");
                 }
+                Debug.LastIndent = indent;
                 return false;
             }
-            Debug.Entry(4, $"Checking for currently flying...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 1, Toggle: getDoDebug());
             if (Blinker.IsFlying)
             {
-                Debug.Entry(4, $"Attempting to land and checking again...", Indent: 2, Toggle: getDoDebug());
+                Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 2, Toggle: getDoDebug());
                 Flight.Land(Blinker, Silent);
                 if (Blinker.IsFlying)
                 {
-                    Debug.Warn(4, 
+                    Debug.Warn(1, 
                         $"{nameof(UD_Blink)}",
                         $"{nameof(Blink)}",
                         $"Still flying despite calling " +
                         $"{nameof(Flight)}.{nameof(Flight.Land)} on " +
-                        $"{nameof(Blinker)} {Blinker?.DebugName ?? NULL}", 
-                        Indent: 2);
+                        $"{nameof(Blinker)} {Blinker?.DebugName ?? NULL}");
 
                     if (!Silent)
                     {
                         Blinker.Fail($"You cannot {verb} while flying.");
                     }
+                    Debug.LastIndent = indent;
                     return false;
                 }
             }
-            Debug.Entry(4, $"Checking can change movement mode...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
+                Debug.LastIndent = indent;
                 return false;
             }
-            Debug.Entry(4, $"Checking can change body position...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking can change body position...", Indent: indent + 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeBodyPosition("Blinking", ShowMessage: !Silent))
             {
+                Debug.LastIndent = indent;
                 return false;
             }
 
-            Debug.Entry(4, $"Checking blinker has {nameof(UD_Blink)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking blinker has {nameof(UD_Blink)}...", Indent: indent + 1, Toggle: getDoDebug());
             bool hasBlink = Blinker.TryGetPart(out UD_Blink blink);
             bool shouts = hasBlink && blink.Shouts;
             bool doNani = hasBlink && blink.DoNani;
@@ -897,26 +914,27 @@ namespace XRL.World.Parts.Mutation
             string nani = GameText.VariableReplace(blink?.Nani, Blinker, Kid);
             string naniColor = blink?.NaniColor ?? "r";
 
-            Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
 
             Cell origin = Blinker.CurrentCell;
             Cell KidDestination = Destination;
-            Debug.Entry(4, $"Initialized {nameof(origin)} and {nameof(KidDestination)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(3, $"Initialized {nameof(origin)} and {nameof(KidDestination)}...", Indent: indent + 1, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"Getting {nameof(Direction)} if null...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Getting {nameof(Direction)} if null...", Indent: indent + 1, Toggle: getDoDebug());
             Direction ??= GetBlinkDirection(Blinker, BlinkRange, IsNothinPersonnelKid, Kid, IsRetreat);
 
             if (!blink.IsMyActivatedAbilityCoolingDown(blink.BlinkActivatedAbilityID, Blinker) && Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
             {
-                Debug.CheckNah(4, $"{nameof(Direction)}", $"{Direction ?? NULL}", Indent: 2, Toggle: getDoDebug());
+                Debug.CheckNah(4, $"{nameof(Direction)}", $"{Direction ?? NULL}", Indent: indent + 2, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return false;
             }
 
-            Debug.Entry(4, $"Initializing Path...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Initializing Path...", Indent: indent + 1, Toggle: getDoDebug());
             FindPath Path = null;
 
-            Debug.Entry(4, $"Checking {nameof(Destination)} for a value...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
             if (Destination == null || (IsNothinPersonnelKid && KidDestination != null))
             {
                 if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out Path, IsNothinPersonnelKid))
@@ -925,84 +943,87 @@ namespace XRL.World.Parts.Mutation
                     {
                         Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
                     }
-                    Debug.CheckNah(4, $"{nameof(Destination)}", NULL, Indent: 2, Toggle: getDoDebug());
+                    Debug.CheckNah(4, $"{nameof(Destination)}", NULL, Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.LastIndent = indent;
                     return false;
                 }
             }
 
-            Debug.Entry(4, $"Checking {nameof(Destination)} adjacency to {nameof(Blinker)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking {nameof(Destination)} adjacency to {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (Blinker.CurrentCell.GetAdjacentCells().Contains(Destination))
             {
-                Debug.CheckNah(4, $"{nameof(Destination)} is adjacent to {nameof(Blinker)}", Indent: 2, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Destination)} is adjacent to {nameof(Blinker)}", Indent: indent + 2, Toggle: getDoDebug());
                 if (Blinker.IsPlayer())
                 {
                     if (!Silent)
                     {
                         Popup.ShowFail("You don't have room to build momentum!");
                     }
+                    Debug.LastIndent = indent;
                     return false;
                 }
             }
 
-            Debug.Entry(4, $"Checking {nameof(BeforeBlinkEvent)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking {nameof(BeforeBlinkEvent)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (!BeforeBlinkEvent.Check(Blinker, blink, out string eventBlockReason, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path))
             {
-                Debug.CheckNah(4, $"{nameof(BeforeBlinkEvent)} blocked Blink: {nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}", 
-                    Indent: 2, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(BeforeBlinkEvent)} blocked Blink: {nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}", 
+                    Indent: indent + 2, Toggle: getDoDebug());
                 if (Blinker.IsPlayer())
                 {
                     if (!Silent && !eventBlockReason.IsNullOrEmpty())
                     {
                         Popup.ShowFail(eventBlockReason);
                     }
+                    Debug.LastIndent = indent;
                     return false;
                 }
             }
 
             bool isNani = false;
             bool doNothinPersonnel = false;
-            Debug.Entry(4, $"Initialized {nameof(isNani)} ({isNani}) and {nameof(doNothinPersonnel)} ({doNothinPersonnel})...", 
-                Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(3, $"Initialized {nameof(isNani)} ({isNani}) and {nameof(doNothinPersonnel)} ({doNothinPersonnel})...", 
+                Indent: indent + 1, Toggle: getDoDebug());
 
-            Debug.Entry(4, $"Checking if IsNothinPersonnelKid and have both Kid and KidDestination...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking if IsNothinPersonnelKid and have both Kid and KidDestination...", Indent: indent + 1, Toggle: getDoDebug());
             if (IsNothinPersonnelKid && Kid != null && KidDestination != null)
             {
-                Debug.CheckYeh(4, $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid}", Indent: 2, Toggle: getDoDebug());
+                Debug.CheckYeh(3, $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid}", Indent: indent + 2, Toggle: getDoDebug());
                 Destination = KidDestination;
                 isNani = Kid.CurrentCell.GetDirectionFromCell(KidDestination) != Direction;
                 doNothinPersonnel = true;
-                Debug.LoopItem(4, $"{nameof(doNothinPersonnel)}: {doNothinPersonnel}", 
-                    Good: doNothinPersonnel, Indent: 2, Toggle: getDoDebug());
+                Debug.LoopItem(3, $"{nameof(doNothinPersonnel)}: {doNothinPersonnel}", 
+                    Good: doNothinPersonnel, Indent: indent + 2, Toggle: getDoDebug());
             }
             else
             {
                 Debug.LoopItem(4, $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid}", 
-                    Good: IsNothinPersonnelKid, Indent: 2, Toggle: getDoDebug());
+                    Good: IsNothinPersonnelKid, Indent: indent + 2, Toggle: getDoDebug());
                 Debug.LoopItem(4, $"{nameof(Kid)}: {Kid?.DebugName ?? NULL}", 
-                    Good: Kid != null, Indent: 2, Toggle: getDoDebug());
+                    Good: Kid != null, Indent: indent + 2, Toggle: getDoDebug());
                 Debug.LoopItem(4, $"{nameof(KidDestination)}: [{KidDestination?.Location}]", 
-                    Good: KidDestination != null, Indent: 2, Toggle: getDoDebug());
+                    Good: KidDestination != null, Indent: indent + 2, Toggle: getDoDebug());
             }
 
-            Debug.Entry(4, $"Playing world sound {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Playing world sound {BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
             Blinker?.PlayWorldSound(BLINK_SOUND);
 
-            Debug.Entry(4, $"Playing Animation...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
             PlayAnimation(Blinker, Destination, Path);
 
-            Debug.Entry(4, $"Direct Moving To [{Destination?.Location}]...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Direct Moving To [{Destination?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
             Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
 
-            Debug.Entry(4, $"Gravitating...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Gravitating...", Indent: indent + 1, Toggle: getDoDebug());
             Blinker.Gravitate();
 
-            Debug.Entry(4, $"Arriving...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Arriving...", Indent: indent + 1, Toggle: getDoDebug());
             Arrive(origin, Destination);
 
-            Debug.Entry(4, $"Checking {nameof(doNothinPersonnel)}...", Indent: 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking {nameof(doNothinPersonnel)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (doNothinPersonnel)
             {
-                Debug.CheckYeh(4, $"{nameof(doNothinPersonnel)}", $"{doNothinPersonnel}", Indent: 2, Toggle: getDoDebug());
+                Debug.CheckYeh(3, $"{nameof(doNothinPersonnel)}", $"{doNothinPersonnel}", Indent: indent + 2, Toggle: getDoDebug());
                 string didVerb = "teleport";
                 string didExtra = "behind";
                 string didEndMark = "!";
@@ -1012,12 +1033,12 @@ namespace XRL.World.Parts.Mutation
                 string messageColor = shoutColor;
                 float floatLength = 8.0f;
 
-                Debug.Entry(4, $"Checking if not Nani...", Indent: 2, Toggle: getDoDebug());
+                Debug.Entry(2, $"Checking if not Nani...", Indent: indent + 2, Toggle: getDoDebug());
                 if (!isNani)
                 {
-                    Debug.CheckYeh(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(3, $"Not {nameof(isNani)}", $"{!isNani}", Indent: indent + 3, Toggle: getDoDebug());
 
-                    Debug.Entry(4, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: 2, Toggle: getDoDebug());
+                    Debug.Entry(2, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: indent + 2, Toggle: getDoDebug());
                     bool attacked = 
                         hasBlink
                         ? PerformNothinPersonnel(Blinker, Kid)
@@ -1027,7 +1048,7 @@ namespace XRL.World.Parts.Mutation
                             HitModifier: 5)
                         ;
 
-                    Debug.Entry(4, $"Checking {nameof(attacked)}...", Indent: 2, Toggle: getDoDebug());
+                    Debug.Entry(3, $"Checking {nameof(attacked)}...", Indent: indent + 2, Toggle: getDoDebug());
                     if (!attacked)
                     {
                         message = doNani ? nani : "!?";
@@ -1037,15 +1058,15 @@ namespace XRL.World.Parts.Mutation
                     {
                         if (blink != null)
                         {
-                            blink.WeGoAgain = true;
+                            blink.WeGoAgain = AllowWeGoAgain;
                         }
                     }
-                    Debug.LoopItem(4, $"{nameof(attacked)}", $"{attacked}", 
-                        Good: attacked, Indent: 3, Toggle: getDoDebug());
+                    Debug.LoopItem(3, $"{nameof(attacked)}", $"{attacked}", 
+                        Good: attacked, Indent: indent + 3, Toggle: getDoDebug());
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"Not {nameof(isNani)}", $"{!isNani}", Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckNah(3, $"Not {nameof(isNani)}", $"{!isNani}", Indent: indent + 3, Toggle: getDoDebug());
                     message = doNani ? nani : "!?";
                     messageColor = naniColor;
 
@@ -1056,8 +1077,8 @@ namespace XRL.World.Parts.Mutation
 
                 didExtra = $"{didExtra} {Kid.t()}";
 
-                Debug.Entry(4, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
-                    Indent: 2, Toggle: getDoDebug());
+                Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
                 blink.DidX(
                     Verb: didVerb, 
                     Extra: didExtra, 
@@ -1070,24 +1091,24 @@ namespace XRL.World.Parts.Mutation
                 
                 if (shouts || isNani)
                 {
-                    Debug.CheckYeh(4, $"{nameof(shouts)}: {shouts} or {nameof(isNani)}: {isNani}",
-                        Indent: 2, Toggle: getDoDebug());
-                    Debug.Entry(4, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
-                        Indent: 3, Toggle: getDoDebug());
+                    Debug.CheckYeh(3, $"{nameof(shouts)}: {shouts} or {nameof(isNani)}: {isNani}",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.Entry(2, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
+                        Indent: indent + 3, Toggle: getDoDebug());
                     Blinker.EmitMessage(message, null, messageColor);
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"{nameof(shouts)}: {shouts}, {nameof(isNani)}: {isNani}",
-                        Indent: 2, Toggle: getDoDebug());
+                    Debug.CheckNah(3, $"{nameof(shouts)}: {shouts}, {nameof(isNani)}: {isNani}",
+                        Indent: indent + 2, Toggle: getDoDebug());
                 }
 
                 if (ObnoxiousYelling && shouts)
                 {
-                    Debug.CheckYeh(4, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
-                        Indent: 2, Toggle: getDoDebug());
+                    Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                        Indent: indent + 2, Toggle: getDoDebug());
                     Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
-                        Indent: 2, Toggle: getDoDebug());
+                        Indent: indent + 2, Toggle: getDoDebug());
                     Blinker.ParticleText(
                         Text: message,
                         Color: messageColor[0],
@@ -1098,14 +1119,14 @@ namespace XRL.World.Parts.Mutation
                 }
                 else
                 {
-                    Debug.CheckNah(4, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
-                        Indent: 2, Toggle: getDoDebug());
+                    Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                        Indent: indent + 2, Toggle: getDoDebug());
                 }
             }
             else
             {
-                Debug.Entry(4, $"DidX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
-                    Indent: 2, Toggle: getDoDebug());
+                Debug.Entry(3, $"DidX Verb: {"blunk".Quote()}, Extra: {"to a new location faster than perceptable".Quote()}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
                 if (blink != null)
                 {
                     blink.DidX(
@@ -1127,12 +1148,13 @@ namespace XRL.World.Parts.Mutation
                         );
                 }
             }
-            Debug.Entry(4,
+            Debug.Entry(1,
                 $"{nameof(UD_Blink)}." +
                 $"{nameof(Blink)}() [{TICK}] Blunk",
-                Indent: 0, Toggle: getDoDebug());
+                Indent: indent, Toggle: getDoDebug());
 
             AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
+            Debug.LastIndent = indent;
             return Blinker.CurrentCell == Destination;
         }
         public static bool Blink(GameObject Blinker, string Direction, bool IsNothinPersonnelKid = false, bool Silent = false)
@@ -1179,11 +1201,11 @@ namespace XRL.World.Parts.Mutation
             CombatJuice.punch(Blinker, Kid);
             int amount = Stat.Roll(blink.GetColdSteelDamage());
             blink.IsSteelCold = !Kid.TakeDamage(
-                Amount: amount,
+                Amount: ref amount,
                 Message: "from %t attack!",
-                Attributes: "Umbral",
-                DeathReason: "nothin personnel",
-                ThirdPersonDeathReason: "nothin personnel",
+                Attributes: "Umbral ColdSteel nothinpersonnel",
+                DeathReason: "psssh...you took %t's cold steel personnely...",
+                ThirdPersonDeathReason: "psssh..." + Kid.it + Kid.GetVerb("take") + " %t's cold steel personnely...",
                 Owner: null,
                 Attacker: Blinker,
                 ShowDamageType: "{{coldsteel|Cold Steel}} damage"
@@ -1306,8 +1328,10 @@ namespace XRL.World.Parts.Mutation
 
             if (IsBornThisWay(Blinker) && prickleBallAnimation != null && RemovePrickleBallAnimation(Blinker, prickleBallAnimation))
             {
-                Debug.CheckYeh(4, $"Animation Removed",
-                    Indent: Debug.LastIndent + 1, Toggle: getDoDebug());
+                int indent = Debug.LastIndent;
+                Debug.CheckYeh(3, $"Animation Removed",
+                    Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
             }
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
@@ -1383,10 +1407,20 @@ namespace XRL.World.Parts.Mutation
         public static bool WeGoingAgain(GameObject Blinker, bool? SetTo = null, bool Silent = false)
         {
             if (Blinker == null)
+            {
                 return false;
+            }
 
             if (!Blinker.TryGetPart(out UD_Blink blink))
+            {
                 return false;
+            }
+
+            if (!AllowWeGoAgain)
+            {
+                blink.WeGoAgain = false;
+                return false;
+            }
 
             if (SetTo != null)
             {
@@ -1470,6 +1504,14 @@ namespace XRL.World.Parts.Mutation
 
                 SB.AppendColored("W", $"General");
                 SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseRange}").Append($"){HONLY}{nameof(BaseRange)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored(TileColor, $"{TileColor}").Append($"){HONLY}{nameof(TileColor)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored(ShoutColor, $"{Shout ?? NULL}").Append($"){HONLY}{nameof(Shout)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored(NaniColor, $"{Nani ?? NULL}").Append($"){HONLY}{nameof(Nani)}");
+                SB.AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("g", $"{ParentObject.GetSpecies()}").Append($"){HONLY}Species");
                 SB.AppendLine();
                 SB.Append(TANDR).Append("(").AppendColored("g", $"{ParentObject.GetGenotype()}").Append($"){HONLY}Genotype");
@@ -1490,9 +1532,21 @@ namespace XRL.World.Parts.Mutation
 
                 SB.AppendColored("W", $"State");
                 SB.AppendLine();
+                SB.Append(VANDR).Append($"[{Shouts.YehNah()}]{HONLY}{nameof(Shouts)}: ").AppendColored("B", $"{Shouts}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{DoNani.YehNah()}]{HONLY}{nameof(DoNani)}: ").AppendColored("B", $"{DoNani}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{ColorChange.YehNah()}]{HONLY}{nameof(ColorChange)}: ").AppendColored("B", $"{ColorChange}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{PhysicalFeatures.YehNah()}]{HONLY}{nameof(PhysicalFeatures)}: ").AppendColored("B", $"{PhysicalFeatures}");
+                SB.AppendLine();
                 SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
+                SB.Append(VANDR).Append($"[{MidBlink.YehNah(true)}]{HONLY}{nameof(MidBlink)}: ").AppendColored("B", $"{MidBlink}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{AllowWeGoAgain.YehNah()}]{HONLY}{nameof(AllowWeGoAgain)}: ").AppendColored("B", $"{AllowWeGoAgain}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah(!AllowWeGoAgain)}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
@@ -1574,7 +1628,7 @@ namespace XRL.World.Parts.Mutation
                     {
                         blinkThink = $"I blunk and ";
                         int energyCost = 1000;
-                        if (WeGoAgain)
+                        if (AllowWeGoAgain && WeGoAgain)
                         {
                             WeGoingAgain(false);
 
@@ -1589,7 +1643,7 @@ namespace XRL.World.Parts.Mutation
                                 Symbol2: "\u221E"
                                 );
 
-                            energyCost = (int)(energyCost * 1.25f);
+                            energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
                             blinkThink += $"We Go Again";
                         }
                         else
@@ -1722,12 +1776,14 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Reason == "nothin personnel")
             {
-                Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
-                Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: Debug.LastIndent, Toggle: getDoDebug());
+                int indent = Debug.LastIndent;
+                Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+                Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
                 /*
                 SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
                 WeGoAgain = true;
                 */
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
@@ -1735,22 +1791,26 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
             {
+                int indent = Debug.LastIndent;
+
                 Debug.Entry(4,
                     $"@ {nameof(UD_Blink)}"
                     + $"{nameof(HandleEvent)}("
                     + $"{nameof(EffectAppliedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
-                    Indent: 0, Toggle: getDoDebug());
+                    Indent: indent, Toggle: getDoDebug());
 
                 Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 1, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug());
 
                 Debug.CheckYeh(4, $"Attempting to add {nameof(PrickleBallAnimation)}",
-                    Indent: 1, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug());
 
                 AddPrickleBallAnimation();
 
                 Debug.LoopItem(4, $"Have {nameof(PrickleBallAnimation)}?",
-                    Good: ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: 2, Toggle: getDoDebug());
+                    Good: ParentObject.HasPart<AnimatedMaterialGeneric>(), Indent: indent + 2, Toggle: getDoDebug());
+
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
@@ -1758,22 +1818,26 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Effect.ClassName == nameof(Running) && ParentObject != null && BornThisWay)
             {
+                int indent = Debug.LastIndent;
+
                 Debug.Entry(4,
                 $"@ {nameof(UD_Blink)}"
                 + $"{nameof(HandleEvent)}("
                 + $"{nameof(EffectRemovedEvent)} E.{E.Effect?.ClassName ?? NULL} (want {nameof(Running)}))",
-                Indent: 0, Toggle: getDoDebug());
+                Indent: indent, Toggle: getDoDebug());
 
                 Debug.Entry(4, $"ParentObject: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 1, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug());
 
                 Debug.CheckYeh(4, $"Attempting to remove {nameof(PrickleBallAnimation)}",
-                    Indent: 1, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug());
 
                 bool removedAnimation = RemovePrickleBallAnimation();
 
                 Debug.LoopItem(4, $"Removed {nameof(PrickleBallAnimation)}?",
-                    Good: !removedAnimation, Indent: 2, Toggle: getDoDebug());
+                    Good: !removedAnimation, Indent: indent + 2, Toggle: getDoDebug());
+
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
@@ -1802,16 +1866,10 @@ namespace XRL.World.Parts.Mutation
         public override void Write(GameObject Basis, SerializationWriter Writer)
         {
             base.Write(Basis, Writer);
-
-            Writer.Write(BlinkActivatedAbilityID);
-            Writer.Write(ColdSteelActivatedAbilityID);
         }
         public override void Read(GameObject Basis, SerializationReader Reader)
         {
             base.Read(Basis, Reader);
-
-            BlinkActivatedAbilityID = Reader.ReadGuid();
-            ColdSteelActivatedAbilityID = Reader.ReadGuid();
         }
 
         public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
@@ -1921,7 +1979,8 @@ namespace XRL.World.Parts.Mutation
                 total += damage;
                 Debug.Entry(4, message.Replace("%D", $"{damage}"), Indent: 1);
             }
-            Debug.Entry(4, $"Total Cold Steel damage: {total} | {damageDie.Min()}, {total/count}, {damageDie.Max()}", Indent: 0);
+            Debug.Entry(4, $"Total Cold Steel damage: {total} | {damageDie.Min()}, {total/count}, {damageDie.Max()}", 
+                Indent: 0, Toggle: getDoDebug());
         }
         [WishCommand(Command = "gimme coldsteel damage")]
         // gimme coldsteel damage maxLevel
@@ -1933,7 +1992,8 @@ namespace XRL.World.Parts.Mutation
             {
                 maxLevel = 45;
             }
-            Debug.Entry(4, $"Cold Steel damage die up to level {maxLevel} comin' right up!", Indent: 0);
+            Debug.Entry(4, $"Cold Steel damage die up to level {maxLevel} comin' right up!", 
+                Indent: 0, Toggle: getDoDebug());
 
             int levelPadding = maxLevel.ToString().Length;
 
@@ -1958,7 +2018,7 @@ namespace XRL.World.Parts.Mutation
             for (int i = 0; i < maxLevel; i++)
             {
                 damageDie = new(GetColdSteelDamage(i + 1));
-                string level = $"{(i+1)}".PadLeft(levelPadding, ' ');
+                string level = $"{i + 1}".PadLeft(levelPadding, ' ');
                 string damage = damageDie.ToString()
                     .PadLeft(dieCountPaddingLeft, ' ')
                     .PadRight(dieCountPaddingRight, ' ');
@@ -1967,7 +2027,8 @@ namespace XRL.World.Parts.Mutation
                 string avgString = ((int)damageDie.Average()).ToString().PadLeft(avgPadding, ' ');
                 string maxString = damageDie.Max().ToString().PadLeft(maxPadding, ' ');
 
-                Debug.Entry(4, $"Level {level}: {damage} ({minString}, {avgString}, {maxString})", Indent: 1);
+                Debug.Entry(4, $"Level {level}: {damage} ({minString}, {avgString}, {maxString})", 
+                    Indent: 1, Toggle: getDoDebug());
             }
         }
     }

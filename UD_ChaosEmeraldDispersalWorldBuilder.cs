@@ -1,6 +1,7 @@
-﻿using Genkit;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System;
+
+using Genkit;
 
 using XRL;
 using XRL.Rules;
@@ -93,6 +94,22 @@ namespace XRL.World.WorldBuilders
                 Debug.LastIndent = indent;
                 return;
             }
+
+            if (!GenerateChaosEmeralds)
+            {
+                Debug.CheckNah(4, $"{nameof(GenerateChaosEmeralds)} is Disabled", Indent: indent + 2, Toggle: doDebug);
+
+                Debug.Entry(4,
+                    $"x {nameof(UD_ChaosEmeraldDispersalWorldBuilder)}."
+                    + $"{nameof(HideChaosEmeralds)}("
+                    + $"{nameof(WorldID)}: {WorldID})"
+                    + $" *//",
+                    Indent: indent + 1, Toggle: doDebug);
+                Debug.LastIndent = indent;
+                return;
+            }
+            Debug.CheckYeh(4, $"{nameof(GenerateChaosEmeralds)} is Enabled", Indent: indent + 2, Toggle: doDebug);
+
             WorldCreationProgress.StepProgress("Hiding Chaos Emeralds...");
 
             Dictionary<string, GameObject> chaosEmeralds = new()
@@ -125,6 +142,7 @@ namespace XRL.World.WorldBuilders
 
                 bool isTombTopEmerald = color == tombTopEmerald;
                 bool isMoonstairEmerald = color == moonstairEmerald;
+                bool isPricklePigEmerald = color == pricklePigEmerald;
 
                 int zoneTier = !isMoonstairEmerald ? Stat.RollCached("2d4") : 8;
 
@@ -146,29 +164,54 @@ namespace XRL.World.WorldBuilders
                 }
                 Debug.LoopItem(4, $"{nameof(zoneID)}", $"{zoneID}",
                     Indent: indent + 3, Toggle: doDebug);
-                
+
+                string secretID = null;
+
                 The.Game.SetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}", int.Parse(emeraldObject.ID));
                 The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
-
+                
                 The.ZoneManager.AdjustZoneGenerationTierTo(zoneID);
-                The.ZoneManager.AddZonePostBuilder(zoneID, nameof(PlaceRelicBuilder), "Relic", The.ZoneManager.CacheObject(emeraldObject));
-                string secretID = Builder.AddSecret(zoneID, emeraldName, new string[1] { "artifact" }, "Artifacts", emeraldSecret);
+
+                if (isPricklePigEmerald)
+                {
+                    GameObject pricklePig = GameObjectFactory.Factory.CreateObject(
+                        ObjectBlueprint: "Metal Prickle Pig", 
+                        BeforeObjectCreated: delegate (GameObject GO) { HeroMaker.MakeHero(GO); });
+
+                    secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying {emeraldName}", new string[1] { "artifact" }, "Artifacts", emeraldSecret);
+
+                    SecretRevealer secretRevealer = pricklePig.RequirePart<SecretRevealer>();
+                    secretRevealer.id = secretID;
+                    secretRevealer.text = $"the location of the prickle pig carrying {emeraldName}";
+                    secretRevealer.message = $"You have discovered {secretRevealer.text}!";
+                    secretRevealer.category = "Artifacts";
+                    secretRevealer.adjectives = "artifact";
+
+                    pricklePig?.ReceiveObject(emeraldObject);
+                    The.ZoneManager.AddZonePostBuilder(zoneID, nameof(AddObjectWithUniqueItemBuilder), "Object", The.ZoneManager.CacheObject(pricklePig));
+                }
+                else
+                {
+                    The.ZoneManager.AddZonePostBuilder(zoneID, nameof(PlaceRelicBuilder), "Relic", The.ZoneManager.CacheObject(emeraldObject));
+
+                    secretID = Builder.AddSecret(zoneID, emeraldName, new string[1] { "artifact" }, "Artifacts", emeraldSecret);
+
+                    if (isTombTopEmerald)
+                    {
+                        SecretRevealer secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
+                        secretRevealer.id = secretID;
+                        secretRevealer.text = $"the location of {emeraldName}";
+                        secretRevealer.message = $"You have discovered {secretRevealer.text}!";
+                        secretRevealer.category = "Artifacts";
+                        secretRevealer.adjectives = "artifact";
+                    }
+                }
 
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: doDebug);
 
                 Debug.LoopItem(4, $"{nameof(emeraldObject)}.{nameof(emeraldObject.ID)}", $"{int.Parse(emeraldObject.ID)}",
                     Indent: indent + 3, Toggle: doDebug);
-
-                if (isTombTopEmerald)
-                {
-                    SecretRevealer secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
-                    secretRevealer.id = secretID;
-                    secretRevealer.text = $"the location of {emeraldObject.DisplayName}";
-                    secretRevealer.message = $"You have discovered {secretRevealer.text}!";
-                    secretRevealer.category = "Artifacts";
-                    secretRevealer.adjectives = "artifact";
-                }
                 if (ChaosEmeraldLocations.ContainsKey(color))
                 {
                     ChaosEmeraldLocations[color] = zoneID;
@@ -200,7 +243,12 @@ namespace XRL.World.WorldBuilders
                     Cell landingCell = Z.GetFirstObjectWithPart(nameof(ChaosEmeraldSetPiece))?.CurrentCell;
                     if (landingCell != null)
                     {
-                        landingCell = landingCell.GetAdjacentCells(5).GetRandomElementCosmetic();
+                        List<Cell> nearbyCells = Event.NewCellList(landingCell.GetAdjacentCells(5));
+                        nearbyCells.RemoveAll(c => c.IsSolidFor(The.Player));
+                        if (!nearbyCells.IsNullOrEmpty())
+                        {
+                            landingCell = nearbyCells.GetRandomElementCosmetic();
+                        }
                     }
                     landingCell ??= Z.GetEmptyCells().GetRandomElement();
                     if (landingCell != null)
@@ -250,25 +298,39 @@ namespace XRL.World.WorldBuilders
         {
             if (!color.IsNullOrEmpty())
             {
+                color = Grammar.MakeTitleCase(color);
                 int chaosEmeraldID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}");
                 if (chaosEmeraldID != 0)
                 {
-                    GameObject chaosEmeraldObject = // The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false)
-                        The.Player.CurrentZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString())
-                        ?? GameObject.FindByID(chaosEmeraldID);
+                    string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}");
 
+                    Zone emeraldZone = The.ZoneManager.GetZone(zoneID);
+
+                    GameObject chaosEmeraldObject = emeraldZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString()) 
+                        ?? emeraldZone.FindObjectByID(chaosEmeraldID);
+                    
                     if (chaosEmeraldObject != null)
                     {
-                        The.Player.ReceiveObject(chaosEmeraldObject);
-                        chaosEmeraldObject.MakeUnderstood();
-                        if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
+                        if (chaosEmeraldObject.Holder == null || chaosEmeraldObject.Holder != The.Player)
                         {
-                            chaosEmeraldObject.RemovePart(secretRevealer);
+                            The.Player.ReceiveObject(chaosEmeraldObject);
+                            chaosEmeraldObject.MakeUnderstood();
+                            if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
+                            {
+                                chaosEmeraldObject.RemovePart(secretRevealer);
+                            }
+                        }
+                        else
+                        {
+                            Popup.Show($"You are already holding {chaosEmeraldObject.T(AsIfKnown: true)}!");
                         }
                     }
                     else
                     {
-                        Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
+                        if (The.Player.Inventory == null || !The.Player.Inventory.HasObject(GO => GO.ID == chaosEmeraldID.ToString()))
+                        {
+                            Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
+                        }
                     }
                 }
                 else

@@ -1142,6 +1142,10 @@ namespace UD_Blink_Mutation
 
         public static string Are(this GameObject Object)
         {
+            return Object.IsPlural ? "Are" : "Is";
+        }
+        public static string are(this GameObject Object)
+        {
             return Object.IsPlural ? "are" : "is";
         }
         public static string SplitCamelCase(this string @string)

@@ -14,9 +14,13 @@ namespace UD_Blink_Mutation
         private static Dictionary<string, string> Directory => new()
         {
             { nameof(ObnoxiousYelling), "ObnoxiousYelling" },
+            { nameof(AllowWeGoAgain), "AllowWeGoAgain" },
+            { nameof(GenerateChaosEmeralds), "GenerateChaosEmeralds" },
             { nameof(DebugVerbosity), "DebugVerbosity" },
             { nameof(DebugIncludeInMessage), "DebugIncludeInMessage" },
             { nameof(DebugBlinkDescriptions), "DebugIncludeBlinkDebugDescriptions" },
+            { nameof(DebugAI_SquareUpDescriptions), "DebugIncludeAI_SquareUpDebugDescriptions" },
+            { nameof(DebugChaosEmeraldSetBonusDescriptions), "DebugIncludeChaosEmeraldSetBonusDebugDescriptions" },
             { nameof(DebugIgnorePlayerWhenSquaringUp), "DebugIgnorePlayerWhenSquaringUp" },
         };
 
@@ -123,6 +127,30 @@ namespace UD_Blink_Mutation
             }
         }
 
+        public static bool DebugAI_SquareUpDescriptions
+        {
+            get
+            {
+                return GetBoolOption($"{nameof(DebugAI_SquareUpDescriptions)}", false);
+            }
+            set
+            {
+                SetBoolOption(nameof(DebugAI_SquareUpDescriptions), value);
+            }
+        }
+        
+        public static bool DebugChaosEmeraldSetBonusDescriptions
+        {
+            get
+            {
+                return GetBoolOption($"{nameof(DebugChaosEmeraldSetBonusDescriptions)}", false);
+            }
+            set
+            {
+                SetBoolOption(nameof(DebugChaosEmeraldSetBonusDescriptions), value);
+            }
+        }
+
         public static bool DebugIgnorePlayerWhenSquaringUp
         {
             get
@@ -146,6 +174,30 @@ namespace UD_Blink_Mutation
             set
             {
                 SetBoolOption(nameof(ObnoxiousYelling), value);
+            }
+        }
+
+        public static bool AllowWeGoAgain
+        {
+            get
+            {
+                return GetBoolOption(nameof(AllowWeGoAgain), true);
+            }
+            set
+            {
+                SetBoolOption(nameof(AllowWeGoAgain), value);
+            }
+        }
+
+        public static bool GenerateChaosEmeralds
+        {
+            get
+            {
+                return GetBoolOption(nameof(GenerateChaosEmeralds), true);
+            }
+            set
+            {
+                SetBoolOption(nameof(GenerateChaosEmeralds), value);
             }
         }
 
