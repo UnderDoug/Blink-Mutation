@@ -261,6 +261,7 @@ namespace XRL.World.Parts
         public static string GetSetPieceDescriptionLine(int SetPiece, int SetPieces = 0)
         {
             string treePiece = SetPiece == MaxSetPieces ? TANDR : VANDR;
+            string powerUpAbilityName = SetPieces == MaxSetPieces ? PowerUpAbilityName : PowerUpAbilityName.Strip().Color("y");
             string description = SetPiece switch
             {
                 1 => $"+15 to all resistances per Chaos Emerald ({15 * SetPieces}).",
@@ -269,7 +270,7 @@ namespace XRL.World.Parts
                 4 => $"Grants Improved {nameof(Regeneration)} at Tier 10.",
                 5 => $"+3 Willpower, +1 per Chaos Emerald ({3 + SetPieces}).",
                 6 => $"Protection from Electromagnetic Pulses.",
-                7 => $"Unlocks {PowerUpAbilityName}.",
+                7 => $"Unlocks {powerUpAbilityName}.",
                 _ => null,
             };
             return $"{treePiece}({GetSetOutOfTotal(SetPiece).Color(GetSetPieceLineColor(SetPiece, SetPieces))}): {description.Color(GetSetPieceLineColor(SetPiece, SetPieces))}"; 
@@ -834,7 +835,7 @@ namespace XRL.World.Parts
                     CombatJuice.StopPrefabAnimation("Particles/BeamWarmUp");
                 }
             }
-
+            Creature.UseEnergy(1500, "Metaphysical Ability Super Chaos Beam", "Activated Ability");
             return true;
         }
         public void PlayBeamSound(List<Cell> BeamCells)
@@ -1222,7 +1223,7 @@ namespace XRL.World.Parts
                 && ParentObject == E.Actor
                 && SuperBeamActivatedAbilityID != Guid.Empty
                 && IsMyActivatedAbilityAIUsable(SuperBeamActivatedAbilityID)
-                && hitpoints.Penalty < (hitpoints.BaseValue * 0.2f))
+                && hitpoints.Penalty > (hitpoints.BaseValue * 0.8f))
             {
                 E.Add(COMMAND_NAME_SUPER_BEAM);
             }

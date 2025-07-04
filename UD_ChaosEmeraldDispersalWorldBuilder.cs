@@ -113,6 +113,8 @@ namespace XRL.World.WorldBuilders
 
             string moonstairEmerald = emeraldColors.DrawRandomToken();
 
+            string pricklePigEmerald = emeraldColors.DrawRandomToken();
+
             foreach ((string color, GameObject emeraldObject) in  chaosEmeralds)
             {
                 Debug.LoopItem(4, $"{nameof(color)}", $"[{color}] ({emeraldObject.ID}) {emeraldObject.DebugName}",
@@ -235,36 +237,44 @@ namespace XRL.World.WorldBuilders
             {
                 foreach (string color in EmeraldColors)
                 {
-                    int chaosEmeraldID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}");
-                    if (chaosEmeraldID != 0)
-                    {
-                        GameObject chaosEmeraldObject = The.Player.CurrentZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString()) 
-                            ?? The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false) 
-                            ?? GameObject.FindByID(chaosEmeraldID);
-                        
-                        if (chaosEmeraldObject != null)
-                        {
-                            The.Player.ReceiveObject(chaosEmeraldObject);
-                            chaosEmeraldObject.MakeUnderstood();
-                            if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
-                            {
-                                chaosEmeraldObject.RemovePart(secretRevealer);
-                            }
-                        }
-                        else
-                        {
-                            Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
-                        }
-                    }
-                    else
-                    {
-                        Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldID)} is {chaosEmeraldID}!");
-                    }
+                    TakeChaosEmerald(color);
                 }
             }
             else
             {
                 Popup.Show($"Something went very wrong trying that! {nameof(EmeraldColors)} is {NULL} for some reason...", "Big Oops!");
+            }
+        }
+        [WishCommand(Command = "take chaos emerald")]
+        public static void TakeChaosEmerald(string color)
+        {
+            if (!color.IsNullOrEmpty())
+            {
+                int chaosEmeraldID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}");
+                if (chaosEmeraldID != 0)
+                {
+                    GameObject chaosEmeraldObject = // The.ZoneManager.PullCachedObject(chaosEmeraldID.ToString(), false)
+                        The.Player.CurrentZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString())
+                        ?? GameObject.FindByID(chaosEmeraldID);
+
+                    if (chaosEmeraldObject != null)
+                    {
+                        The.Player.ReceiveObject(chaosEmeraldObject);
+                        chaosEmeraldObject.MakeUnderstood();
+                        if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
+                        {
+                            chaosEmeraldObject.RemovePart(secretRevealer);
+                        }
+                    }
+                    else
+                    {
+                        Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
+                    }
+                }
+                else
+                {
+                    Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldID)} is {chaosEmeraldID}!");
+                }
             }
         }
     }

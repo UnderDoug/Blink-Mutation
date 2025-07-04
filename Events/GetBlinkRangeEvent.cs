@@ -76,8 +76,7 @@ namespace UD_Blink_Mutation
             Debug.Entry(4,
                 $"* {nameof(GetBlinkRangeEvent)}."
                 + $"{nameof(GetFor)}()"
-                + $" for {nameof(Blinker)}: {Blinker?.DebugName ?? NULL},"
-                + $" {nameof(CascadeLevel)}: {CascadeLevel}",
+                + $" for {nameof(Blinker)}: {Blinker?.DebugName ?? NULL}",
                 Indent: indent + 1, Toggle: doDebug);
 
             bool wantsMin = Blinker.WantEvent(ID, CascadeLevel);

@@ -64,6 +64,7 @@ namespace XRL.World.Parts.Mutation
         public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
 
         // Flags
+        private bool MidBlink = false;
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string MutationDescBornWithString => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
@@ -892,9 +893,9 @@ namespace XRL.World.Parts.Mutation
             bool doNani = hasBlink && blink.DoNani;
 
             string shout = GameText.VariableReplace(blink?.Shout, Blinker, Kid);
-            string shoutColor = blink?.ShoutColor;
+            string shoutColor = blink?.ShoutColor ?? "m";
             string nani = GameText.VariableReplace(blink?.Nani, Blinker, Kid);
-            string naniColor = blink?.NaniColor;
+            string naniColor = blink?.NaniColor ?? "r";
 
             Debug.Entry(4, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
@@ -1011,7 +1012,6 @@ namespace XRL.World.Parts.Mutation
                 string messageColor = shoutColor;
                 float floatLength = 8.0f;
 
-
                 Debug.Entry(4, $"Checking if not Nani...", Indent: 2, Toggle: getDoDebug());
                 if (!isNani)
                 {
@@ -1062,7 +1062,6 @@ namespace XRL.World.Parts.Mutation
                     Verb: didVerb, 
                     Extra: didExtra, 
                     EndMark: didEndMark, 
-                    SubjectOverride: null, 
                     Color: didColor, 
                     ColorAsGoodFor: isNani ? Kid : Blinker, 
                     ColorAsBadFor: isNani ? Blinker : Kid
@@ -1530,8 +1529,10 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Command == COMMAND_UD_BLINK && ParentObject == E.Actor)
             {
-                if (GameObject.Validate(E.Actor) && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor))
+                if (GameObject.Validate(E.Actor) && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor) && !MidBlink)
                 {
+                    MidBlink = true;
+
                     int blinkRange = GetBlinkRange();
                     bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
                     bool isMovement = !isRetreat && E.TargetCell != null;
@@ -1607,6 +1608,7 @@ namespace XRL.World.Parts.Mutation
                     {
                         E.Actor.Think(blinkThink);
                     }
+                    MidBlink = false;
                 }
             }
             return base.HandleEvent(E);
