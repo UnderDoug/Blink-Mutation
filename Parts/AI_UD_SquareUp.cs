@@ -18,7 +18,28 @@ namespace XRL.World.Parts
     [Serializable]
     public class AI_UD_SquareUp : AIBehaviorPart
     {
-        private static bool doDebug => false;
+        private static bool doDebug => getClassDoDebug(nameof(AI_UD_SquareUp));
+        private static bool getDoDebug(object what = null)
+        {
+            List<object> doList = new()
+            {
+                'V',    // Vomit
+                'X',    // Trace
+                "TT",   // TurnTick
+            };
+            List<object> dontList = new()
+            {
+            };
+
+            if (what != null && doList.Contains(what))
+                return true;
+
+            if (what != null && dontList.Contains(what))
+                return false;
+
+            return doDebug;
+        }
+
         private static bool IgnorePlayer => DebugIgnorePlayerWhenSquaringUp;
 
         private bool RecentlyAcquiredTarget = false;
@@ -234,7 +255,7 @@ namespace XRL.World.Parts
                 + $"{nameof(SquareUp)}("
                 + $"{nameof(Squarer)}: {Squarer?.DebugName ?? NULL} "
                 + $"{nameof(RecentlyAcquiredTarget)}: {RecentlyAcquiredTarget})",
-                Indent: 0, Toggle: doDebug);
+                Indent: 0, Toggle: getDoDebug());
 
             TargetAcquired = false;
             SquareUpTarget = null;
@@ -321,7 +342,7 @@ namespace XRL.World.Parts
                 + $"{nameof(Squarer)}: {Squarer?.DebugName ?? NULL} "
                 + $"{nameof(RecentlyAcquiredTarget)}: {RecentlyAcquiredTarget})"
                 + $" *//",
-                Indent: 0, Toggle: doDebug);
+                Indent: 0, Toggle: getDoDebug());
 
             return didSquare;
         }
@@ -342,7 +363,7 @@ namespace XRL.World.Parts
                     $"~ {nameof(AI_UD_SquareUp)}."
                     + $"{nameof(TurnTick)}()"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: doDebug);
+                    Indent: 0, Toggle: getDoDebug());
 
                 if (RecentlyAcquiredTarget && TimeTick - StoredTurnTickForAcquiredTarget > AcquiredTargetTurnThreshold)
                 {
@@ -366,12 +387,12 @@ namespace XRL.World.Parts
         }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
-            Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
             base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || (DebugAI_SquareUpDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == GetItemElementsEvent.ID
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
                 || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
@@ -441,7 +462,7 @@ namespace XRL.World.Parts
                 + $"{nameof(HandleEvent)}("
                 + $"{nameof(BeginTakeActionEvent)} E)"
                 + $" For: {ParentObject?.DebugName ?? NULL}",
-                Indent: 0, Toggle: doDebug);
+                Indent: 0, Toggle: getDoDebug());
 
             if (SquareUp())
             {
@@ -458,7 +479,7 @@ namespace XRL.World.Parts
                     + $"{nameof(HandleEvent)}("
                     + $"{nameof(AIBoredEvent)} E)"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: doDebug);
+                    Indent: 0, Toggle: getDoDebug());
 
                 if (Stat.RollCached("1d10") == 1 && SquareUp())
                 {

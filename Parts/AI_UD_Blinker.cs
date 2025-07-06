@@ -1,15 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text;
-
+using UD_Blink_Mutation;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.Parts.Mutation;
-
-using UD_Blink_Mutation;
-
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
-
 using Debug = UD_Blink_Mutation.Debug;
 
 namespace XRL.World.Parts
@@ -17,7 +14,27 @@ namespace XRL.World.Parts
     [Serializable]
     public class AI_UD_Blinker : AIBehaviorPart
     {
-        private static bool doDebug => false;
+        private static bool doDebug => getClassDoDebug(nameof(AI_UD_Blinker));
+        private static bool getDoDebug(object what = null)
+        {
+            List<object> doList = new()
+            {
+                'V',    // Vomit
+                'X',    // Trace
+                "TT",   // TurnTick
+            };
+            List<object> dontList = new()
+            {
+            };
+
+            if (what != null && doList.Contains(what))
+                return true;
+
+            if (what != null && dontList.Contains(what))
+                return false;
+
+            return doDebug;
+        }
 
         public static readonly string COMMAND_AI_UD_BLINK = "Command_AI_UD_Blinker";
 
@@ -49,7 +66,7 @@ namespace XRL.World.Parts
                     $"~ {nameof(AI_UD_Blinker)}."
                     + $"{nameof(TurnTick)}()"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: doDebug);
+                    Indent: 0, Toggle: getDoDebug());
 
                 if (RecentlyBlunk && TimeTick - StoredTurnTickForBlunk > BlunkTurnThreshold)
                 {
@@ -239,7 +256,7 @@ namespace XRL.World.Parts
                 + $"{nameof(HandleEvent)}("
                 + $"{nameof(BeginTakeActionEvent)} E)"
                 + $" For: {ParentObject?.DebugName ?? NULL}",
-                Indent: 0, Toggle: doDebug);
+                Indent: 0, Toggle: getDoDebug());
 
             return base.HandleEvent(E);
         }

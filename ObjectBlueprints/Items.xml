@@ -152,7 +152,7 @@
        
    -->
   <object Name="BaseChaosEmerald" Inherits="Polished Emerald">
-    <part Name="Render" DisplayName="[chaos emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" />
+    <part Name="Render" DisplayName="[chaos emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" Tile="Items/Chaos_Emerald.png" />
     <part Name="Physics" Category="Artifacts" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="5" />
     <part Name="Suspensor" PercentageForce="200" ChargeUse="0" IsEMPSensitive="false" />
     <part Name="Armor" AV="2" DV="2" WornOn="Floating Nearby" />

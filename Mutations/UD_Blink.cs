@@ -31,12 +31,24 @@ namespace XRL.World.Parts.Mutation
     [Serializable]
     public class UD_Blink : BaseMutation
     {
-        // Debug stuff
-        private static bool doDebug = true;
-        private static bool getDoDebug(string flag = "")
+        private static bool doDebug => getClassDoDebug(nameof(UD_Blink));
+        private static bool getDoDebug(object what = null)
         {
-            if (flag == "")
-                return doDebug;
+            List<object> doList = new()
+            {
+                'V',    // Vomit
+                'X',    // Trace
+                "TT",   // TurnTick
+            };
+            List<object> dontList = new()
+            {
+            };
+
+            if (what != null && doList.Contains(what))
+                return true;
+
+            if (what != null && dontList.Contains(what))
+                return false;
 
             return doDebug;
         }

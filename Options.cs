@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 
 using XRL;
+using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
+using XRL.World.WorldBuilders;
 using static UD_Blink_Mutation.Const;
 
 namespace UD_Blink_Mutation
@@ -74,19 +76,27 @@ namespace UD_Blink_Mutation
         public static Dictionary<string, bool> classDoDebug = new()
         {
             // General
-            { nameof(UD_Blink), false },
+            { nameof(UD_Blink), true },
+            { nameof(ChaosEmeraldSetPiece), true },
+            { nameof(ChaosEmeraldSetBonus), true },
+            { nameof(UD_ChaosEmeraldDispersalWorldBuilder), true },
 
             // Events
             { nameof(GetBlinkRangeEvent), true },
             { nameof(BeforeBlinkEvent), true },
             { nameof(AfterBlinkEvent), true },
+
+            // AI Parts
+            { nameof(AI_UD_SquareUp), true },
+            { nameof(AI_UD_Blinker), true },
         };
 
         public static bool getClassDoDebug(string Class)
         {
             if (classDoDebug.ContainsKey(Class))
+            {
                 return classDoDebug[Class];
-
+            }
             return doDebug;
         }
 

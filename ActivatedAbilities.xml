@@ -46,8 +46,8 @@
       <statline Name="ChargeForRounds" DisplayName="Rounds available from current charge" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="w" Detail="y" />
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="W" Detail="Y" State="ToggleOn" />
+    <UITile Tile="Abilities/UD_BlinkMutation_SuperTransformation_ToggleOff.png" Foreground="B" Detail="w" />
+    <UITile Tile="Abilities/UD_BlinkMutation_SuperTransformation_ToggleOn.png" Foreground="W" Detail="Y" State="ToggleOn" />
   </ability>
   <ability Command="Command_UD_ChaosEmeraldSetBonus_SuperBeam">
     <description>
@@ -61,6 +61,6 @@
       <statline Name="ApproxChargePower" DisplayName="Approximate power from charge draw" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
-    <UITile Tile="Abilities/abil_gaze.bmp" Foreground="W" Detail="Y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_SuperChaosBeam.png" Foreground="W" Detail="Y" />
   </ability>
 </activatedabilities>

@@ -20,7 +20,27 @@ namespace XRL.World.Parts
     [Serializable]
     public class ChaosEmeraldSetPiece : IScribedPart
     {
-        private static bool doDebug => true;
+        private static bool doDebug => getClassDoDebug(nameof(ChaosEmeraldSetPiece));
+        private static bool getDoDebug(object what = null)
+        {
+            List<object> doList = new()
+            {
+                'V',    // Vomit
+                'X',    // Trace
+                "TT",   // TurnTick
+            };
+            List<object> dontList = new()
+            {
+            };
+
+            if (what != null && doList.Contains(what))
+                return true;
+
+            if (what != null && dontList.Contains(what))
+                return false;
+
+            return doDebug;
+        }
 
         public ChaosEmeraldSetBonus ChaosEmeraldSetBonus;
 

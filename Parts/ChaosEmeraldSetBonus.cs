@@ -30,17 +30,17 @@ namespace XRL.World.Parts
         , IModEventHandler<GetBlinkRangeEvent>
         , IModEventHandler<AfterBlinkEvent>
     {
-        private static bool doDebug => true;
+        private static bool doDebug => getClassDoDebug(nameof(ChaosEmeraldSetBonus));
         private static bool getDoDebug(object what = null)
         {
             List<object> doList = new()
             {
                 'V',    // Vomit
+                'X',    // Trace
+                "TT",   // TurnTick
             };
             List<object> dontList = new()
             {
-                'X',    // Trace
-                "TT",   // TurnTick
             };
 
             if (what != null && doList.Contains(what))
@@ -774,9 +774,9 @@ namespace XRL.World.Parts
             {
                 beamCells.RemoveRange(1000, beamCells.Count - 1000);
             }
-            Cell originCell = beamCells[0];
-            Cell destinationCell = beamCells.Last();
-            float angle = (float)Math.Atan2(destinationCell.X - originCell.X, destinationCell.Y - originCell.Y).toDegrees();
+            Cell firstBeamCell = beamCells[0];
+            Cell lastBeamCell = beamCells.Last();
+            float angle = (float)Math.Atan2(lastBeamCell.X - firstBeamCell.X, lastBeamCell.Y - firstBeamCell.Y).toDegrees();
             beamCells.RemoveAt(0);
 
             bool isVisible = Creature.IsVisible();
@@ -1087,7 +1087,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DebugChaosEmeraldSetBonusDescriptions && ParentObject != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 StringBuilder SB = Event.NewStringBuilder();
 

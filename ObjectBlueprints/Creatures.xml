@@ -143,8 +143,8 @@
     <removeinventoryobject Blueprint="Plastifer Gloves" />
     <inventoryobject Blueprint="@Junk 6" Number="1d3-1" />
     <inventoryobject Blueprint="@Junk 7" Number="1d2-1" />
-    <inventoryobject Blueprint="MetalPricklePig_Bite" Number="1" Chance="100" />
-    <inventoryobject Blueprint="MetalPricklePig_Claw" Number="2" Chance="100" />
+    <inventoryobject Blueprint="MetalPricklePig_Bite" Number="1" Chance="100" IntProperties="AlwaysEquipAsWeapon:1" />
+    <inventoryobject Blueprint="MetalPricklePig_Claw" Number="2" Chance="100" IntProperties="AlwaysEquipAsWeapon:1" />
     <inventoryobject Blueprint="Integrated Rocket Runners" Number="1" Chance="100" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   <object Name="MetalPricklePig_Bite" Inherits="PricklePig_Bite">

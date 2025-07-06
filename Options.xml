@@ -62,7 +62,7 @@
 	
   <option
         ID="Option_UD_Blink_DebugIncludeAI_SquareUpDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_SquareUP internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_SquareUp internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
