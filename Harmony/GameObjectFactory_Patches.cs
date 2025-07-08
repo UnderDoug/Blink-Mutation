@@ -28,9 +28,9 @@ namespace UD_Blink_Mutation.Harmony
         [HarmonyPostfix]
         public static void LoadBakedXML_MutationEntryIfSupplied_Postfix(ref GameObjectFactory __instance, ref GameObjectBlueprint __result, ObjectBlueprintLoader.ObjectBlueprintXMLData node)
         {
-            if (!HNPS_GigantismPlus.IsEnabled && Stat.Roll("1d2") < 3)
+            try
             {
-                try
+                if (HNPS_GigantismPlus != null && !HNPS_GigantismPlus.IsEnabled && Stat.Roll("1d2") < 3)
                 {
                     GameObjectBlueprint gameObjectBlueprint = __result;
                     if (gameObjectBlueprint.Mutations.IsNullOrEmpty())
@@ -140,10 +140,10 @@ namespace UD_Blink_Mutation.Harmony
                             Indent: 0, Toggle: doDebug);
                     }
                 }
-                catch (Exception x)
-                {
-                    MetricsManager.LogException($"[{MOD_ID}] {nameof(GameObjectFactory_Patches)}", x);
-                }
+            }
+            catch (Exception x)
+            {
+                MetricsManager.LogException($"[{MOD_ID}] {nameof(GameObjectFactory_Patches)}", x);
             }
         }
     }

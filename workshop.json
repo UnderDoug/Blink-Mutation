@@ -1,3 +1,8 @@
 {
-  "WorkshopId": 3518250317
+  "WorkshopId": 3518250317,
+  "Title": "Blink Mutation",
+  "Description": "[h3]ROLLING AROUND AT THE SPEED OF SOUND[/h3]\r\n\r\nAdds a physical alternative to teleport that blinks you a short distance in one of the orthogonal directions.\r\n\r\nAlso adds a bunch of homages to everyone's favourite blue speedy-boi, and his edgy purple class-mate (oc).\r\n\r\nCheck back here shortly for more information!\r\n\r\n[h2]Source[/h2]\r\nWant to see how it's made? There's a [url=https://github.com/UnderDoug/Blink-Mutation]git repository[/url]!\r\n\r\nLicence is the \"Unlicence\". I don't know what that means, but I also don't care what you do with it. Easy.",
+  "Tags": "Mutation,Balance,Harmony,Meme",
+  "Visibility": "2",
+  "ImagePath": "preview.png"
 }
