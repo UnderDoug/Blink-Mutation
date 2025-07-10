@@ -53,8 +53,6 @@ namespace XRL.World.Parts.Mutation
             return doDebug;
         }
 
-        private static int BlinkParticleSkipChance = 85;
-
         // Options 
         private static bool OptionMutationColor => UI.Options.MutationColor;
 
@@ -1908,16 +1906,6 @@ namespace XRL.World.Parts.Mutation
             return blink;
         }
 
-        [WishCommand(Command = "set bpc")]
-        public static void SetPunchTimeWish(string In100)
-        {
-            BlinkParticleSkipChance = int.Parse(In100);
-        }
-        [WishCommand(Command = "output blink")]
-        public static void OutputBlinkWish()
-        {
-            Debug.Entry($"{nameof(BlinkParticleSkipChance)}: {BlinkParticleSkipChance}");
-        }
         [WishCommand(Command = "gimme blinker")]
         public static void GimmeBlinkerWish()
         {
