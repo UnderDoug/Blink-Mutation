@@ -1,5 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <activatedabilities>
+
+  <!-- Mutation Abilities -->
+  
   <ability Command="Command_UD_Blink_Ability">
     <description>
       <p><stat Name="BornWith" /></p>
@@ -10,8 +13,10 @@
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
-      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{m|unblockable}} damage</p>
+      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{m|unblockable}} damage.</p>
       <br />
+      <statline Name="BlinkRange" DisplayName="Range" />
+      <statline Name="CellsPerRange" DisplayName="Cells per range" />
       <statline Name="Cooldown" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
@@ -23,12 +28,62 @@
       <br />
 			<p> While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
       <br />
-      <p>Killing an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
+      <p>Damaging an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y" State="ToggleOn" />
   </ability>
+
+  <!-- Cyber Abilities -->
+  
+  <ability Command="Command_UD_Blink_Cyber_Ability">
+    <description>
+      <p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
+      <br />
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <br />
+      <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
+      <br />
+      <p>While {{C|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack.</p>
+      <br />
+      <statline Name="BlinkRange" DisplayName="Range" />
+      <statline Name="CellsPerRange" DisplayName="Cells per range" />
+      <statline Name="Cooldown" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="C" Detail="Y" />
+  </ability>
+  <ability Command="Command_UD_ColdSteel_Cyber_Ability">
+    <description>
+      <p>While {{C|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available and expends a charge.</p>
+      <br />
+      <p>Damaging an enemy with your {{C|Cold}} {{Y|Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
+      <br />
+      <statline Name="FlickerCharges" DisplayName="Flicker charges" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="c" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="C" Detail="Y" State="ToggleOn" />
+  </ability>
+  <ability Command="Command_UD_Flicker_Cyber_Ability">
+    <description>
+      <p>You may expend all of your remaining {{rules|flicker charges}} to teleport to random enemies with a radius of half your {{rules|blink range}}, performing a free attack against said enemy each time you do.</p>
+      <br />
+      <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
+      <br />
+      <p>After flicker strike is finished, you return to your original cell.</p>
+      <br />
+      <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
+      <statline Name="FlickerRechargeTurns" DisplayName="Flicker charge recharge rate" />
+      <statline Name="Radius" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="C" Detail="Y" />
+  </ability>
+
+  <!-- Chaos Emerald Abilities -->
+
   <ability Command="Command_UD_ChaosEmeraldSetBonus_PowerUp">
     <description>
       <p>You draw on the power of the <stat Name="MaxChaosEmeralds" /> Chaos Emeralds to undergo a {{supertransformation|Super Transformation}}.</p>
