@@ -71,7 +71,6 @@ namespace XRL.World.Parts
         public static int PerEmeraldChargeCost => 100;
         public int LowestEmeraldCharge => GetLowestEmeraldCharge();
         public int PowerUpAbilityTurns => Math.Max(0, (int)Math.Floor(LowestEmeraldCharge / (float)PerEmeraldChargeCost));
-        private int RunningPowerUpTurns = 0;
 
         [SerializeField]
         private bool CoolingOff = false;
@@ -1023,6 +1022,7 @@ namespace XRL.World.Parts
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == EndTurnEvent.ID
                 || (DebugChaosEmeraldSetBonusDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == CommandEvent.ID
                 || ID == GetDisplayNameEvent.ID
@@ -1041,8 +1041,17 @@ namespace XRL.World.Parts
         }
         public override void TurnTick(long TimeTick, int Amount)
         {
-            Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(TurnTick)}({nameof(TimeTick)}: {TimeTick}, {nameof(Amount)}: {Amount})", 
+            
+            base.TurnTick(TimeTick, Amount);
+        }
+        public override bool HandleEvent(EndTurnEvent E)
+        {
+            Debug.Entry(4, 
+                $"{nameof(ChaosEmeraldSetBonus)}." +
+                $"{nameof(HandleEvent)}(" +
+                $"{nameof(EndTurnEvent)} E)",
                 Indent: 0, Toggle: getDoDebug("TT"));
+
             if (CoolingOff && PowerUpAbilityTurns > 5)
             {
                 CoolingOff = false;
@@ -1068,22 +1077,14 @@ namespace XRL.World.Parts
                     Debug.CheckNah(4, $"Deactivating {GetPowerUpAbilityName(false)}", Indent: 2, Toggle: getDoDebug("TT"));
                     DeactivateActivatedAbilityPowerUp();
                 }
-                bool turnsAnnounced = RunningPowerUpTurns == PowerUpAbilityTurns;
-                RunningPowerUpTurns = PowerUpAbilityTurns;
-                if (!turnsAnnounced
-                    && (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0)))
+                if (PowerUpAbilityTurns == 10 || (PowerUpAbilityTurns < 6 && PowerUpAbilityTurns > 0))
                 {
                     Debug.CheckYeh(4, $"Announce Turns Remaining: {GetPowerUpAbilityName(false)}", Indent: 2, Toggle: getDoDebug("TT"));
                     ParentObject.EmitMessage($"=subject.T=='s:verb:afterpronoun= {GetPowerUpAbilityName(true)} will run out of power in {PowerUpAbilityTurns} turns!");
                 }
             }
-            else
-            {
-                Debug.CheckYeh(4, $"{nameof(PoweredUp)}", $"{PoweredUp}", Indent: 1, Toggle: getDoDebug("TT"));
-                RunningPowerUpTurns = 0;
-            }
             SyncPowerUpAbilityName();
-            base.TurnTick(TimeTick, Amount);
+            return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {

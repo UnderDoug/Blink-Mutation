@@ -934,7 +934,7 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(2, $"Getting {nameof(Direction)} if null...", Indent: indent + 1, Toggle: getDoDebug());
             Direction ??= GetBlinkDirection(Blinker, BlinkRange, IsNothinPersonnelKid, Kid, IsRetreat);
 
-            if (!blink.IsMyActivatedAbilityCoolingDown(blink.BlinkActivatedAbilityID, Blinker) && Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
+            if (Direction.IsNullOrEmpty() || Direction == "." || Direction == "?")
             {
                 Debug.CheckNah(4, $"{nameof(Direction)}", $"{Direction ?? NULL}", Indent: indent + 2, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
@@ -1022,7 +1022,7 @@ namespace XRL.World.Parts.Mutation
             PlayAnimation(Blinker, Destination, Path);
 
             Debug.Entry(2, $"Direct Moving To [{Destination?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
-            Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
+            bool didBlink = Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
 
             Debug.Entry(2, $"Gravitating...", Indent: indent + 1, Toggle: getDoDebug());
             Blinker.Gravitate();
@@ -1089,7 +1089,7 @@ namespace XRL.World.Parts.Mutation
 
                 Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
                     Indent: indent + 2, Toggle: getDoDebug());
-                blink.DidX(
+                Blinker.Physics?.DidX(
                     Verb: didVerb, 
                     Extra: didExtra, 
                     EndMark: didEndMark, 
@@ -1098,7 +1098,6 @@ namespace XRL.World.Parts.Mutation
                     ColorAsBadFor: isNani ? Blinker : Kid
                     );
 
-                
                 if (shouts || isNani)
                 {
                     Debug.CheckYeh(3, $"{nameof(shouts)}: {shouts} or {nameof(isNani)}: {isNani}",
@@ -1165,7 +1164,7 @@ namespace XRL.World.Parts.Mutation
 
             AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
             Debug.LastIndent = indent;
-            return Blinker.CurrentCell == Destination;
+            return didBlink;
         }
         public static bool Blink(GameObject Blinker, string Direction, bool IsNothinPersonnelKid = false, bool Silent = false)
         {
@@ -1591,9 +1590,26 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(CommandEvent E)
         {
+            if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY)
+            {
+                IsNothinPersonnelKid = !IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
+            }
+            if (E.Command == COMMAND_UD_BLINK_ABILITY && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, ParentObject))
+            {
+                GameObject Blinker = ParentObject;
+
+                CommandEvent.Send(
+                    Actor: Blinker,
+                    Command: COMMAND_UD_BLINK,
+                    Target: null,
+                    TargetCell: null,
+                    StandoffDistance: 0,
+                    Forced: false,
+                    Silent: false);
+            }
             if (E.Command == COMMAND_UD_BLINK && ParentObject == E.Actor)
             {
-                if (GameObject.Validate(E.Actor) && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor) && !MidBlink)
+                if (GameObject.Validate(E.Actor) && !MidBlink)
                 {
                     MidBlink = true;
 
@@ -1853,23 +1869,6 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool FireEvent(Event E)
         {
-            if (E.ID == COMMAND_UD_COLDSTEEL_ABILITY)
-            {
-                IsNothinPersonnelKid = !IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
-            }
-            if (E.ID == COMMAND_UD_BLINK_ABILITY)
-            {
-                GameObject Blinker = ParentObject;
-                
-                CommandEvent.Send(
-                    Actor: Blinker,
-                    Command: COMMAND_UD_BLINK,
-                    Target: null,
-                    TargetCell: null,
-                    StandoffDistance: 0,
-                    Forced: false,
-                    Silent: false);
-            }
             return base.FireEvent(E);
         }
 
