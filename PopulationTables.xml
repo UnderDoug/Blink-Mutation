@@ -60,6 +60,18 @@
       <table Weight="3" Name="DynamicInheritsTable:BaseHat:Tier{ownertier}" Number="1" />
     </group>
   </population>
+  
+  <population Name="Implants_4PlusPointers" Load="Merge">
+    <group Name="Items" Style="pickone" Weight="1" Load="Merge">
+      <object Weight="10" Blueprint="UD_OverclockedCentralNervousSystem" />
+    </group>
+  </population>
+  
+  <population Name="Implants_3Pointers" Load="Merge">
+    <group Name="Items" Style="pickone" Weight="1" Load="Merge">
+      <object Weight="1" Number="1" Blueprint="UD_OverclockedCentralNervousSystem" />
+    </group>
+  </population>
     
   <!-- 
   

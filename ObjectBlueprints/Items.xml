@@ -110,6 +110,7 @@
        
    -->
   <object Name="Badass Earrings" Inherits="Polyhedral Rings">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{badass|badass}} {{W|earrings}}" 
           Tile="Items/sw_poly_rings.bmp" 
           RenderString="236" ColorString="&amp;W" 
@@ -133,6 +134,7 @@
   
   <object Name="Gold Ring" Inherits="BaseBracelet">
     <part Name="Armor" DV="3" />
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{W|gold ring}}" 
           Tile="Items/sw_bracelet_simple.bmp" 
           RenderString="]" ColorString="&amp;W" 
@@ -157,7 +159,10 @@
   <object Name="UD_OverclockedCentralNervousSystem" Inherits="BaseCyberneticsEquipment_4point">
     <part Name="Physics" Weight="0" />
     <part Name="Description" Short="Palladium nano-fibres writhe in anticipation of their coupling with living nerve fibres. Their agitation is almost audible." />
-    <part Name="Render" DisplayName="{{Y|overclocked central nervous system}}" Tile="Items/sw_intravenous.bmp" TileColor="&amp;r" DetailColor="C" />
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="{{Y|overclocked central nervous system}}" 
+          Tile="Items/OverclockedCentralNervousSystem.png" 
+          TileColor="&amp;r" DetailColor="C" />
     <part Name="CyberneticsBaseItem" Slots="Back,Body,Head" Cost="4" BehaviorDescription="You gain the ability to blink a short distance in a direction of your choosing, and the ability to flicker between multiple enemies performing an attack as you do so." />
     <part Name="UD_CyberneticsOverclockedCentralNervousSystem" />
     <tag Name="CyberneticsOneOnly" />

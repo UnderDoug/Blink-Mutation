@@ -1048,6 +1048,19 @@ namespace XRL.World.Parts.Mutation
                 {
                     Debug.CheckYeh(3, $"Not {nameof(isNani)}", $"{!isNani}", Indent: indent + 3, Toggle: getDoDebug());
 
+                    didExtra = $"{didExtra} {Kid.t()}";
+
+                    Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                    Blinker.Physics?.DidX(
+                        Verb: didVerb,
+                        Extra: didExtra,
+                        EndMark: didEndMark,
+                        Color: didColor,
+                        ColorAsGoodFor: isNani ? Kid : Blinker,
+                        ColorAsBadFor: isNani ? Blinker : Kid
+                        );
+
                     Debug.Entry(2, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: indent + 2, Toggle: getDoDebug());
                     bool attacked = 
                         hasBlink
@@ -1083,20 +1096,20 @@ namespace XRL.World.Parts.Mutation
                     didExtra = "in front of";
                     didEndMark = "!?";
                     didColor = naniColor;
+
+                    didExtra = $"{didExtra} {Kid.t()}";
+
+                    Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                    Blinker.Physics?.DidX(
+                        Verb: didVerb,
+                        Extra: didExtra,
+                        EndMark: didEndMark,
+                        Color: didColor,
+                        ColorAsGoodFor: isNani ? Kid : Blinker,
+                        ColorAsBadFor: isNani ? Blinker : Kid
+                        );
                 }
-
-                didExtra = $"{didExtra} {Kid.t()}";
-
-                Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
-                    Indent: indent + 2, Toggle: getDoDebug());
-                Blinker.Physics?.DidX(
-                    Verb: didVerb, 
-                    Extra: didExtra, 
-                    EndMark: didEndMark, 
-                    Color: didColor, 
-                    ColorAsGoodFor: isNani ? Kid : Blinker, 
-                    ColorAsBadFor: isNani ? Blinker : Kid
-                    );
 
                 if (shouts || isNani)
                 {
@@ -1777,7 +1790,12 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(GetMovementCapabilitiesEvent E)
         {
-            E.Add("Blink a short distance", COMMAND_UD_BLINK_ABILITY, 5500, MyActivatedAbility(BlinkActivatedAbilityID), IsNothinPersonnelKid);
+            E.Add(
+                Description: "Blink a short distance",
+                Command: COMMAND_UD_BLINK_ABILITY,
+                Order: 5600,
+                Ability: MyActivatedAbility(BlinkActivatedAbilityID, ParentObject),
+                IsAttack: IsNothinPersonnelKid);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetAttackerMeleePenetrationEvent E)
@@ -1800,15 +1818,12 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(KilledEvent E)
         {
-            if (E.Reason == "nothin personnel")
+            if (E.Killer == ParentObject && E.Reason.EndsWith("cold steel personnely..."))
             {
                 int indent = Debug.LastIndent;
-                Debug.Entry(4, $"KillerText", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-                Debug.Entry(4, $"Reason", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-                /*
-                SoundManager.PreloadClipSet(WE_GO_AGAIN_SOUND);
-                WeGoAgain = true;
-                */
+                Debug.Entry(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+                Debug.Entry(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+                
                 Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);

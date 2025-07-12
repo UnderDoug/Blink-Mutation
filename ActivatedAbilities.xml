@@ -49,6 +49,7 @@
       <br />
       <statline Name="BlinkRange" DisplayName="Range" />
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
+      <statline Name="EffectiveRange" DisplayName="Effective range" />
       <statline Name="Cooldown" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
@@ -63,8 +64,8 @@
       <statline Name="FlickerCharges" DisplayName="Flicker charges" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="c" Detail="y" />
-    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="C" Detail="Y" State="ToggleOn" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOff.png" Foreground="c" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOn.png" Foreground="C" Detail="Y" State="ToggleOn" />
   </ability>
   <ability Command="Command_UD_Flicker_Cyber_Ability">
     <description>
@@ -75,11 +76,12 @@
       <p>After flicker strike is finished, you return to your original cell.</p>
       <br />
       <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
-      <statline Name="FlickerRechargeTurns" DisplayName="Flicker charge recharge rate" />
-      <statline Name="Radius" />
+      <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
+      <statline Name="FlickerChargeRechargeTurns" DisplayName="Flicker charge recharge rate" />
+      <statline Name="FlickerRadius" DisplayName="Radius" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
-    <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="C" Detail="Y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_Flicker.png" Foreground="C" Detail="Y" />
   </ability>
 
   <!-- Chaos Emerald Abilities -->
