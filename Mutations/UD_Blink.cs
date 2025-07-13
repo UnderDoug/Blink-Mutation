@@ -55,6 +55,7 @@ namespace XRL.World.Parts.Mutation
 
         // Options 
         private static bool OptionMutationColor => UI.Options.MutationColor;
+        private static bool DoDebugDescriptions => DebugBlinkDebugDescriptions;
 
         // "Constants"
         public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
@@ -91,7 +92,7 @@ namespace XRL.World.Parts.Mutation
             get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID);
             set 
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Silent: true, SetState: value);
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, Silent: true, SetState: value);
                 AddActivatedAbilityBlink(Force: true, Silent: true);
             }
         }
@@ -1134,7 +1135,6 @@ namespace XRL.World.Parts.Mutation
                     Blinker.ParticleText(
                         Text: message,
                         Color: messageColor[0],
-                        IgnoreVisibility: true,
                         juiceDuration: 1.5f,
                         floatLength: floatLength
                         );
@@ -1320,26 +1320,29 @@ namespace XRL.World.Parts.Mutation
                         scrapBuffer.RenderBase();
                         foreach (Cell step in Path.Steps)
                         {
-                            string color = colors.Sample();
-                            string particle = particles.Sample();
+                            if (Blinker.IsVisible() || step.IsVisible())
+                            {
+                                string color = colors.Sample();
+                                string particle = particles.Sample();
 
-                            Dictionary<string, int> echoes = new()
-                            {
-                                { "n", 8 }, // none
-                                { "t", 4 }, // tile
-                                { "s", 4 }, // string
-                            };
-                            switch (echoes.Sample())
-                            {
-                                case "n":
-                                    break;
-                                case "t":
-                                    BufferEcho(Blinker, step, scrapBuffer, i);
-                                    break;
-                                case "s":
-                                    scrapBuffer.Goto(step.X, step.Y);
-                                    scrapBuffer.Write($"{color}{particle}");
-                                    break;
+                                Dictionary<string, int> echoes = new()
+                                {
+                                    { "n", 8 }, // none
+                                    { "t", 4 }, // tile
+                                    { "s", 4 }, // string
+                                };
+                                switch (echoes.Sample())
+                                {
+                                    case "n":
+                                        break;
+                                    case "t":
+                                        BufferEcho(Blinker, step, scrapBuffer, i);
+                                        break;
+                                    case "s":
+                                        scrapBuffer.Goto(step.X, step.Y);
+                                        scrapBuffer.Write($"{color}{particle}");
+                                        break;
+                                }
                             }
                         }
                         scrapBuffer.Draw();
@@ -1358,16 +1361,19 @@ namespace XRL.World.Parts.Mutation
         }
         public static void BufferEcho(GameObject Blinker, Cell cell, ScreenBuffer scrapBuffer, int i = 0)
         {
-            string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) + 1}");
+            if (Blinker.IsVisible() || cell.IsVisible())
+            {
+                string prickleBallTile = PRICKLE_PIG_BALL_TILE.Replace("%n", $"{(i % 4) + 1}");
 
-            scrapBuffer.Goto(cell.X, cell.Y);
-            scrapBuffer.Write(Blinker.Render.RenderString);
-            scrapBuffer.Buffer[cell.X, cell.Y].Tile = IsBornThisWay(Blinker) ? prickleBallTile : Blinker.Render.Tile;
-            scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
-            scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
-            scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
-            scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
-            scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
+                scrapBuffer.Goto(cell.X, cell.Y);
+                scrapBuffer.Write(Blinker.Render.RenderString);
+                scrapBuffer.Buffer[cell.X, cell.Y].Tile = IsBornThisWay(Blinker) ? prickleBallTile : Blinker.Render.Tile;
+                scrapBuffer.Buffer[cell.X, cell.Y].HFlip = !Blinker.Render.HFlip;
+                scrapBuffer.Buffer[cell.X, cell.Y].VFlip = Blinker.Render.VFlip;
+                scrapBuffer.Buffer[cell.X, cell.Y].TileForeground = The.Color.Black;
+                scrapBuffer.Buffer[cell.X, cell.Y].Foreground = The.Color.Black;
+                scrapBuffer.Buffer[cell.X, cell.Y].Detail = The.Color.Gray;
+            }
         }
 
         public static bool AddPrickleBallAnimation(GameObject PricklePig)
@@ -1492,14 +1498,12 @@ namespace XRL.World.Parts.Mutation
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register(GetAttackerMeleePenetrationEvent.ID, EventOrder.EXTREMELY_EARLY);
-            Registrar.Register(COMMAND_UD_BLINK_ABILITY);
-            Registrar.Register(COMMAND_UD_COLDSTEEL_ABILITY);
             base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int cascade)
         {
             return base.WantEvent(ID, cascade)
-                || (DebugBlinkDescriptions && ID == GetShortDescriptionEvent.ID)
+                || (DebugBlinkDebugDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == BeforeAbilityManagerOpenEvent.ID
                 || ID == GetExtraPhysicalFeaturesEvent.ID
                 || ID == CommandEvent.ID
@@ -1514,7 +1518,7 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 StringBuilder SB = Event.NewStringBuilder();
                 int range = GetBlinkRange();
@@ -1605,7 +1609,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY)
             {
-                IsNothinPersonnelKid = !IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
+                IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
             if (E.Command == COMMAND_UD_BLINK_ABILITY && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, ParentObject))
             {
@@ -1716,59 +1720,69 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
-            if (!ParentObject.IsFleeing())
+            string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? NULL}";
+            if (!E.Actor.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, SetState: true);
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: true);
             }
-            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 25.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
+            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
+                && !E.Actor.OnWorldMap() 
+                && 25.in100() 
+                && GameObject.Validate(E.Target))
             {
-                E.Actor.Think($"I want to attack {E.Target.ShortDisplayNameStripped}");
+                E.Actor.Think($"I want to attack {targetName}");
                 string Direction = GetAggressiveBlinkDirection(E.Actor, GetBlinkRange(), IsNothinPersonnelKid, E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
-                    E.Actor.Think($"{E?.Target?.ShortDisplayNameStripped ?? NULL} is {Direction ?? NULL} of me");
+                    E.Actor.Think($"{targetName} is {Direction ?? NULL} of me");
                 }
                 else
                 {
-                    E.Actor.Think($"I can't blink to {E?.Target?.ShortDisplayNameStripped ?? NULL}");
+                    E.Actor.Think($"I can't blink to {targetName}");
                 }
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
-                    E.Actor.Think($"I might teleport behind {E?.Target?.ShortDisplayNameStripped ?? NULL}, it's nothin personnel");
-                    E.Add(COMMAND_UD_BLINK, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
+                    E.Actor.Think($"I might teleport behind {targetName}, it's nothin personnel");
+                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(AIGetRetreatAbilityListEvent E)
         {
-            if (ParentObject.IsFleeing())
+            string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? "here"}";
+            if (E.Actor.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, SetState: false);
+                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: false);
             }
-            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 100.in100() && !E.Actor.OnWorldMap() && GameObject.Validate(E.Target))
+            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
+                && !E.Actor.OnWorldMap()
+                && 100.in100()
+                && GameObject.Validate(E.Target))
             {
-                E.Actor.Think($"I want to retreat from {E.Target.ShortDisplayNameStripped}");
+                E.Actor.Think($"I want to retreat from {targetName}");
                 string Direction = GetRetreatingBlinkDirection(E.Actor, GetBlinkRange(), E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
-                    E.Actor.Think($"Away from {E.Target.ShortDisplayNameStripped} is {Direction} of me");
+                    E.Actor.Think($"Away from {targetName} is {Direction} of me");
                 }
                 else
                 {
-                    E.Actor.Brain.Think($"I can't blink away from {E.Target.ShortDisplayNameStripped}");
+                    E.Actor.Think($"I can't blink away from {targetName}");
                 }
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
-                    E.Actor.Brain.Think($"I might blink away from {E.Target.ShortDisplayNameStripped}");
-                    E.Add(COMMAND_UD_BLINK, Priority: 3, TargetCellOverride: Destination);
+                    E.Actor.Think($"I might blink away from {targetName}");
+                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, Priority: 3, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(AIGetMovementAbilityListEvent E)
         {
-            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID) && 25.in100() && !E.Actor.OnWorldMap())
+            if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
+                && !E.Actor.OnWorldMap()
+                && 25.in100())
             {
                 E.Actor.Think($"I gotta go fast");
                 string Direction = GetMovementBlinkDirection(E.Actor, GetBlinkRange(), E.TargetCell);
@@ -1783,7 +1797,7 @@ namespace XRL.World.Parts.Mutation
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
-                    E.Add(COMMAND_UD_BLINK, TargetCellOverride: Destination);
+                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1794,7 +1808,7 @@ namespace XRL.World.Parts.Mutation
                 Description: "Blink a short distance",
                 Command: COMMAND_UD_BLINK_ABILITY,
                 Order: 5600,
-                Ability: MyActivatedAbility(BlinkActivatedAbilityID, ParentObject),
+                Ability: MyActivatedAbility(BlinkActivatedAbilityID, E.Actor),
                 IsAttack: IsNothinPersonnelKid);
             return base.HandleEvent(E);
         }

@@ -1,12 +1,13 @@
-﻿using Battlehub.UIControls;
-using Genkit;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+
+using Genkit;
+
 using XRL;
 using XRL.CharacterBuilds;
 using XRL.CharacterBuilds.Qud;
@@ -21,6 +22,7 @@ using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
 using XRL.World.Parts.Skill;
 using XRL.World.Tinkering;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
 
@@ -2163,6 +2165,13 @@ namespace UD_Blink_Mutation
         public static string Damage(this string String)
         {
             return "\u0003".Color("r") + String;
+        }
+
+        public static bool IsHostileTowardsInRadius(this GameObject GO, GameObject Actor, int Radius)
+        {
+            return GO != null && Actor != null
+                && GO.IsHostileTowards(Actor)
+                && GO.CurrentCell.CosmeticDistanceto(Actor.CurrentCell.Location) < Radius + 1;
         }
 
     } //!-- public static class Extensions

@@ -67,7 +67,7 @@
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOff.png" Foreground="c" Detail="y" />
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOn.png" Foreground="C" Detail="Y" State="ToggleOn" />
   </ability>
-  <ability Command="Command_UD_Flicker_Cyber_Ability">
+  <ability Command="Command_UD_Flicker_Ability">
     <description>
       <p>You may expend all of your remaining {{rules|flicker charges}} to teleport to random enemies with a radius of half your {{rules|blink range}}, performing a free attack against said enemy each time you do.</p>
       <br />
@@ -82,6 +82,23 @@
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Flicker.png" Foreground="C" Detail="Y" />
+  </ability>
+  
+  <ability Command="Command_AI_UD_Flicker_Ability">
+    <description>
+      <p>You may expend all of your remaining {{rules|flicker charges}} to teleport to random enemies with a radius of half your {{rules|blink range}}, performing a free attack against said enemy each time you do.</p>
+      <br />
+      <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
+      <br />
+      <p>After flicker strike is finished, you return to your original cell.</p>
+      <br />
+      <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
+      <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
+      <statline Name="FlickerChargeRechargeTurns" DisplayName="Flicker charge recharge rate" />
+      <statline Name="FlickerRadius" DisplayName="Radius" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_Flicker.png" Foreground="W" Detail="w" />
   </ability>
 
   <!-- Chaos Emerald Abilities -->

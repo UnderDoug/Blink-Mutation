@@ -30,15 +30,6 @@ namespace UD_Blink_Mutation
             if (MethodName == nameof(TryGetTilePath))
                 return false;
 
-            if (MethodName == nameof(ExplodingDie))
-                return false;
-
-            if (MethodName == nameof(SwapMutationEnrtyClass))
-                return false;
-
-            if (MethodName == nameof(SwapMutationCategory))
-                return false;
-
             if (MethodName == nameof(Rumble))
                 return false;
 
@@ -255,121 +246,6 @@ namespace UD_Blink_Mutation
             }
             return obj.GetVerb(item[0], PrependSpace: false) + " " + item[1];
         } //!-- public static string GetProcessedItem(List<string> item, bool second, List<List<string>> items, GameObject obj)
-
-        public static int ExplodingDie(int Number, DieRoll DieRoll, int Step = 1, int Limit = 0, int Indent = 0)
-        {
-            Debug.Entry(4,
-                $"ExplodingDie(Number: {Number}, DieRoll: {DieRoll}, Step: {Step}, Limit: {Limit})",
-                Indent: Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-
-            int High = DieRoll.Max();
-            int oldIndent = Indent;
-
-            Debug.Entry(4, $"Explodes on High Roll: {High}", Indent: Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-            Begin:
-            if (Limit != 0 && High >= Limit)
-            {
-                Debug.Entry(4, "Limit 0 or DieRoll.Max() >= Limit", Indent: ++Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-                Debug.Entry(4, "Exiting", Indent: Indent--, Toggle: getDoDebug(nameof(ExplodingDie)));
-                Number = Limit;
-                goto Exit;
-            }
-
-            Debug.Entry(4, $"Rollin' the Die!", Indent: Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-            int Result = DieRoll.Resolve();
-            if (Result == High)
-            {
-                Debug.Entry(4, $"continue: {Result}, Success!", Indent: ++Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-                Debug.Entry(4, $"Increasing Number by {Step}", Indent: Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-                Debug.Entry(4, $"Sending Number for another roll!", Indent: Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-                Number += Step;
-                Indent++;
-                // Number = ExplodingDie(Number += Step, DieRoll, Step, Limit, ++Indent);
-                goto Begin;
-            }
-            else
-            {
-                Debug.Entry(4, $"continue: {Result}, Failure!", Indent: ++Indent, Toggle: getDoDebug(nameof(ExplodingDie)));
-            }
-
-            Exit:
-            Debug.Entry(4, $"Final Number: {Number}", Indent: oldIndent, Toggle: getDoDebug(nameof(ExplodingDie)));
-            return Number;
-        }
-
-        public static int ExplodingDie(int Number, string DieRoll, int Step = 1, int Limit = 0, int Indent = 0)
-        {
-            DieRoll dieRoll = new(DieRoll);
-            return ExplodingDie(Number, dieRoll, Step, Limit, Indent);
-        }
-
-        public static void SwapMutationEnrtyClass(MutationEntry Entry, string Class, int Indent = 0)
-        {
-            Debug.Entry(4, 
-                $"@ {nameof(Utils)}.{nameof(SwapMutationEnrtyClass)}(MutationEntry Entry, string Class, int Indent = 0)",
-                Indent: Indent, Toggle: getDoDebug(nameof(SwapMutationEnrtyClass)));
-            Debug.Entry(4,
-                $"Entry.DisplayName: {Entry.Name ?? "[Nameless]"} | Entry.Class: {Entry.Class} | Destination Class: {Class}",
-                Indent: Indent, Toggle: getDoDebug(nameof(SwapMutationEnrtyClass)));
-
-            if (Entry.Class != Class)
-            {
-                Debug.Entry(4, $"Classes don't match, swapping", Indent: Indent + 1, Toggle: getDoDebug(nameof(SwapMutationEnrtyClass)));
-                Entry.Class = Class;
-            }
-            else
-            {
-                Debug.Entry(4, $"Classes already match, no action necessary", Indent: Indent + 1, Toggle: getDoDebug(nameof(SwapMutationEnrtyClass)));
-            }
-                
-            Debug.Entry(4,
-                $"x {nameof(Utils)}.{nameof(SwapMutationEnrtyClass)}(MutationEntry Entry, string Class, int Indent = 0) @//",
-                Indent: Indent, Toggle: getDoDebug(nameof(SwapMutationEnrtyClass)));
-        }
-
-        public static void SwapMutationCategory(string MutationName, string OutOfCategory, string IntoCategory)
-        {
-            Debug.Header(3, 
-                $"{MutationName}", 
-                $"SwapMutationCategory(MutationName, OutOfCategory: \"{OutOfCategory}\", IntoCategory: \"{IntoCategory}\")", 
-                Toggle: getDoDebug(nameof(SwapMutationCategory)));
-
-            MutationEntry MutationEntry = MutationFactory.GetMutationEntryByName(MutationName);
-
-            Debug.Entry(4, "> foreach (MutationCategory category in MutationFactory.GetCategories())", Indent: 1, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-            foreach (MutationCategory category in MutationFactory.GetCategories())
-            {
-                Debug.LoopItem(4, category.Name, Indent: 2);
-                if (category.Name == IntoCategory)
-                {
-                    Debug.DiveIn(4, $"Found Category: \"{IntoCategory}\"", Indent: 2, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-
-                    Debug.Entry(3, $"Adding \"{MutationEntry.Name}\" Mutation to \"{IntoCategory}\" Category", Indent: 3, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    category.Add(MutationEntry);
-                    category.Entries.Sort((x, y) => x.Name.CompareTo(y.Name));
-
-                    Debug.Entry(4, $"Displaying all entries in \"{IntoCategory}\" Category", Indent: 3, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    Debug.Entry(4, "> foreach (MutationCategory category in MutationFactory.GetCategories())", Indent: 3, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    foreach (MutationEntry entry in category.Entries)
-                    {
-                        Debug.LoopItem(4, entry.Name, Indent: 4, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    }
-                    Debug.DiveOut(3, $"x {IntoCategory} //", Indent: 2, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                }
-                if (category.Name == OutOfCategory)
-                {
-                    Debug.DiveIn(3, $"Found Category: \"{OutOfCategory}\"", Indent: 2, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    Debug.Entry(3, $"Removing \"{MutationEntry.Name}\" from \"{OutOfCategory}\" Category", Indent: 3, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                    category.Entries.RemoveAll(r => r == MutationEntry);
-                    Debug.DiveOut(3, $"x {OutOfCategory} //", Indent: 2, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-                }
-            }
-            Debug.Entry(4, "x foreach (MutationCategory category in MutationFactory.GetCategories()) >//", Indent: 1, Toggle: getDoDebug(nameof(SwapMutationCategory)));
-            Debug.Footer(3, 
-                $"{MutationName}", 
-                $"SwapMutationCategory(MutationName, OutOfCategory: \"{OutOfCategory}\", IntoCategory: \"{IntoCategory}\")", 
-                Toggle: getDoDebug(nameof(SwapMutationCategory)));
-        } //!-- private void SwapMutationCategory(bool Before = true)
 
         public static GameObjectBlueprint GetGameObjectBlueprint(string Blueprint)
         {

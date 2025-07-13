@@ -51,6 +51,7 @@ namespace XRL.World.Parts
 
             return doDebug;
         }
+        private static bool DoDebugDescriptions => DebugChaosEmeraldSetBonusDebugDescriptions;
 
         public const string COMMAND_NAME_POWER_UP = "Command_UD_ChaosEmeraldSetBonus_PowerUp";
         public const string COMMAND_NAME_SUPER_BEAM = "Command_UD_ChaosEmeraldSetBonus_SuperBeam";
@@ -421,7 +422,8 @@ namespace XRL.World.Parts
 
                 Wielder.UnregisterEvent(ChaosEmeraldSetBonus, ApplyEffectEvent.ID);
 
-                ChaosEmeraldSetBonus.RemoveActivatedAbilityPowerUp(Wielder);
+                ChaosEmeraldSetBonus.DeactivateActivatedAbilityPowerUp();
+                ChaosEmeraldSetBonus.RemoveActivatedAbilityPowerUp(Wielder, true);
 
                 ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
 
@@ -1023,7 +1025,7 @@ namespace XRL.World.Parts
         {
             return base.WantEvent(ID, Cascade)
                 || ID == EndTurnEvent.ID
-                || (DebugChaosEmeraldSetBonusDescriptions && ID == GetShortDescriptionEvent.ID)
+                || (DebugChaosEmeraldSetBonusDebugDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == CommandEvent.ID
                 || ID == GetDisplayNameEvent.ID
                 || ID == BeforeAbilityManagerOpenEvent.ID
@@ -1041,7 +1043,10 @@ namespace XRL.World.Parts
         }
         public override void TurnTick(long TimeTick, int Amount)
         {
-            
+            if (PowerUpActivatedAbilityID == Guid.Empty && SuperBeamActivatedAbilityID != Guid.Empty)
+            {
+                RemoveActivatedAbilitySuperBeam(ParentObject, true);
+            }
             base.TurnTick(TimeTick, Amount);
         }
         public override bool HandleEvent(EndTurnEvent E)
@@ -1084,11 +1089,15 @@ namespace XRL.World.Parts
                 }
             }
             SyncPowerUpAbilityName();
+            if (SetPieces < MaxSetPieces)
+            {
+                UnGrantBonus();
+            }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DebugChaosEmeraldSetBonusDescriptions && ParentObject != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions && ParentObject != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 StringBuilder SB = Event.NewStringBuilder();
 

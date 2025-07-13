@@ -6,7 +6,7 @@
   -->
   
   <option
-        ID="Option_UD_Blink_DebugVerbosity"
+        ID="Option_UD_BlinkMutation_DebugVerbosity"
         DisplayText="{{nothinpersonnel|Blink Mutation}}: Verbosity of debug entries output to Player.log"
         Category="Debug"
         Type="Slider" 
@@ -27,8 +27,8 @@
 	</option>
 	
   <option
-        ID="Option_UD_Blink_DebugIncludeInMessage"
-		    Requires="Option_UD_Blink_DebugVerbosity!=0"
+        ID="Option_UD_BlinkMutation_DebugIncludeInMessage"
+		    Requires="Option_UD_BlinkMutation_DebugVerbosity!=0"
         DisplayText="{{nothinpersonnel|Blink Mutation}}: Also show debug entries in the Message Queue"
         Category="Debug"
         Type="Checkbox"
@@ -43,7 +43,7 @@
   </option>
 	
   <option
-        ID="Option_UD_Blink_DebugIncludeBlinkDebugDescriptions"
+        ID="Option_UD_BlinkMutation_DebugBlinkDebugDescriptions"
         DisplayText="{{nothinpersonnel|Blink Mutation}}: Show Blink internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
@@ -61,16 +61,17 @@
   </option>
 	
   <option
-        ID="Option_UD_Blink_DebugIncludeAI_SquareUpDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_SquareUp internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        ID="Option_UD_BlinkMutation_DebugAI_UD_BlinkerDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_Blinker internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the AI_SquareUp AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the AI_UD_Blinker AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
-      {{M|AI_SquareUP}}:
+      {{M|AI_UD_Blinker}}:
+      {{W|Blink}}: Current blink stats.
       {{W|Target}}: Current target and squared up target information.
       {{W|State}}: Current internal flags used to determine different actions happening.
 
@@ -79,7 +80,44 @@
   </option>
 	
   <option
-        ID="Option_UD_Blink_DebugIncludeChaosEmeraldSetBonusDebugDescriptions"
+        ID="Option_UD_BlinkMutation_DebugAI_UD_FlickererDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_Flickerer internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, internal debug information relating to the AI_UD_Flickerer AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+
+      {{M|AI_UD_Flickerer}}:
+      {{W|Flicker}}: Current flicker stats.
+      {{W|Target}}: Current target and squared up target information.
+      {{W|State}}: Current internal flags used to determine different actions happening.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+	
+  <option
+        ID="Option_UD_BlinkMutation_DebugAI_UD_SquareUpDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_SquareUp internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, internal debug information relating to the AI_UD_SquareUp AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+
+      {{M|AI_UD_SquareUP}}:
+      {{W|Target}}: Current target and squared up target information.
+      {{W|State}}: Current internal flags used to determine different actions happening.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+	
+  <option
+        ID="Option_UD_BlinkMutation_DebugChaosEmeraldSetBonusDebugDescriptions"
         DisplayText="{{nothinpersonnel|Blink Mutation}}: Show ChaosEmeraldSetBonus internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
@@ -98,7 +136,7 @@
   </option>
 	
   <option
-        ID="Option_UD_Blink_DebugIgnorePlayerWhenSquaringUp"
+        ID="Option_UD_BlinkMutation_DebugIgnorePlayerWhenSquaringUp"
         DisplayText="{{nothinpersonnel|Blink Mutation}}: Ignore the player when AI_UD_SquareUp is squaring up for a worthy opponent."
         Category="Debug"
         Type="Checkbox"
@@ -115,7 +153,7 @@
   Mod Options
   -->
   <option
-        ID="Option_UD_Blink_ObnoxiousYelling"
+        ID="Option_UD_BlinkMutation_ObnoxiousYelling"
         DisplayText="Enable obnoxious shouts from most types of creatures who have the Blink mutation included in this mod."
         Category="Mod: UD Blink Mutation"
         Type="Checkbox"
@@ -133,7 +171,7 @@
   </option>
   
   <option
-        ID="Option_UD_Blink_AllowWeGoAgain"
+        ID="Option_UD_BlinkMutation_AllowWeGoAgain"
         DisplayText="Enable refreshing the cooldown on Blink when successfully dealing damage with Cold Steel."
         Category="Mod: UD Blink Mutation"
         Type="Checkbox"
@@ -151,7 +189,7 @@
   </option>
   
   <option
-        ID="Option_UD_Blink_GenerateChaosEmeralds"
+        ID="Option_UD_BlinkMutation_GenerateChaosEmeralds"
         DisplayText="Enable the addition of the famed 7 Chaos Emeralds to the game by this mod ({{r|new save}})."
         Category="Mod: UD Blink Mutation"
         Type="Checkbox"

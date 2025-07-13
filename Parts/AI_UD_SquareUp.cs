@@ -40,6 +40,8 @@ namespace XRL.World.Parts
             return doDebug;
         }
 
+        private static bool DoDebugDescriptions => DebugAI_UD_SquareUpDebugDescriptions;
+
         private static bool IgnorePlayer => DebugIgnorePlayerWhenSquaringUp;
 
         private bool RecentlyAcquiredTarget = false;
@@ -392,7 +394,7 @@ namespace XRL.World.Parts
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
-                || (DebugAI_SquareUpDescriptions && ID == GetShortDescriptionEvent.ID)
+                || (DoDebugDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == GetItemElementsEvent.ID
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
                 || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
@@ -409,7 +411,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DebugAI_SquareUpDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 GameObject currentTarget = ParentObject?.Target;
 

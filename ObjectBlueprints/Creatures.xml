@@ -8,10 +8,11 @@
   <object Name="Troll King 3" Load="Merge">
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" ColorChange="false" PhysicalFeatures="false" />
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <part Name="AI_UD_Blinker" />
   </object>
   
-  <object Name="Snapjaw" Load="Merge">
-    <!-- part Name="AI_UD_Blinker" BlinkLevel="19" BaseRange="8" BaseCooldown="55" CooldownFactor="6" /-->
+  <object Name="Warden Esthers" Load="Merge">
+    <part Name="AI_UD_Flickerer" BaseMaxFlickerCharges="5" BaseBlinkRange="12" FlickerChargesAtLeastToFlicker="3" IdleFlickerTurnThreshold="60" />
   </object>
   
   <!-- 
@@ -68,6 +69,7 @@
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
     <tag Name="Subtype" Value="Speed Ball" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="5" BaseRange="5" TileColor="B" Shouts="false" DoNani="false" PhysicalFeatures="false" />
+    <part Name="AI_UD_Flickerer" IdleFlickerTurnThreshold="10" />
     <inventoryobject Blueprint="Red Plastifer Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
   </object>
   

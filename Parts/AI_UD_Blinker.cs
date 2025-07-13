@@ -8,6 +8,7 @@ using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
 {
@@ -36,52 +37,40 @@ namespace XRL.World.Parts
             return doDebug;
         }
 
+        private static bool DoDebugDescriptions => DebugAI_UD_BlinkerDebugDescriptions;
+
         public static readonly string COMMAND_AI_UD_BLINK = "Command_AI_UD_Blinker";
 
+        [SerializeField]
         private bool RecentlyBlunk = false;
 
         public long BlunkTurnThreshold => HasBlink 
             ? BlinkMutation.GetMyActivatedAbilityCooldown(BlinkMutation.BlinkActivatedAbilityID) 
             : Math.Max(5, BaseCooldown - (BlinkLevel * CooldownFactor));
 
-        private long StoredTurnTickForBlunk = 0L;
-
+        [SerializeField]
+        private int StoredTurnsSinceBlunk = 0;
+        
         public UD_Blink BlinkMutation => ParentObject?.GetPart<UD_Blink>();
         public bool HasBlink => BlinkMutation != null;
 
-        public int CooldownFactor = 5;
-        public int BaseCooldown = 60;
-        public int BlinkLevel = 5;
-        public int BaseRange = 3;
+        public int CooldownFactor;
+        public int BaseCooldown;
+        public int BlinkLevel;
+        public int BaseRange;
         public int Range => UD_Blink.GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
 
         public bool IsNothinPersonnelKid => HasBlink ? BlinkMutation.IsNothinPersonnelKid : ParentObject != null && !ParentObject.IsFleeing();
         public bool WeGoAgain => HasBlink && BlinkMutation.WeGoAgain;
 
-        public override void TurnTick(long TimeTick, int Amount)
+        public AI_UD_Blinker()
         {
-            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == The.ActiveZone)
-            {
-                Debug.Entry(4,
-                    $"~ {nameof(AI_UD_Blinker)}."
-                    + $"{nameof(TurnTick)}()"
-                    + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: getDoDebug());
+            CooldownFactor = 5;
+            BaseCooldown = 60;
+            BlinkLevel = 5;
+            BaseRange = 3;
+        }
 
-                if (RecentlyBlunk && TimeTick - StoredTurnTickForBlunk > BlunkTurnThreshold)
-                {
-                    ParentObject.Think($"I could Blink again.");
-                    StoredTurnTickForBlunk = TimeTick;
-                    RecentlyBlunk = false;
-                }
-            }
-            base.TurnTick(TimeTick, Amount);
-        }
-        public override bool WantTurnTick()
-        {
-            return base.WantTurnTick()
-                || true;
-        }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
@@ -90,6 +79,7 @@ namespace XRL.World.Parts
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == EndTurnEvent.ID
                 || ID == GetItemElementsEvent.ID
                 || ID == ActorGetNavigationWeightEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
@@ -100,7 +90,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
                 GameObject currentTarget = ParentObject?.Target;
 
@@ -141,10 +131,31 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append(HONLY).Append("(").AppendColored("c", $"{BlunkTurnThreshold}").Append($"){HONLY}{nameof(BlunkTurnThreshold)}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append(HONLY).Append("(").AppendColored("c", $"{StoredTurnTickForBlunk}").Append($"){HONLY}{nameof(StoredTurnTickForBlunk)}");
+                SB.Append(TANDR).Append(HONLY).Append("(").AppendColored("c", $"{StoredTurnsSinceBlunk}").Append($"){HONLY}{nameof(StoredTurnsSinceBlunk)}");
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(EndTurnEvent E)
+        {
+            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == The.ActiveZone)
+            {
+                Debug.Entry(4,
+                    $"~ {nameof(AI_UD_Blinker)}."
+                    + $"{nameof(HandleEvent)}("
+                    + $"{nameof(EndTurnEvent)} E)"
+                    + $" For: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 0, Toggle: getDoDebug());
+
+                if (RecentlyBlunk && StoredTurnsSinceBlunk++ > BlunkTurnThreshold)
+                {
+                    ParentObject.Think($"I could Blink again.");
+
+                    StoredTurnsSinceBlunk = 0;
+                    RecentlyBlunk = false;
+                }
             }
             return base.HandleEvent(E);
         }
