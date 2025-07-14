@@ -594,7 +594,7 @@ namespace XRL.World.Parts
                             flickerCharges--;
                             flickers++;
 
-                            if (3.in10())
+                            if (4.in10())
                             {
                                 message = effortSounds.DrawRandomToken();
                                 E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);

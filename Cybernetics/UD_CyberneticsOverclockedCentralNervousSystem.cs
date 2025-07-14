@@ -1,8 +1,9 @@
-﻿using System;
+﻿using ConsoleLib.Console;
+using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 using XRL.UI;
 using XRL.Wish;
@@ -16,7 +17,11 @@ using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
+
+using Color = UnityEngine.Color;
 using SerializeField = UnityEngine.SerializeField;
+using XRL.World.Anatomy;
+using Qud.UI;
 
 namespace XRL.World.Parts
 {
@@ -365,7 +370,11 @@ namespace XRL.World.Parts
             {
                 foreach (Cell flickerRadiusCell in CellsInFlickerRadius)
                 {
-                    List<GameObject> cellObjects = Event.NewGameObjectList(flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)));
+                    List<GameObject> cellObjects = 
+                        Event.NewGameObjectList(flickerRadiusCell.GetObjects(
+                            GO => GO.IsVisible() 
+                            && GO.IsHostileTowards(Flickerer)));
+
                     if (!cellObjects.IsNullOrEmpty())
                     {
                         foreach (GameObject gameObject in cellObjects)
@@ -577,6 +586,12 @@ namespace XRL.World.Parts
                     return false;
                 }
 
+                Debug.Entry(2, $"Listing {nameof(flickerTargets)}...", Indent: indent + 1, Toggle: getDoDebug());
+                foreach (GameObject flickerTarget in flickerTargets)
+                {
+                    Debug.LoopItem(2, $"{flickerTarget?.DebugName}...", Indent: indent + 2, Toggle: getDoDebug());
+                }
+
                 int attempts = 0;
                 Cell currentOriginCell = originCell;
                 bool didFlicker = false;
@@ -587,90 +602,137 @@ namespace XRL.World.Parts
                 {
                     attempts++;
 
-                    Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
-                    SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
+                    try
+                    {
+                        Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
+                        SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
 
-                    GameObject flickerTarget = FlickerTargetOverride ?? flickerTargets.GetRandomElementCosmetic();
-                    List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget?.CurrentCell.GetAdjacentCells());
+                        GameObject flickerTarget = null;
+                        if (GameObject.Validate(ref FlickerTargetOverride) && FlickerTargetOverride?.CurrentCell != null)
+                        {
+                            flickerTarget = FlickerTargetOverride;
+                        }
+                        else
+                        {
+                            FlickerTargetOverride = null;
 
-                    flickerTargetAdjacentCells.RemoveAll(
-                        c => !cellsInFlickerRadius.Contains(c)
-                        || c.IsSolidFor(Flickerer)
-                        || !c.IsVisible());
+                            flickerTarget ??= flickerTargets.GetRandomElementCosmetic();
 
-                    if (flickerTargetAdjacentCells.IsNullOrEmpty()
-                        || !GetFlickerPaths(
+                            if (!GameObject.Validate(ref flickerTarget) || FlickerTargetOverride?.CurrentCell == null)
+                            {
+                                Debug.Warn(2,
+                                    nameof(UD_CyberneticsOverclockedCentralNervousSystem),
+                                    nameof(Flicker),
+                                    $"randomly selected {nameof(flickerTarget)} isn't valid but should be", Indent: 0);
+                                flickerTargets.Remove(flickerTarget);
+                                continue;
+                            }
+                        }
+
+                        List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget?.CurrentCell?.GetAdjacentCells());
+
+                        flickerTargetAdjacentCells.RemoveAll(
+                            c => !cellsInFlickerRadius.Contains(c)
+                            || c.IsSolidFor(Flickerer)
+                            || !c.IsVisible());
+
+                        if (flickerTargetAdjacentCells.IsNullOrEmpty()
+                            || !GetFlickerPaths(
+                                Flickerer: Flickerer,
+                                BlinkRange: BlinkRange,
+                                OriginCell: currentOriginCell,
+                                FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
+                                DestinationPaths: out Dictionary<Cell, FindPath> destinationPaths))
+                        {
+                            flickerTargets.Remove(flickerTarget);
+                            continue;
+                        }
+
+                        Cell destinationCell = destinationPaths.Keys.GetRandomElementCosmetic();
+
+                        if (!destinationPaths.TryGetValue(destinationCell, out FindPath path)
+                            || !CheckBeforeBlinkEvent(
+                                Flickerer: Flickerer,
+                                BlinkRange: BlinkRange,
+                                DestinationCell: destinationCell,
+                                FlickerTarget: flickerTarget,
+                                Path: path,
+                                Silent: Silent))
+                        {
+                            continue;
+                        }
+
+                        if (!PerformFlickerMove(
                             Flickerer: Flickerer,
-                            BlinkRange: BlinkRange,
                             OriginCell: currentOriginCell,
-                            FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
-                            DestinationPaths: out Dictionary<Cell, FindPath> destinationPaths))
-                    {
-                        flickerTargets.Remove(flickerTarget);
-                        continue;
+                            DestinationCell: destinationCell,
+                            HaveFlickered: didFlicker,
+                            Path: path,
+                            DidFlicker: out didFlicker)
+                            || !didFlicker)
+                        {
+                            continue;
+                        }
+
+                        currentOriginCell = destinationCell;
+                        FlickerCharges--;
+                        flickers++;
+                        flickerEnergyCost += EnergyPerFlickerCharge;
+
+                        OCCNS?.SyncFlickerAbilityName();
+                        aI_Flickerer?.SyncFlickerAbilityName();
+
+                        Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
+
+                        GameObject primaryWeapon = Flickerer.GetPrimaryWeapon();
+                        BodyPart primaryLimb = Flickerer.Body.FindDefaultOrEquippedItem(primaryWeapon);
+
+                        if (!(bool)Combat.MeleeAttackWithWeapon(
+                            Attacker: Flickerer,
+                            Defender: flickerTarget,
+                            Weapon: primaryWeapon,
+                            BodyPart: primaryLimb,
+                            Properties: "Flicker",
+                            HitModifier: 5,
+                            Primary: true))
+                        {
+                            FlickerTargetOverride = null;
+                            flickerTargets.Remove(flickerTarget);
+                        }
+                        else
+                        {
+                            Flickerer.Target = flickerTarget;
+                        }
+
+                        if (FlickerTargetOverride.IsInGraveyard() || FlickerTargetOverride.CurrentCell == null)
+                        {
+                            if (!GameObject.Validate(FlickerTargetOverride))
+                            {
+                                FlickerTargetOverride = null;
+                            }
+                        }
+
+                        if (!GameObject.Validate(flickerTarget) || flickerTarget.CurrentCell == null)
+                        {
+                            flickerTargets.Remove(flickerTarget);
+                        }
+
+                        AfterBlinkEvent.Send(
+                            Blinker: Flickerer,
+                            Blink: null,
+                            Direction: null,
+                            BlinkRange: BlinkRange,
+                            Destination: destinationCell,
+                            IsNothinPersonnelKid: true,
+                            Kid: flickerTarget,
+                            IsRetreat: false,
+                            Path: path);
                     }
-
-                    Cell destinationCell = destinationPaths.Keys.GetRandomElementCosmetic();
-
-                    if (!destinationPaths.TryGetValue(destinationCell, out FindPath path)
-                        || !CheckBeforeBlinkEvent(
-                            Flickerer: Flickerer, 
-                            BlinkRange: BlinkRange, 
-                            DestinationCell: destinationCell, 
-                            FlickerTarget: flickerTarget, 
-                            Path: path, 
-                            Silent: Silent))
+                    catch (Exception x)
                     {
-                        continue;
+                        FlickerTargetOverride = null;
+                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
                     }
-
-                    if (!PerformFlickerMove(
-                        Flickerer: Flickerer, 
-                        OriginCell: currentOriginCell, 
-                        DestinationCell: destinationCell, 
-                        HaveFlickered: didFlicker,
-                        Path: path,
-                        DidFlicker: out didFlicker)
-                        || !didFlicker)
-                    {
-                        continue;
-                    }
-
-                    currentOriginCell = destinationCell;
-                    FlickerCharges--;
-                    flickers++;
-                    flickerEnergyCost += EnergyPerFlickerCharge;
-
-                    OCCNS?.SyncFlickerAbilityName();
-                    aI_Flickerer?.SyncFlickerAbilityName();
-
-                    Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
-
-                    Combat.PerformMeleeAttack(
-                        Attacker: Flickerer,
-                        Defender: flickerTarget,
-                        EnergyCost: 0,
-                        HitModifier: 5);
-
-                    if (FlickerTargetOverride != null)
-                    {
-                        GameObject.Validate(ref FlickerTargetOverride);
-                    }
-
-                    if (!GameObject.Validate(ref flickerTarget))
-                    {
-                        flickerTargets.Remove(flickerTarget);
-                    }
-                    AfterBlinkEvent.Send(
-                        Blinker: Flickerer,
-                        Blink: null,
-                        Direction: null,
-                        BlinkRange: BlinkRange,
-                        Destination: destinationCell,
-                        IsNothinPersonnelKid: true,
-                        Kid: flickerTarget,
-                        IsRetreat: false,
-                        Path: path);
                 }
 
                 if (flickerTargets.IsNullOrEmpty())
@@ -750,7 +812,7 @@ namespace XRL.World.Parts
 
         public static bool IsValidFlickerTarget(GameObject GO, GameObject Flickerer, int BlinkRange)
         {
-            if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsHostileTowards(Flickerer))
+            if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsVisible() && !GO.IsHostileTowards(Flickerer))
             {
                 return false;
             }
@@ -766,23 +828,32 @@ namespace XRL.World.Parts
             return false;
         }
 
-        public static GameObject PickFlickerTarget(GameObject Flickerer, int FlickerRadius, int BlinkRange)
+        public static GameObject PickFlickerTarget(GameObject Flickerer, int FlickerRadius, int BlinkRange, bool Silent = false)
         {
             if (Flickerer == null || FlickerRadius < 1 || BlinkRange < 1)
             {
                 return null;
             }
+
             Cell originCell = Flickerer.CurrentCell;
-            
-            return PickTarget.ShowPicker(
-                Style: PickTarget.PickStyle.EmptyCell, 
-                Range: FlickerRadius, 
-                StartX: originCell.X, 
-                StartY: originCell.Y, 
+
+            GameObject pickedTarget = PickTarget.ShowPicker(
+                Style: PickTarget.PickStyle.EmptyCell,
+                Radius: FlickerRadius,
+                Range: FlickerRadius,
+                StartX: originCell.X,
+                StartY: originCell.Y,
                 ObjectTest: GO => IsValidFlickerTarget(GO, Flickerer, BlinkRange),
                 EnforceRange: true,
                 Label: "Pick flicker target")
                 ?.GetFirstObject(GO => GO.IsCombatObject() && GO.IsHostileTowards(Flickerer));
+
+            if (pickedTarget == null && Flickerer.IsPlayerControlled() && !Silent)
+            {
+                Popup.Show($"There are no hostile creatures in that location to flicker strike.");
+            }
+
+            return pickedTarget;
         }
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
@@ -867,10 +938,22 @@ namespace XRL.World.Parts
                 bool doFlicker = true;
                 if (E.Actor.IsPlayerControlled() && E.Actor.Target == null)
                 {
-                    switch (Popup.ShowYesNoCancel($"You do not have a target to focus your flicker strike on, would you like to select one before using this ability? \n\r" +
-                        $"Choose \"Yes\" to pick a target. \n\r" +
-                        $"Choose \"No\" to perform flicker strike against random targets. \n\r" +
-                        $"Choose \"Cancel\" to do nothing."))
+                    StringBuilder SB = Event.NewStringBuilder();
+
+                    string yesString = PopupMessage.YesNoCancelButton[0].text;
+                    string noString = PopupMessage.YesNoCancelButton[1].text;
+                    string cancelString = PopupMessage.YesNoCancelButton[2].text;
+
+                    SB.Append("You do not have a target to focus your flicker strike on.").AppendLine();
+                    SB.Append("Would you like to select one before using this ability?").AppendLine().AppendLine();
+
+                    SB.AppendColored("K", "- ").Append(yesString).Append(" to pick a target.").AppendLine();
+
+                    SB.AppendColored("K", "- ").Append(noString).Append(" to perform flicker strike against random targets.").AppendLine();
+
+                    SB.AppendColored("K", "- ").Append(cancelString).Append(" to do nothing.");
+
+                    switch (Popup.ShowYesNoCancel(Event.FinalizeString(SB)))
                     {
                         case DialogResult.Yes:
                             E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
@@ -907,102 +990,121 @@ namespace XRL.World.Parts
                 if (GameObject.Validate(E.Actor) && !MidAction)
                 {
                     MidBlink = true;
-
-                    bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
-                    bool isMovement = !isRetreat && E.TargetCell != null;
-
-                    string Direction = null;
-                    string blinkThink = "hurr durr, i blinking";
-                    if (!E.Actor.IsPlayerControlled())
+                    try
                     {
-                        Direction = UD_Blink.GetBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
+                        bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isMovement = !isRetreat && E.TargetCell != null;
 
-                        if (isRetreat)
+                        string Direction = null;
+                        string blinkThink = "hurr durr, i blinking";
+                        if (!E.Actor.IsPlayerControlled())
                         {
-                            blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
-                        }
-                        else if (isMovement)
-                        {
-                            blinkThink = $"I don't think you have any idea how fast I really am";
-                        }
-                        else
-                        {
-                            blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
-                        }
+                            Direction = UD_Blink.GetBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
 
-                        E.Actor.Think(blinkThink);
-                    }
-
-                    bool blunk = UD_Blink.Blink(
-                        Blinker: E.Actor,
-                        Direction: Direction,
-                        BlinkRange: BlinkRange,
-                        Destination: E.TargetCell,
-                        IsNothinPersonnelKid: IsNothinPersonnelKid,
-                        Kid: E.Target,
-                        IsRetreat: isRetreat,
-                        Silent: false
-                        );
-
-                    if (blunk)
-                    {
-                        blinkThink = $"I blunk and ";
-                        int energyCost = 1000;
-                        if (AllowWeGoAgain && WeGoAgain)
-                        {
-                            WeGoingAgain(false);
-
-                            if (HaveFlickerCharges)
+                            if (isRetreat)
                             {
-                                energyCost = 0;
-                                FlickerCharges--;
+                                blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
+                            }
+                            else if (isMovement)
+                            {
+                                blinkThink = $"I don't think you have any idea how fast I really am";
+                            }
+                            else
+                            {
+                                blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
                             }
 
-                            Cell currentCell = E.Actor.CurrentCell;
-                            UD_Blink.Arrive(
-                                From: currentCell.GetCellFromDirection(Direction),
-                                To: currentCell,
-                                Life: 8,
-                                Color1: "C",
-                                Symbol1: "\u203C",
-                                Color2: "Y",
-                                Symbol2: "\u221E"
-                                );
+                            E.Actor.Think(blinkThink);
+                        }
 
-                            energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
-                            blinkThink += $"We Go Again";
+                        bool blunk = UD_Blink.Blink(
+                            Blinker: E.Actor,
+                            Direction: Direction,
+                            BlinkRange: BlinkRange,
+                            Destination: E.TargetCell,
+                            IsNothinPersonnelKid: IsNothinPersonnelKid,
+                            Kid: E.Target,
+                            IsRetreat: isRetreat,
+                            Silent: false
+                            );
+
+                        if (blunk)
+                        {
+                            blinkThink = $"I blunk and ";
+                            int energyCost = 1000;
+                            if (AllowWeGoAgain && WeGoAgain)
+                            {
+                                WeGoingAgain(false);
+
+                                if (HaveFlickerCharges)
+                                {
+                                    energyCost = 0;
+                                    FlickerCharges--;
+                                }
+
+                                Cell currentCell = E.Actor.CurrentCell;
+                                UD_Blink.Arrive(
+                                    From: currentCell.GetCellFromDirection(Direction),
+                                    To: currentCell,
+                                    Life: 8,
+                                    Color1: "C",
+                                    Symbol1: "\u203C",
+                                    Color2: "Y",
+                                    Symbol2: "\u221E"
+                                    );
+
+                                energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
+                                blinkThink += $"We Go Again";
+                            }
+                            else
+                            {
+                                CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(), E.Actor);
+                                blinkThink += $"I am knackered";
+                            }
+
+                            E.Actor.UseEnergy(energyCost, "Cybernetics Ability Blink");
                         }
                         else
                         {
-                            CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(), E.Actor);
-                            blinkThink += $"I am knackered";
+                            blinkThink = "I blunked out :(";
                         }
-
-                        E.Actor.UseEnergy(energyCost, "Cybernetics Ability Blink");
+                        if (!E.Actor.IsPlayerControlled())
+                        {
+                            E.Actor.Think(blinkThink);
+                        }
                     }
-                    else
+                    catch (Exception x)
                     {
-                        blinkThink = "I blunked out :(";
+                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
                     }
-                    if (!E.Actor.IsPlayerControlled())
+                    finally
                     {
-                        E.Actor.Think(blinkThink);
+                        MidBlink = false;
                     }
-                    MidBlink = false;
                 }
             }
             if (E.Command == COMMAND_UD_FLICKER && E.Actor == Implantee && !MidAction)
             {
                 MidFlicker = true;
-                if (GameObject.Validate(E.Actor) && HaveFlickerCharges)
+                try
                 {
-                    Flicker(E.Target, E.Silent);
+                    if (GameObject.Validate(E.Actor) && HaveFlickerCharges)
+                    {
+                        Flicker(E.Target, E.Silent);
+                    }
+                    if (!HaveFlickerCharges)
+                    {
+                        DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
+                    }
                 }
-                if (!HaveFlickerCharges)
+                catch (Exception x)
                 {
-                    DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
+                    MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
                 }
-                MidFlicker = false;
+                finally
+                {
+                    MidFlicker = false;
+                }
             }
             return base.HandleEvent(E);
         }
@@ -1086,40 +1188,37 @@ namespace XRL.World.Parts
                 && GameObject.Validate(E.Target))
             {
                 E.Actor.Think($"I want to attack {targetName}");
-                bool targetInRange = E.Actor.CurrentCell.CosmeticDistanceto(E.Target.CurrentCell.Location) < FlickerRadius;
+                List<Cell> cellsInFlickerRadius = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
+                bool targetInRange = !cellsInFlickerRadius.IsNullOrEmpty() && cellsInFlickerRadius.Contains(E.Target.CurrentCell);
                 if (targetInRange)
                 {
                     E.Actor.Think($"{targetName} is superficially in range");
 
-                    List<Cell> cellsInBlinkRadius = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
-                    if (!cellsInBlinkRadius.IsNullOrEmpty())
+                    GameObject flickerTarget = E.Target;
+                    List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget.CurrentCell.GetAdjacentCells());
+                    flickerTargetAdjacentCells.RemoveAll(c => !cellsInFlickerRadius.Contains(c) || c.IsSolidFor(E.Actor));
+                    if (!flickerTargetAdjacentCells.IsNullOrEmpty())
                     {
-                        GameObject flickerTarget = E.Target;
-                        List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget.CurrentCell.GetAdjacentCells());
-                        flickerTargetAdjacentCells.RemoveAll(c => !cellsInBlinkRadius.Contains(c) || c.IsSolidFor(E.Actor));
-                        if (!flickerTargetAdjacentCells.IsNullOrEmpty())
+                        foreach (Cell possibleDestination in flickerTargetAdjacentCells)
                         {
-                            foreach (Cell possibleDestination in flickerTargetAdjacentCells)
-                            {
-                                FindPath posiblePath = new(
-                                    StartCell: E.Actor.CurrentCell,
-                                    EndCell: possibleDestination,
-                                    PathGlobal: true,
-                                    Looker: E.Actor,
-                                    MaxWeight: 10,
-                                    IgnoreCreatures: true);
+                            FindPath posiblePath = new(
+                                StartCell: E.Actor.CurrentCell,
+                                EndCell: possibleDestination,
+                                PathGlobal: true,
+                                Looker: E.Actor,
+                                MaxWeight: 10,
+                                IgnoreCreatures: true);
 
-                                if (posiblePath.Steps.Contains(E.Actor.CurrentCell))
-                                {
-                                    posiblePath.Steps.Remove(E.Actor.CurrentCell);
-                                }
-                                if (UD_Blink.IsValidDestinationCell(E.Actor, possibleDestination, BlinkRange, posiblePath.Steps.Count))
-                                {
-                                    E.Actor.Think($"I've found a path I could use to flicker strike {targetName}");
-                                    E.Actor.Think($"I might try and flicker strike {targetName}, omae wa mou shindeiru");
-                                    E.Add(COMMAND_UD_FLICKER, 1, E.Actor);
-                                    break;
-                                }
+                            if (posiblePath.Steps.Contains(E.Actor.CurrentCell))
+                            {
+                                posiblePath.Steps.Remove(E.Actor.CurrentCell);
+                            }
+                            if (UD_Blink.IsValidDestinationCell(E.Actor, possibleDestination, BlinkRange, posiblePath.Steps.Count))
+                            {
+                                E.Actor.Think($"I've found a path I could use to flicker strike {targetName}");
+                                E.Actor.Think($"I might try and flicker strike {targetName}, omae wa mou shindeiru");
+                                E.Add(COMMAND_UD_FLICKER, 1, E.Actor);
+                                break;
                             }
                         }
                     }
