@@ -8,15 +8,20 @@ using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 
 using UD_Blink_Mutation;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class AI_UD_SquareUp : AIBehaviorPart
+    public class AI_UD_SquareUp 
+        : AIBehaviorPart
+        , IModEventHandler<BeforeBlinkEvent>
+        , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => getClassDoDebug(nameof(AI_UD_SquareUp));
         private static bool getDoDebug(object what = null)

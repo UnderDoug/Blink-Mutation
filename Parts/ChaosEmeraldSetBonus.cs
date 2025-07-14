@@ -13,13 +13,15 @@ using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
 
+using static XRL.World.Parts.Mutation.BaseMutation;
+
 using UD_Blink_Mutation;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
-using static XRL.World.Parts.Mutation.BaseMutation;
 using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
 {
@@ -28,6 +30,7 @@ namespace XRL.World.Parts
         : IActivePart
         , IFlightSource
         , IModEventHandler<GetBlinkRangeEvent>
+        , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => getClassDoDebug(nameof(ChaosEmeraldSetBonus));

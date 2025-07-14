@@ -4,11 +4,13 @@ using XRL;
 using XRL.World;
 using XRL.World.Parts;
 using XRL.World.Anatomy;
+using XRL.World.Parts.Mutation;
 
+using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
-using static UD_Blink_Mutation.Const;
-using XRL.World.Parts.Mutation;
+using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace UD_Blink_Mutation
 {

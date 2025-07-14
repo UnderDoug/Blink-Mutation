@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
+using XRL.Rules;
 using XRL.UI;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.AI.Pathfinding;
@@ -19,7 +21,10 @@ using SerializeField = UnityEngine.SerializeField;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class AI_UD_Flickerer : AIBehaviorPart
+    public class AI_UD_Flickerer 
+        : AIBehaviorPart
+        , IModEventHandler<BeforeBlinkEvent>
+        , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => getClassDoDebug(nameof(AI_UD_Flickerer));
         private static bool getDoDebug(object what = null)
@@ -57,6 +62,8 @@ namespace XRL.World.Parts
 
         public int IdleFlickerTurnThreshold;
 
+        public bool WantsToIdleFlicker => IdleFlickerTurnThreshold > -1;
+
         public int FlickerChargesAtLeastToFlicker;
         public int HealthThresholdToOverrideMinFlickerCharges;
 
@@ -71,7 +78,7 @@ namespace XRL.World.Parts
 
         public bool MidFlicker;
 
-        public int BlinkRange => BaseBlinkRange;
+        public int BlinkRange => GetBlinkRange();
         public int FlickerRadius => BlinkRange / 2;
         public int CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
         public int EffectiveRange => BlinkRange * CellsPerRange;
@@ -114,6 +121,23 @@ namespace XRL.World.Parts
                 AddActivatedAbilityFlicker(ParentObject);
             }
             FlickerCharges = MaxFlickerCharges;
+        }
+
+        public static int GetBlinkRange(int BaseRange, UD_Blink BlinkMutation = null)
+        {
+            if (BlinkMutation != null)
+            {
+                BaseRange += BlinkMutation.GetBlinkRange();
+            }
+            return BaseRange;
+        }
+        public int GetBlinkRange(int BaseRange)
+        {
+            return GetBlinkRange(BaseRange, ParentObject?.GetPart<UD_Blink>());
+        }
+        public int GetBlinkRange()
+        {
+            return GetBlinkRange(BaseBlinkRange);
         }
 
         public virtual Guid AddActivatedAbilityFlicker(GameObject GO, bool Force = false, bool Silent = false)
@@ -236,6 +260,10 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{RecentlyFlickered.YehNah()}]{HONLY}{nameof(RecentlyFlickered)}: ").AppendColored("B", $"{RecentlyFlickered}");
                 SB.AppendLine();
+                SB.Append(VANDR).Append($"[{WantsToIdleFlicker.YehNah()}]{HONLY}{nameof(WantsToIdleFlicker)}: ").AppendColored("B", $"{WantsToIdleFlicker}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnThreshold}").Append($"){HONLY}{nameof(IdleFlickerTurnThreshold)}");
+                SB.AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnCounter}").Append($"){HONLY}{nameof(IdleFlickerTurnCounter)}");
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{WantsToFlicker.YehNah()}]{HONLY}{nameof(WantsToFlicker)}: ").AppendColored("B", $"{WantsToFlicker}");
@@ -277,7 +305,7 @@ namespace XRL.World.Parts
                 {
                     DisableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
                 }
-                if (RecentlyFlickered && IdleFlickerTurnCounter++ > IdleFlickerTurnThreshold)
+                if (RecentlyFlickered && WantsToIdleFlicker && IdleFlickerTurnCounter++ > IdleFlickerTurnThreshold)
                 {
                     RecentlyFlickered = false;
                     IdleFlickerTurnCounter = 0;
@@ -372,7 +400,7 @@ namespace XRL.World.Parts
                 + $" For: {ParentObject?.DebugName ?? NULL}",
                 Indent: 0, Toggle: getDoDebug());
 
-            if (!RecentlyFlickered && 25.in100() && E.Actor.Target == null && !E.Actor.HasPart<Temporary>())
+            if (WantsToIdleFlicker && !RecentlyFlickered && 25.in100() && E.Actor.Target == null && !E.Actor.HasPart<Temporary>())
             {
                 E.Actor.Think("I got too much beans!");
                 CommandEvent.Send(E.Actor, COMMAND_AI_UD_FLICKER);
@@ -381,27 +409,61 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY && !IsMyActivatedAbilityCoolingDown(FlickerActivatedAbilityID, E.Actor))
+            if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY && E.Actor == ParentObject && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 CommandEvent.Send(
                     Actor: E.Actor,
                     Command: COMMAND_AI_UD_FLICKER);
             }
-            if (E.Command == COMMAND_AI_UD_FLICKER && ParentObject == E.Actor)
+            if (E.Command == COMMAND_AI_UD_FLICKER && E.Actor == ParentObject)
             {
                 MidFlicker = true;
                 bool nearbyHostile = The.ActiveZone.GetFirstObject(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)) != null;
                 bool haveTarget = E.Target != null || nearbyHostile;
                 if (haveTarget)
                 {
-                    UD_CyberneticsOverclockedCentralNervousSystem.Flicker(
-                        Flickerer: E.Actor, 
-                        FlickerRadius: FlickerRadius, 
-                        BlinkRange: BlinkRange, 
-                        FlickerCharges: ref FlickerCharges,
-                        EnergyPerFlickerCharge: EnergyPerFlickerCharge,
-                        OCCNS: null, 
-                        Silent: E.Silent);
+
+                    bool doFlicker = true;
+                    if (E.Actor.IsPlayerControlled() && E.Actor.Target == null)
+                    {
+                        switch (Popup.ShowYesNoCancel($"You do not have a target to focus your flicker strike on, would you like to select one before using this ability? \n\r" +
+                            $"Choose \"Yes\" to pick a target. \n\r" +
+                            $"Choose \"No\" to perform flicker strike against random targets. \n\r" +
+                            $"Choose \"Cancel\" to do nothing."))
+                        {
+                            case DialogResult.Yes:
+                                E.Actor.Target = UD_CyberneticsOverclockedCentralNervousSystem.PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
+                                doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
+                                break;
+                            case DialogResult.Cancel:
+                            default:
+                                doFlicker = false;
+                                break;
+                            case DialogResult.No:
+                                break;
+                        }
+                    }
+
+                    bool singleTarget = true;
+                    if (!E.Actor.IsPlayerControlled())
+                    {
+                        List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
+                        nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => UD_CyberneticsOverclockedCentralNervousSystem.IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
+                        singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
+                    }
+
+                    if (doFlicker)
+                    {
+                        UD_CyberneticsOverclockedCentralNervousSystem.Flicker(
+                            Flickerer: E.Actor,
+                            FlickerRadius: FlickerRadius,
+                            BlinkRange: BlinkRange,
+                            FlickerCharges: ref FlickerCharges,
+                            EnergyPerFlickerCharge: EnergyPerFlickerCharge,
+                            OCCNS: null,
+                            FlickerTargetOverride: E.Actor.Target,
+                            Silent: E.Silent);
+                    }
                 }
                 else
                 {
@@ -467,7 +529,7 @@ namespace XRL.World.Parts
                         Cell currentOriginCell = originCell;
                         bool didFlicker = false;
                         int flickers = 0;
-                        int flickerCharges = FlickerCharges;
+                        int flickerCharges = Stat.RandomCosmetic(1, FlickerCharges);
 
                         string actorName = E.Actor.T(WithoutTitles: true, Short: true);
                         string message;
@@ -616,6 +678,18 @@ namespace XRL.World.Parts
                 MidFlicker = false;
             }
             return base.HandleEvent(E);
+        }
+
+        public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+        {
+            AI_UD_Flickerer aI_UD_Flickerer = base.DeepCopy(Parent, MapInv) as AI_UD_Flickerer;
+
+            if (aI_UD_Flickerer.FlickerActivatedAbilityID != Guid.Empty)
+            {
+                aI_UD_Flickerer.AddActivatedAbilityFlicker(true);
+            }
+
+            return aI_UD_Flickerer;
         }
     }
 }

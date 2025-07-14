@@ -163,7 +163,9 @@
     <part Name="Render" DisplayName="{{Y|overclocked central nervous system}}" 
           Tile="Items/OverclockedCentralNervousSystem.png" 
           TileColor="&amp;r" DetailColor="C" />
-    <part Name="CyberneticsBaseItem" Slots="Back,Body,Head" Cost="4" BehaviorDescription="You gain the ability to blink a short distance in a direction of your choosing, and the ability to flicker between multiple enemies performing an attack as you do so." />
+    <part Name="CyberneticsBaseItem" Slots="Back,Body,Head" Cost="4" BehaviorDescription="You gain the ability to blink a short distance in a direction of your choosing optionally attacking an enemy you pass through.
+You gain the ability to flicker between multiple enemies performing an attack against each as you do so.
+Compute power on the local lattice increases this implant's effectiveness." />
     <part Name="UD_CyberneticsOverclockedCentralNervousSystem" />
     <tag Name="CyberneticsOneOnly" />
   </object>

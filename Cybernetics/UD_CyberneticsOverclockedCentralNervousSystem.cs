@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 
@@ -10,16 +11,21 @@ using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
 
 using UD_Blink_Mutation;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
 {
     [HasWishCommand]
     [Serializable]
-    public class UD_CyberneticsOverclockedCentralNervousSystem : IActivePart
+    public class UD_CyberneticsOverclockedCentralNervousSystem 
+        : IActivePart
+        , IModEventHandler<BeforeBlinkEvent>
+        , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => getClassDoDebug(nameof(UD_CyberneticsOverclockedCentralNervousSystem));
         private static bool getDoDebug(object what = null)
@@ -43,9 +49,9 @@ namespace XRL.World.Parts
             return doDebug;
         }
 
-        public static readonly string COMMAND_UD_BLINK_ABILITY = "Command_UD_Blink_Cyber_Ability";
-        public static readonly string COMMAND_UD_BLINK = "Command_UD_Cyber_Blink";
-        public static readonly string COMMAND_UD_COLDSTEEL_ABILITY = "Command_UD_ColdSteel_Cyber_Ability";
+        public static readonly string COMMAND_UD_BLINK_CYBER_ABILITY = "Command_UD_Blink_Cyber_Ability";
+        public static readonly string COMMAND_UD_BLINK_CYBER = "Command_UD_Cyber_Blink";
+        public static readonly string COMMAND_UD_COLDSTEEL_CYBER_ABILITY = "Command_UD_ColdSteel_Cyber_Ability";
         public static readonly string COMMAND_UD_FLICKER_ABILITY = "Command_UD_Flicker_Ability";
         public static readonly string COMMAND_UD_FLICKER = "Command_UD_Flicker";
 
@@ -54,8 +60,15 @@ namespace XRL.World.Parts
             get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, Implantee);
             set
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Implantee, Silent: true, SetState: value);
-                AddActivatedAbilityBlink(Force: true, Silent: true);
+                if (IsNothinPersonnelKid != value)
+                {
+                    ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, Implantee, Silent: true, SetState: value);
+                    ActivatedAbilityEntry blinkActivatedAbilityEntry = Implantee?.GetActivatedAbilityByCommand(COMMAND_UD_BLINK_CYBER_ABILITY);
+                    if (blinkActivatedAbilityEntry != null)
+                    {
+                        blinkActivatedAbilityEntry.IsAttack = value;
+                    }
+                }
             }
         }
 
@@ -140,7 +153,7 @@ namespace XRL.World.Parts
                 BlinkActivatedAbilityID =
                     AddMyActivatedAbility(
                         Name: "Blink",
-                        Command: COMMAND_UD_BLINK_ABILITY,
+                        Command: COMMAND_UD_BLINK_CYBER_ABILITY,
                         Class: "Cybernetics",
                         Icon: "~",
                         IsAttack: IsNothinPersonnelKid,
@@ -179,7 +192,7 @@ namespace XRL.World.Parts
                 ColdSteelActivatedAbilityID =
                     AddMyActivatedAbility(
                         Name: "{{C|Cold}} {{Y|Steel}}",
-                        Command: COMMAND_UD_COLDSTEEL_ABILITY,
+                        Command: COMMAND_UD_COLDSTEEL_CYBER_ABILITY,
                         Class: "Cybernetics",
                         Icon: "\\",
                         Toggleable: true,
@@ -462,7 +475,7 @@ namespace XRL.World.Parts
             return false;
         }
 
-        public static bool Flicker(GameObject Flickerer, int FlickerRadius, int BlinkRange, ref int FlickerCharges, int EnergyPerFlickerCharge, UD_CyberneticsOverclockedCentralNervousSystem OCCNS = null, bool Silent = false)
+        public static bool Flicker(GameObject Flickerer, int FlickerRadius, int BlinkRange, ref int FlickerCharges, int EnergyPerFlickerCharge, UD_CyberneticsOverclockedCentralNervousSystem OCCNS = null, GameObject FlickerTargetOverride = null, bool Silent = false)
         {
             string verb = "flicker";
             int indent = Debug.LastIndent;
@@ -524,14 +537,43 @@ namespace XRL.World.Parts
             List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
             if (!cellsInFlickerRadius.IsNullOrEmpty())
             {
+                Debug.Entry(2, $"Checking {nameof(FlickerTargetOverride)} for value and valid path...", Indent: indent + 1, Toggle: getDoDebug());
+                if (FlickerTargetOverride != null)
+                {
+                    List<Cell> flickerTargetOverrideAdjacentCells = Event.NewCellList(FlickerTargetOverride?.CurrentCell.GetAdjacentCells());
+
+                    flickerTargetOverrideAdjacentCells.RemoveAll(
+                        c => !cellsInFlickerRadius.Contains(c)
+                        || c.IsSolidFor(Flickerer)
+                        || !c.IsVisible());
+
+                    if (FlickerTargetOverride != null
+                        && flickerTargetOverrideAdjacentCells.IsNullOrEmpty()
+                        || !GetFlickerPaths(
+                            Flickerer: Flickerer,
+                            BlinkRange: BlinkRange,
+                            OriginCell: originCell,
+                            FlickerTargetAdjacentCells: flickerTargetOverrideAdjacentCells,
+                            DestinationPaths: out _))
+                    {
+                        if (!Silent && Flickerer.IsPlayerControlled())
+                        {
+                            Popup.Show($"Your target cannot be reached to {verb} strike!");
+                        }
+                        Debug.LastIndent = indent;
+                        return false;
+                    }
+                }
+
                 List<GameObject> flickerTargets = Event.NewGameObjectList(GetFlickerTargets(Flickerer, cellsInFlickerRadius));
 
-                if (flickerTargets.IsNullOrEmpty())
+                if (flickerTargets.IsNullOrEmpty() && FlickerTargetOverride == null)
                 {
                     if (!Silent && Flickerer.IsPlayerControlled())
                     {
                         Popup.Show($"There are no nearby hostiles to {verb} strike!");
                     }
+                    Debug.LastIndent = indent;
                     return false;
                 }
 
@@ -548,8 +590,8 @@ namespace XRL.World.Parts
                     Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
                     SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
 
-                    GameObject flickerTarget = flickerTargets.GetRandomElementCosmetic();
-                    List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget.CurrentCell.GetAdjacentCells());
+                    GameObject flickerTarget = FlickerTargetOverride ?? flickerTargets.GetRandomElementCosmetic();
+                    List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget?.CurrentCell.GetAdjacentCells());
 
                     flickerTargetAdjacentCells.RemoveAll(
                         c => !cellsInFlickerRadius.Contains(c)
@@ -610,7 +652,12 @@ namespace XRL.World.Parts
                         EnergyCost: 0,
                         HitModifier: 5);
 
-                    if (!GameObject.Validate(flickerTarget))
+                    if (FlickerTargetOverride != null)
+                    {
+                        GameObject.Validate(ref FlickerTargetOverride);
+                    }
+
+                    if (!GameObject.Validate(ref flickerTarget))
                     {
                         flickerTargets.Remove(flickerTarget);
                     }
@@ -646,27 +693,21 @@ namespace XRL.World.Parts
                 {
                     Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
                     SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
-
-                    FindPath finalPath = new(
-                                StartCell: currentOriginCell,
-                                EndCell: originCell,
-                                PathGlobal: true,
-                                Looker: Flickerer,
-                                MaxWeight: 10,
-                                IgnoreCreatures: true);
-
-                    if (finalPath.Steps.Contains(currentOriginCell))
-                    {
-                        finalPath.Steps.Remove(currentOriginCell);
-                    }
-
-                    PerformFlickerMove(
+                    if (TryGetFlickerPath(
                         Flickerer: Flickerer,
+                        BlinkRange: BlinkRange,
                         OriginCell: currentOriginCell,
                         DestinationCell: originCell,
-                        HaveFlickered: didFlicker,
-                        Path: finalPath,
-                        DidFlicker: out _);
+                        Path: out FindPath finalPath))
+                    {
+                        PerformFlickerMove(
+                            Flickerer: Flickerer,
+                            OriginCell: currentOriginCell,
+                            DestinationCell: originCell,
+                            HaveFlickered: didFlicker,
+                            Path: finalPath,
+                            DidFlicker: out _);
+                    }
                 }
                 if (didFlicker)
                 {
@@ -694,9 +735,54 @@ namespace XRL.World.Parts
             }
             return false;
         }
-        public bool Flicker(bool Silent = false)
+        public bool Flicker(GameObject FlickerTargetOverride = null, bool Silent = false)
         {
-            return Flicker(Implantee, FlickerRadius, BlinkRange, ref FlickerCharges, EnergyPerFlickerCharge, this, Silent);
+            return Flicker(
+                Flickerer: Implantee, 
+                FlickerRadius: FlickerRadius,
+                BlinkRange: BlinkRange,
+                FlickerCharges: ref FlickerCharges,
+                EnergyPerFlickerCharge: EnergyPerFlickerCharge,
+                OCCNS: this,
+                FlickerTargetOverride: FlickerTargetOverride,
+                Silent: Silent);
+        }
+
+        public static bool IsValidFlickerTarget(GameObject GO, GameObject Flickerer, int BlinkRange)
+        {
+            if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsHostileTowards(Flickerer))
+            {
+                return false;
+            }
+
+            foreach (Cell targetAdjacentCell in GO.CurrentCell.GetAdjacentCells())
+            {
+                if (TryGetFlickerPath(Flickerer, BlinkRange, Flickerer.CurrentCell, targetAdjacentCell, out _))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public static GameObject PickFlickerTarget(GameObject Flickerer, int FlickerRadius, int BlinkRange)
+        {
+            if (Flickerer == null || FlickerRadius < 1 || BlinkRange < 1)
+            {
+                return null;
+            }
+            Cell originCell = Flickerer.CurrentCell;
+            
+            return PickTarget.ShowPicker(
+                Style: PickTarget.PickStyle.EmptyCell, 
+                Range: FlickerRadius, 
+                StartX: originCell.X, 
+                StartY: originCell.Y, 
+                ObjectTest: GO => IsValidFlickerTarget(GO, Flickerer, BlinkRange),
+                EnforceRange: true,
+                Label: "Pick flicker target")
+                ?.GetFirstObject(GO => GO.IsCombatObject() && GO.IsHostileTowards(Flickerer));
         }
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
@@ -765,25 +851,58 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY)
+            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY && E.Actor == Implantee)
             {
-                IsNothinPersonnelKid = !IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, E.Actor);
+                IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.Command == COMMAND_UD_BLINK_ABILITY && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor))
-            {
-                CommandEvent.Send(
-                    Actor: Implantee,
-                    Command: COMMAND_UD_BLINK,
-                    Handler: ParentObject);
-            }
-            if (E.Command == COMMAND_UD_FLICKER_ABILITY && !IsMyActivatedAbilityCoolingDown(FlickerActivatedAbilityID, E.Actor))
+            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY && E.Actor == Implantee && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
             {
                 CommandEvent.Send(
-                    Actor: Implantee,
-                    Command: COMMAND_UD_FLICKER,
+                    Actor: E.Actor,
+                    Command: COMMAND_UD_BLINK_CYBER,
                     Handler: ParentObject);
             }
-            if (E.Command == COMMAND_UD_BLINK && Implantee == E.Actor)
+            if (E.Command == COMMAND_UD_FLICKER_ABILITY && E.Actor == Implantee && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
+            {
+                bool doFlicker = true;
+                if (E.Actor.IsPlayerControlled() && E.Actor.Target == null)
+                {
+                    switch (Popup.ShowYesNoCancel($"You do not have a target to focus your flicker strike on, would you like to select one before using this ability? \n\r" +
+                        $"Choose \"Yes\" to pick a target. \n\r" +
+                        $"Choose \"No\" to perform flicker strike against random targets. \n\r" +
+                        $"Choose \"Cancel\" to do nothing."))
+                    {
+                        case DialogResult.Yes:
+                            E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
+                            doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
+                            break;
+                        case DialogResult.Cancel:
+                        default:
+                            doFlicker = false;
+                            break;
+                        case DialogResult.No:
+                            break;
+                    }
+                }
+
+                bool singleTarget = true;
+                if (!E.Actor.IsPlayerControlled())
+                {
+                    List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
+                    nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
+                    singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
+                }
+
+                if (doFlicker)
+                {
+                    CommandEvent.Send(
+                        Actor: E.Actor,
+                        Command: COMMAND_UD_FLICKER,
+                        Target: singleTarget ? E.Actor.Target : null,
+                        Handler: ParentObject);
+                }
+            }
+            if (E.Command == COMMAND_UD_BLINK_CYBER && E.Actor == Implantee)
             {
                 if (GameObject.Validate(E.Actor) && !MidAction)
                 {
@@ -872,12 +991,12 @@ namespace XRL.World.Parts
                     MidBlink = false;
                 }
             }
-            if (E.Command == COMMAND_UD_FLICKER && !MidAction)
+            if (E.Command == COMMAND_UD_FLICKER && E.Actor == Implantee && !MidAction)
             {
                 MidFlicker = true;
-                if (GameObject.Validate(E.Actor) && HaveFlickerCharges && Implantee != null)
+                if (GameObject.Validate(E.Actor) && HaveFlickerCharges)
                 {
-                    Flicker(E.Silent);
+                    Flicker(E.Target, E.Silent);
                 }
                 if (!HaveFlickerCharges)
                 {
@@ -926,7 +1045,7 @@ namespace XRL.World.Parts
         {
             E.Add(
                 Description: "Blink a short distance", 
-                Command: COMMAND_UD_BLINK_ABILITY, 
+                Command: COMMAND_UD_BLINK_CYBER_ABILITY, 
                 Order: 5600, 
                 Ability: MyActivatedAbility(BlinkActivatedAbilityID, E.Actor), 
                 IsAttack: IsNothinPersonnelKid);
@@ -937,7 +1056,7 @@ namespace XRL.World.Parts
             string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? NULL}";
             if (!ParentObject.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: true);
+                IsNothinPersonnelKid = true;
             }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
                 && !E.Actor.OnWorldMap()
@@ -957,7 +1076,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, BlinkRange, out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
                     E.Actor.Think($"I might teleport behind {targetName}, it's nothin personnel");
-                    E.Add(COMMAND_UD_BLINK, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
+                    E.Add(COMMAND_UD_BLINK_CYBER, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
             if (IsMyActivatedAbilityAIUsable(FlickerActivatedAbilityID, E.Actor)
@@ -1017,7 +1136,7 @@ namespace XRL.World.Parts
             string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? "here"}";
             if (E.Actor.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: false);
+                IsNothinPersonnelKid = false;
             }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
                 && !E.Actor.OnWorldMap()
@@ -1037,7 +1156,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, BlinkRange, out Cell Destination))
                 {
                     E.Actor.Think($"I might blink away from {targetName}");
-                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, Priority: 3, TargetCellOverride: Destination);
+                    E.Add(COMMAND_UD_BLINK_CYBER, Object: E.Actor, Priority: 3, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1061,7 +1180,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, BlinkRange, out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
-                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, TargetCellOverride: Destination);
+                    E.Add(COMMAND_UD_BLINK_CYBER, Object: E.Actor, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1091,6 +1210,57 @@ namespace XRL.World.Parts
                 Debug.LastIndent = indent;
             }
             return base.FireEvent(E);
+        }
+
+        public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
+        {
+            UD_CyberneticsOverclockedCentralNervousSystem OCCNS = base.DeepCopy(Parent, MapInv) as UD_CyberneticsOverclockedCentralNervousSystem;
+
+            if (OCCNS.BlinkActivatedAbilityID != Guid.Empty)
+            {
+                OCCNS.RemoveActivatedAbilityBlink(Force: true);
+                if (Parent.Implantee != null)
+                {
+                    OCCNS.AddActivatedAbilityBlink(Parent.Implantee, Force: true, Silent: true);
+                }
+            }
+            if (OCCNS.ColdSteelActivatedAbilityID != Guid.Empty)
+            {
+                OCCNS.RemoveActivatedAbilityColdSteel(Force: true);
+                if (Parent.Implantee != null)
+                {
+                    OCCNS.AddActivatedAbilityColdSteel(Parent, Force: true, Silent: true);
+                }
+            }
+            if (OCCNS.FlickerActivatedAbilityID != Guid.Empty)
+            {
+                OCCNS.RemoveActivatedAbilityFlicker(Force: true);
+                if (Parent.Implantee != null)
+                {
+                    OCCNS.AddActivatedAbilityFlicker(Parent, Force: true, Silent: true);
+                }
+            }
+
+            return OCCNS;
+        }
+
+        public override void FinalizeCopyEarly(GameObject Source, bool CopyEffects, bool CopyID, Func<GameObject, GameObject> MapInv)
+        {
+            if (Implantee != null)
+            {
+                if (BlinkActivatedAbilityID == Guid.Empty)
+                {
+                    AddActivatedAbilityBlink(Implantee, Force: true, Silent: true);
+                }
+                if (ColdSteelActivatedAbilityID == Guid.Empty)
+                {
+                    AddActivatedAbilityColdSteel(Implantee, Force: true, Silent: true);
+                }
+                if (FlickerActivatedAbilityID != Guid.Empty)
+                {
+                    AddActivatedAbilityFlicker(Implantee, Force: true, Silent: true);
+                }
+            }
         }
 
         [WishCommand(Command = "OC_CNS test kit")]

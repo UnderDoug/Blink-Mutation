@@ -20,16 +20,21 @@ using XRL.World.Capabilities;
 using XRL.World.Effects;
 
 using UD_Blink_Mutation;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts.Mutation
 {
     [HasWishCommand]
     [Serializable]
-    public class UD_Blink : BaseMutation
+    public class UD_Blink 
+        : BaseMutation
+        , IModEventHandler<BeforeBlinkEvent>
+        , IModEventHandler<AfterBlinkEvent>
     {
         private static bool doDebug => getClassDoDebug(nameof(UD_Blink));
         private static bool getDoDebug(object what = null)
@@ -87,13 +92,20 @@ namespace XRL.World.Parts.Mutation
          && ParentObject.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
          && animatedMaterialGeneric.TileAnimationFrames == PrickleBallAnimation.TileAnimationFrames;
 
-        public bool IsNothinPersonnelKid 
-        { 
-            get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID);
-            set 
+        public bool IsNothinPersonnelKid
+        {
+            get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, ParentObject);
+            set
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, Silent: true, SetState: value);
-                AddActivatedAbilityBlink(Force: true, Silent: true);
+                if (IsNothinPersonnelKid != value)
+                {
+                    ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, ParentObject, Silent: true, SetState: value);
+                    ActivatedAbilityEntry blinkActivatedAbilityEntry = ParentObject?.GetActivatedAbilityByCommand(COMMAND_UD_BLINK_ABILITY);
+                    if (blinkActivatedAbilityEntry != null)
+                    {
+                        blinkActivatedAbilityEntry.IsAttack = value;
+                    }
+                }
             }
         }
 
@@ -101,6 +113,9 @@ namespace XRL.World.Parts.Mutation
         public float WeGoAgainEnergyFactor = 1.25f;
 
         public bool IsSteelCold = false;
+
+        public int CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
+        public int EffectiveRange => GetBlinkRange() * CellsPerRange;
 
         // Containers
         public Guid BlinkActivatedAbilityID = Guid.Empty;
@@ -327,6 +342,8 @@ namespace XRL.World.Parts.Mutation
         {
             stats.Set("BornWith", MutationDescBornWithString, changes: false);
             stats.Set("BlinkRange", GetBlinkRange(Level, BaseRange));
+            stats.Set(nameof(CellsPerRange), CellsPerRange);
+            stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
         }
@@ -429,8 +446,8 @@ namespace XRL.World.Parts.Mutation
 
         public override bool Mutate(GameObject GO, int Level)
         {
-            AddActivatedAbilityBlink(GO);
-            AddActivatedAbilityColdSteel(GO);
+            AddActivatedAbilityBlink(GO, true);
+            AddActivatedAbilityColdSteel(GO, true);
             return base.Mutate(GO, Level);
         }
         public override bool Unmutate(GameObject GO)
@@ -1607,24 +1624,24 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY)
+            if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY && E.Actor == ParentObject)
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.Command == COMMAND_UD_BLINK_ABILITY && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, ParentObject))
+            if (E.Command == COMMAND_UD_BLINK_ABILITY && E.Actor == ParentObject && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, ParentObject))
             {
                 GameObject Blinker = ParentObject;
 
                 CommandEvent.Send(
                     Actor: Blinker,
                     Command: COMMAND_UD_BLINK,
-                    Target: null,
-                    TargetCell: null,
+                    Target: E.Target,
+                    TargetCell: E.TargetCell,
                     StandoffDistance: 0,
                     Forced: false,
                     Silent: false);
             }
-            if (E.Command == COMMAND_UD_BLINK && ParentObject == E.Actor)
+            if (E.Command == COMMAND_UD_BLINK && E.Actor == ParentObject)
             {
                 if (GameObject.Validate(E.Actor) && !MidBlink)
                 {
@@ -1723,7 +1740,7 @@ namespace XRL.World.Parts.Mutation
             string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? NULL}";
             if (!E.Actor.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: true);
+                IsNothinPersonnelKid = true;
             }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
                 && !E.Actor.OnWorldMap() 
@@ -1743,7 +1760,7 @@ namespace XRL.World.Parts.Mutation
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
                     E.Actor.Think($"I might teleport behind {targetName}, it's nothin personnel");
-                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
+                    E.Add(COMMAND_UD_BLINK_ABILITY, Object: E.Actor, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1753,7 +1770,7 @@ namespace XRL.World.Parts.Mutation
             string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? "here"}";
             if (E.Actor.IsFleeing())
             {
-                ToggleMyActivatedAbility(ColdSteelActivatedAbilityID, E.Actor, SetState: false);
+                IsNothinPersonnelKid = false;
             }
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
                 && !E.Actor.OnWorldMap()
@@ -1773,7 +1790,7 @@ namespace XRL.World.Parts.Mutation
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
                     E.Actor.Think($"I might blink away from {targetName}");
-                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, Priority: 3, TargetCellOverride: Destination);
+                    E.Add(COMMAND_UD_BLINK_ABILITY, Object: E.Actor, Priority: 3, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1797,7 +1814,7 @@ namespace XRL.World.Parts.Mutation
                 if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, GetBlinkRange(), out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
-                    E.Add(COMMAND_UD_BLINK, Object: E.Actor, TargetCellOverride: Destination);
+                    E.Add(COMMAND_UD_BLINK_ABILITY, Object: E.Actor, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -1916,13 +1933,11 @@ namespace XRL.World.Parts.Mutation
 
             if (blink.BlinkActivatedAbilityID != Guid.Empty)
             {
-                blink.BlinkActivatedAbilityID = Guid.Empty;
-                blink.AddActivatedAbilityBlink();
+                blink.AddActivatedAbilityBlink(true);
             }
             if (blink.ColdSteelActivatedAbilityID != Guid.Empty)
             {
-                blink.ColdSteelActivatedAbilityID = Guid.Empty;
-                blink.AddActivatedAbilityColdSteel();
+                blink.AddActivatedAbilityColdSteel(true);
             }
             if (Parent.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
                 && animatedMaterialGeneric.TileAnimationFrames == blink.PrickleBallAnimation.TileAnimationFrames
@@ -1958,6 +1973,7 @@ namespace XRL.World.Parts.Mutation
 
             pickedCell.AddObject(Blinker);
         }
+
         [WishCommand(Command = "gimme coldsteel dealt")]
         // gimme coldsteel dealt count level
         public static void GimmeColdSteelDealtWish(string Parameters)
@@ -2010,6 +2026,7 @@ namespace XRL.World.Parts.Mutation
             Debug.Entry(4, $"Total Cold Steel damage: {total} | {damageDie.Min()}, {total/count}, {damageDie.Max()}", 
                 Indent: 0, Toggle: getDoDebug());
         }
+
         [WishCommand(Command = "gimme coldsteel damage")]
         // gimme coldsteel damage maxLevel
         public static void GimmeColdSteelDamageWish(string Parameters)

@@ -17,6 +17,7 @@
       <br />
       <statline Name="BlinkRange" DisplayName="Range" />
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
+      <statline Name="EffectiveRange" DisplayName="Effective range" />
       <statline Name="Cooldown" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
@@ -33,6 +34,35 @@
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOff.png" Foreground="m" Detail="y" />
     <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_ToggleOn.png" Foreground="m" Detail="Y" State="ToggleOn" />
+  </ability>
+  
+  <ability Command="Command_AI_UD_Blink_Ability">
+    <description>
+      <p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
+      <br />
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <br />
+      <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
+      <br />
+      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack.</p>
+      <br />
+      <statline Name="BlinkRange" DisplayName="Range" />
+      <statline Name="CellsPerRange" DisplayName="Cells per range" />
+      <statline Name="EffectiveRange" DisplayName="Effective range" />
+      <statline Name="Cooldown" />
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="W" Detail="w" />
+  </ability>
+  <ability Command="Command_AI_UD_ColdSteel_Ability">
+    <description>
+      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available and expends a charge.</p>
+      <br />
+      <p>Damaging an enemy with your {{W|Cold}} {{Y|Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
+    </description>
+    <!-- Foreground is black pixels, Detail is white pixels -->
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOff.png" Foreground="w" Detail="y" />
+    <UITile Tile="Abilities/UD_BlinkMutation_ColdSteel_Cyber_ToggleOn.png" Foreground="W" Detail="Y" State="ToggleOn" />
   </ability>
 
   <!-- Cyber Abilities -->
