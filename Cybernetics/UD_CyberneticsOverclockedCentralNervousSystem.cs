@@ -810,12 +810,18 @@ namespace XRL.World.Parts
                             Debug.Entry(2, $"Target has likely died...", Indent: indent + 4, Toggle: getDoDebug());
                         }
 
-                        if (FlickerTargetOverride != null && !GameObject.Validate(FlickerTargetOverride) || FlickerTargetOverride.IsInGraveyard() || FlickerTargetOverride.CurrentCell == null)
+                        if (FlickerTargetOverride != null
+                            && !GameObject.Validate(FlickerTargetOverride)
+                            || FlickerTargetOverride?.CurrentCell == null
+                            || FlickerTargetOverride.IsInGraveyard())
                         {
                             Debug.Entry(2, $"nulling invalid {nameof(FlickerTargetOverride)}...", Indent: indent + 4, Toggle: getDoDebug());
                             FlickerTargetOverride = null;
                         }
-                        if (flickerTarget != null && !GameObject.Validate(flickerTarget) || flickerTarget.IsInGraveyard() || flickerTarget.CurrentCell == null)
+                        if (flickerTarget != null
+                            && !GameObject.Validate(flickerTarget)
+                            || flickerTarget?.CurrentCell == null
+                            || flickerTarget.IsInGraveyard())
                         {
                             Debug.Entry(2, $"removing invalid {nameof(flickerTarget)} from list and nulling...", Indent: indent + 4, Toggle: getDoDebug());
                             flickerTargets.Remove(flickerTarget);
