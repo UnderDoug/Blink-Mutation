@@ -32,11 +32,11 @@ namespace XRL.World.Parts
             List<object> doList = new()
             {
                 'V',    // Vomit
-                'X',    // Trace
                 "TT",   // TurnTick
             };
             List<object> dontList = new()
             {
+                'X',    // Trace
             };
 
             if (what != null && doList.Contains(what))
@@ -282,11 +282,11 @@ namespace XRL.World.Parts
             if (ParentObject?.CurrentZone == The.ActiveZone)
             {
                 Debug.Entry(4,
-                    $"~ {nameof(AI_UD_Flickerer)}."
+                    $"@ {nameof(AI_UD_Flickerer)}."
                     + $"{nameof(HandleEvent)}("
                     + $"{nameof(EndTurnEvent)} E)"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: getDoDebug());
+                    Indent: 0, Toggle: getDoDebug('X'));
 
                 if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
                 {
@@ -393,15 +393,15 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIBoredEvent E)
         {
-            Debug.Entry(4,
-                $"@ {nameof(AI_UD_Flickerer)}."
-                + $"{nameof(HandleEvent)}("
-                + $"{nameof(AIBoredEvent)} E)"
-                + $" For: {ParentObject?.DebugName ?? NULL}",
-                Indent: 0, Toggle: getDoDebug());
 
             if (WantsToIdleFlicker && !RecentlyFlickered && 25.in100() && E.Actor.Target == null && !E.Actor.HasPart<Temporary>())
             {
+                Debug.Entry(4,
+                    $"@ {nameof(AI_UD_Flickerer)}."
+                    + $"{nameof(HandleEvent)}("
+                    + $"{nameof(AIBoredEvent)} E)"
+                    + $" For: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 0, Toggle: getDoDebug());
                 E.Actor.Think("I got too much beans!");
                 CommandEvent.Send(E.Actor, COMMAND_AI_UD_FLICKER);
             }
@@ -422,48 +422,15 @@ namespace XRL.World.Parts
                 bool haveTarget = E.Target != null || nearbyHostile;
                 if (haveTarget)
                 {
-
-                    bool doFlicker = true;
-                    if (E.Actor.IsPlayerControlled() && E.Actor.Target == null)
-                    {
-                        switch (Popup.ShowYesNoCancel($"You do not have a target to focus your flicker strike on, would you like to select one before using this ability? \n\r" +
-                            $"Choose \"Yes\" to pick a target. \n\r" +
-                            $"Choose \"No\" to perform flicker strike against random targets. \n\r" +
-                            $"Choose \"Cancel\" to do nothing."))
-                        {
-                            case DialogResult.Yes:
-                                E.Actor.Target = UD_CyberneticsOverclockedCentralNervousSystem.PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
-                                doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
-                                break;
-                            case DialogResult.Cancel:
-                            default:
-                                doFlicker = false;
-                                break;
-                            case DialogResult.No:
-                                break;
-                        }
-                    }
-
-                    bool singleTarget = true;
-                    if (!E.Actor.IsPlayerControlled())
-                    {
-                        List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
-                        nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => UD_CyberneticsOverclockedCentralNervousSystem.IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
-                        singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
-                    }
-
-                    if (doFlicker)
-                    {
-                        UD_CyberneticsOverclockedCentralNervousSystem.Flicker(
-                            Flickerer: E.Actor,
-                            FlickerRadius: FlickerRadius,
-                            BlinkRange: BlinkRange,
-                            FlickerCharges: ref FlickerCharges,
-                            EnergyPerFlickerCharge: EnergyPerFlickerCharge,
-                            OCCNS: null,
-                            FlickerTargetOverride: E.Actor.Target,
-                            Silent: E.Silent);
-                    }
+                    UD_CyberneticsOverclockedCentralNervousSystem.Flicker(
+                        Flickerer: E.Actor,
+                        FlickerRadius: FlickerRadius,
+                        BlinkRange: BlinkRange,
+                        FlickerCharges: ref FlickerCharges,
+                        EnergyPerFlickerCharge: EnergyPerFlickerCharge,
+                        OCCNS: null,
+                        FlickerTargetOverride: null,
+                        Silent: E.Silent);
                 }
                 else
                 {
@@ -526,6 +493,7 @@ namespace XRL.World.Parts
                     if (!cellsInFlickerRadius.IsNullOrEmpty())
                     {
                         int attempts = 0;
+                        int maxAttempts = 65;
                         Cell currentOriginCell = originCell;
                         bool didFlicker = false;
                         int flickers = 0;
@@ -557,7 +525,7 @@ namespace XRL.World.Parts
                             "arr!",
                         };
 
-                        while (flickerCharges > 0 && attempts < 45)
+                        while (flickerCharges > 0 && attempts < maxAttempts)
                         {
                             attempts++;
 
@@ -594,7 +562,7 @@ namespace XRL.World.Parts
                             flickerCharges--;
                             flickers++;
 
-                            if (4.in10())
+                            if (6.in10())
                             {
                                 message = effortSounds.DrawRandomToken();
                                 E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);

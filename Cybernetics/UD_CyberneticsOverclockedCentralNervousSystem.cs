@@ -5,8 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
+using Qud.UI;
+
 using XRL.UI;
 using XRL.Wish;
+using XRL.World.Anatomy;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
@@ -20,8 +23,6 @@ using Debug = UD_Blink_Mutation.Debug;
 
 using Color = UnityEngine.Color;
 using SerializeField = UnityEngine.SerializeField;
-using XRL.World.Anatomy;
-using Qud.UI;
 
 namespace XRL.World.Parts
 {
@@ -371,9 +372,7 @@ namespace XRL.World.Parts
                 foreach (Cell flickerRadiusCell in CellsInFlickerRadius)
                 {
                     List<GameObject> cellObjects = 
-                        Event.NewGameObjectList(flickerRadiusCell.GetObjects(
-                            GO => GO.IsVisible() 
-                            && GO.IsHostileTowards(Flickerer)));
+                        Event.NewGameObjectList(flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)));
 
                     if (!cellObjects.IsNullOrEmpty())
                     {
@@ -489,27 +488,44 @@ namespace XRL.World.Parts
             string verb = "flicker";
             int indent = Debug.LastIndent;
 
-            AI_UD_Flickerer aI_Flickerer = Flickerer.GetPart<AI_UD_Flickerer>();
+            Debug.Entry(2, 
+                $"* {nameof(UD_CyberneticsOverclockedCentralNervousSystem)}."
+                + $"{nameof(Flicker)}("
+                + $"{nameof(Flickerer)}: {Flickerer?.DebugName ?? NULL}, "
+                + $"{nameof(FlickerRadius)}: {FlickerRadius}, "
+                + $"{nameof(FlickerCharges)}: {FlickerCharges}, "
+                + $"{nameof(FlickerTargetOverride)}: {FlickerTargetOverride?.DebugName ?? NULL}, "
+                + $"{nameof(Silent)}: {Silent})", 
+                Indent: indent + 1, Toggle: getDoDebug());
 
             if (Flickerer == null)
             {
                 return false;
             }
 
-            Debug.Entry(2, $"Checking for being on the world map...", Indent: indent + 1, Toggle: getDoDebug());
+            if (OCCNS != null)
+            {
+                FlickerTargetOverride ??= Flickerer.Target;
+                Flickerer.Target = FlickerTargetOverride;
+            }
+
+            AI_UD_Flickerer aI_Flickerer = Flickerer.GetPart<AI_UD_Flickerer>();
+
+            Debug.Entry(2, $"Checking for being on the world map...", Indent: indent + 2, Toggle: getDoDebug());
             if (Flickerer.OnWorldMap())
             {
                 if (!Silent)
                 {
                     Flickerer.Fail($"You cannot {verb} on the world map.");
                 }
+                Debug.CheckNah(3, $"On World Map", Indent: indent + 3, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
             }
-            Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 2, Toggle: getDoDebug());
             if (Flickerer.IsFlying)
             {
-                Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 2, Toggle: getDoDebug());
+                Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 3, Toggle: getDoDebug());
                 Flight.Land(Flickerer, Silent);
                 if (Flickerer.IsFlying)
                 {
@@ -522,21 +538,42 @@ namespace XRL.World.Parts
 
                     if (!Silent)
                     {
-                        Flickerer.Fail($"You cannot {verb} while flying.");
+                        Flickerer.Fail($"You cannot {verb} while flying");
                     }
+                    Debug.CheckNah(3, $"Stuck Flying", Indent: indent + 3, Toggle: getDoDebug());
                     Debug.LastIndent = indent;
                     return false;
                 }
             }
-            Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 2, Toggle: getDoDebug());
             if (!Flickerer.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
+                Debug.CheckNah(3, $"Can't change Movement Mode", Indent: indent + 3, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
             }
-            Debug.Entry(2, $"Checking can change body position...", Indent: indent + 1, Toggle: getDoDebug());
+            Debug.Entry(2, $"Checking can change body position...", Indent: indent + 2, Toggle: getDoDebug());
             if (!Flickerer.CanChangeBodyPosition("Blinking", ShowMessage: !Silent))
             {
+                Debug.CheckNah(3, $"Can't change Body Position", Indent: indent + 3, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
+                return false;
+            }
+
+            Debug.Entry(2, $"Checking for weapon...", Indent: indent + 2, Toggle: getDoDebug());
+            GameObject primaryWeapon = Flickerer.GetPrimaryWeapon();
+            BodyPart primaryLimb = Flickerer.Body.FindDefaultOrEquippedItem(primaryWeapon);
+
+            Debug.LoopItem(4, $"{nameof(primaryWeapon)}", $"{primaryWeapon?.DebugName ?? NULL}", Indent: indent + 3, Toggle: getDoDebug());
+            Debug.LoopItem(4, $"{nameof(primaryLimb)}", $"{primaryLimb?.DebugName()}", Indent: indent + 3, Toggle: getDoDebug());
+
+            if (primaryWeapon == null)
+            {
+                if (!Silent && Flickerer.IsPlayerControlled())
+                {
+                    Popup.Show($"You don't have a primary weapon with which to {verb} strike!");
+                }
+                Debug.CheckNah(3, $"Missing primary weapon", Indent: indent + 3, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
             }
@@ -546,18 +583,22 @@ namespace XRL.World.Parts
             List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
             if (!cellsInFlickerRadius.IsNullOrEmpty())
             {
-                Debug.Entry(2, $"Checking {nameof(FlickerTargetOverride)} for value and valid path...", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.Entry(2, $"{nameof(cellsInFlickerRadius)}.Count: {cellsInFlickerRadius.Count}", Indent: indent + 2, Toggle: getDoDebug());
+
+                Debug.Entry(2, $"Checking {nameof(FlickerTargetOverride)} for value and valid path...", Indent: indent + 2, Toggle: getDoDebug());
                 if (FlickerTargetOverride != null)
                 {
+                    Debug.CheckYeh(2, $"{nameof(FlickerTargetOverride)} is {FlickerTargetOverride.DebugName}", Indent: indent + 3, Toggle: getDoDebug());
                     List<Cell> flickerTargetOverrideAdjacentCells = Event.NewCellList(FlickerTargetOverride?.CurrentCell.GetAdjacentCells());
 
+                    Debug.Entry(3, $"{nameof(flickerTargetOverrideAdjacentCells)}.Count: {flickerTargetOverrideAdjacentCells.Count} (before)", Indent: indent + 3, Toggle: getDoDebug());
                     flickerTargetOverrideAdjacentCells.RemoveAll(
                         c => !cellsInFlickerRadius.Contains(c)
                         || c.IsSolidFor(Flickerer)
                         || !c.IsVisible());
+                    Debug.Entry(3, $"{nameof(flickerTargetOverrideAdjacentCells)}.Count: {flickerTargetOverrideAdjacentCells.Count} (after)", Indent: indent + 3, Toggle: getDoDebug());
 
-                    if (FlickerTargetOverride != null
-                        && flickerTargetOverrideAdjacentCells.IsNullOrEmpty()
+                    if (flickerTargetOverrideAdjacentCells.IsNullOrEmpty()
                         || !GetFlickerPaths(
                             Flickerer: Flickerer,
                             BlinkRange: BlinkRange,
@@ -569,16 +610,21 @@ namespace XRL.World.Parts
                         {
                             Popup.Show($"Your target cannot be reached to {verb} strike!");
                         }
+                        Debug.CheckNah(3, $"Can't reach target", Indent: indent + 3, Toggle: getDoDebug());
                         Debug.LastIndent = indent;
                         return false;
                     }
                 }
+                else
+                {
+                    Debug.CheckNah(2, $"{nameof(FlickerTargetOverride)} is {NULL}", Indent: indent + 3, Toggle: getDoDebug());
+                }
 
                 List<GameObject> flickerTargets = Event.NewGameObjectList(GetFlickerTargets(Flickerer, cellsInFlickerRadius));
 
-                if (flickerTargets.IsNullOrEmpty() && FlickerTargetOverride == null)
+                if (flickerTargets.IsNullOrEmpty())
                 {
-                    if (!Silent && Flickerer.IsPlayerControlled())
+                    if (Flickerer.IsPlayerControlled() && !Silent)
                     {
                         Popup.Show($"There are no nearby hostiles to {verb} strike!");
                     }
@@ -586,10 +632,12 @@ namespace XRL.World.Parts
                     return false;
                 }
 
-                Debug.Entry(2, $"Listing {nameof(flickerTargets)}...", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.Entry(2, $"{nameof(flickerTargets)}.Count: {flickerTargets.Count}", Indent: indent + 2, Toggle: getDoDebug());
+
+                Debug.Entry(2, $"Listing {nameof(flickerTargets)}...", Indent: indent + 2, Toggle: getDoDebug());
                 foreach (GameObject flickerTarget in flickerTargets)
                 {
-                    Debug.LoopItem(2, $"{flickerTarget?.DebugName}...", Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.LoopItem(2, $"{flickerTarget?.DebugName}...", Indent: indent + 3, Toggle: getDoDebug());
                 }
 
                 int attempts = 0;
@@ -597,44 +645,70 @@ namespace XRL.World.Parts
                 bool didFlicker = false;
                 int flickers = 0;
                 int flickerEnergyCost = 0;
+                int maxAttempts = 65;
 
-                while (FlickerCharges > 0 && attempts < 45 && !flickerTargets.IsNullOrEmpty())
+                Debug.Entry(2, $"Performing Flicker ({nameof(maxAttempts)}: {maxAttempts})...", Indent: indent + 2, Toggle: getDoDebug());
+                while (FlickerCharges > 0 && attempts < maxAttempts && !flickerTargets.IsNullOrEmpty())
                 {
-                    attempts++;
-
+                    Debug.LoopItem(2, $"{attempts++}] {nameof(attempts)}", Indent: indent + 3, Toggle: getDoDebug());
                     try
                     {
-                        Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
+                        Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 4, Toggle: getDoDebug());
                         SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
 
                         GameObject flickerTarget = null;
-                        if (GameObject.Validate(ref FlickerTargetOverride) && FlickerTargetOverride?.CurrentCell != null)
+
+                        flickerTargets.RemoveAll(GO => GO == null);
+
+                        if (OCCNS != null)
                         {
+                            FlickerTargetOverride ??= Flickerer.Target;
+                            Flickerer.Target = FlickerTargetOverride;
+                        }
+
+                        if (GameObject.Validate(ref FlickerTargetOverride) && FlickerTargetOverride != null && FlickerTargetOverride?.CurrentCell != null)
+                        {
+                            Debug.CheckYeh(3, $"{nameof(FlickerTargetOverride)} is valid and exists in the world", Indent: indent + 5, Toggle: getDoDebug());
                             flickerTarget = FlickerTargetOverride;
                         }
                         else
                         {
+                            Debug.CheckNah(3, $"{nameof(FlickerTargetOverride)} is not valid or doesn't exist in the world", Indent: indent + 5, Toggle: getDoDebug());
                             FlickerTargetOverride = null;
 
                             flickerTarget ??= flickerTargets.GetRandomElementCosmetic();
 
-                            if (!GameObject.Validate(ref flickerTarget) || FlickerTargetOverride?.CurrentCell == null)
+                            Debug.Entry(2, $"{flickerTarget?.DebugName ?? NULL} selected at random...", Indent: indent + 4, Toggle: getDoDebug());
+                            if (!GameObject.Validate(ref flickerTarget) || flickerTarget == null || flickerTarget?.CurrentCell == null)
                             {
                                 Debug.Warn(2,
                                     nameof(UD_CyberneticsOverclockedCentralNervousSystem),
                                     nameof(Flicker),
                                     $"randomly selected {nameof(flickerTarget)} isn't valid but should be", Indent: 0);
-                                flickerTargets.Remove(flickerTarget);
                                 continue;
                             }
                         }
 
-                        List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget?.CurrentCell?.GetAdjacentCells());
+                        if (Flickerer.IsPlayerControlled() && !flickerTarget.IsVisible())
+                        {
+                            Debug.CheckNah(3, 
+                                $"{nameof(flickerTarget)} is not visible. " +
+                                $"Continuing without removal " +
+                                $"(they may become visible with subsequent flickers)...", 
+                                Indent: indent + 5, Toggle: getDoDebug());
+                            continue;
+                        }
+
+                        List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget.CurrentCell.GetAdjacentCells());
+
+                        Debug.Entry(3, $"{nameof(flickerTargetAdjacentCells)}.Count: {flickerTargetAdjacentCells.Count} (before)", Indent: indent + 4, Toggle: getDoDebug());
 
                         flickerTargetAdjacentCells.RemoveAll(
                             c => !cellsInFlickerRadius.Contains(c)
                             || c.IsSolidFor(Flickerer)
                             || !c.IsVisible());
+
+                        Debug.Entry(3, $"{nameof(flickerTargetAdjacentCells)}.Count: {flickerTargetAdjacentCells.Count} (after)", Indent: indent + 4, Toggle: getDoDebug());
 
                         if (flickerTargetAdjacentCells.IsNullOrEmpty()
                             || !GetFlickerPaths(
@@ -644,14 +718,38 @@ namespace XRL.World.Parts
                                 FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
                                 DestinationPaths: out Dictionary<Cell, FindPath> destinationPaths))
                         {
+                            Debug.CheckNah(3, $"{nameof(flickerTargetAdjacentCells)} is empty. Removing flicker target from list and attempting again", Indent: indent + 5, Toggle: getDoDebug());
                             flickerTargets.Remove(flickerTarget);
                             continue;
                         }
 
-                        Cell destinationCell = destinationPaths.Keys.GetRandomElementCosmetic();
+                        Cell destinationCell = null;
 
-                        if (!destinationPaths.TryGetValue(destinationCell, out FindPath path)
-                            || !CheckBeforeBlinkEvent(
+                        FindPath path = null;
+
+                        Debug.Entry(2, $"Getting {nameof(path)} from {nameof(destinationPaths)}...", Indent: indent + 4, Toggle: getDoDebug());
+                        while (path == null && !destinationPaths.IsNullOrEmpty())
+                        {
+                            destinationCell = destinationPaths.Keys.GetRandomElementCosmetic();
+
+                            if (destinationCell == null || !destinationPaths.TryGetValue(destinationCell, out path))
+                            {
+                                destinationPaths.Remove(destinationCell);
+                            }
+                        }
+
+                        if (path == null)
+                        {
+                            Debug.Warn(2,
+                                nameof(UD_CyberneticsOverclockedCentralNervousSystem),
+                                nameof(Flicker),
+                                $"{nameof(destinationPaths)} didn't contain any non-null paths", Indent: 0);
+                            flickerTargets.Remove(flickerTarget);
+                            continue;
+                        }
+
+                        Debug.Entry(2, $"Processing {nameof(CheckBeforeBlinkEvent)}...", Indent: indent + 4, Toggle: getDoDebug());
+                        if (!CheckBeforeBlinkEvent(
                                 Flickerer: Flickerer,
                                 BlinkRange: BlinkRange,
                                 DestinationCell: destinationCell,
@@ -662,6 +760,7 @@ namespace XRL.World.Parts
                             continue;
                         }
 
+                        Debug.Entry(2, $"Processing {nameof(PerformFlickerMove)}...", Indent: indent + 4, Toggle: getDoDebug());
                         if (!PerformFlickerMove(
                             Flickerer: Flickerer,
                             OriginCell: currentOriginCell,
@@ -671,23 +770,30 @@ namespace XRL.World.Parts
                             DidFlicker: out didFlicker)
                             || !didFlicker)
                         {
+                            Debug.Warn(2,
+                                nameof(UD_CyberneticsOverclockedCentralNervousSystem),
+                                nameof(Flicker),
+                                $"{nameof(PerformFlickerMove)} failed or not didFlicker", Indent: 0);
                             continue;
                         }
+
+                        Debug.Entry(2, $"Moved successfully...", Indent: indent + 4, Toggle: getDoDebug());
 
                         currentOriginCell = destinationCell;
                         FlickerCharges--;
                         flickers++;
                         flickerEnergyCost += EnergyPerFlickerCharge;
 
+                        Debug.LoopItem(4, $"{nameof(FlickerCharges)}", $"{FlickerCharges}", Indent: indent + 5, Toggle: getDoDebug());
+                        Debug.LoopItem(4, $"{nameof(flickers)}", $"{flickers}", Indent: indent + 5, Toggle: getDoDebug());
+                        Debug.LoopItem(4, $"{nameof(flickerEnergyCost)}", $"{flickerEnergyCost}", Indent: indent + 5, Toggle: getDoDebug());
+
                         OCCNS?.SyncFlickerAbilityName();
                         aI_Flickerer?.SyncFlickerAbilityName();
 
                         Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
 
-                        GameObject primaryWeapon = Flickerer.GetPrimaryWeapon();
-                        BodyPart primaryLimb = Flickerer.Body.FindDefaultOrEquippedItem(primaryWeapon);
-
-                        if (!(bool)Combat.MeleeAttackWithWeapon(
+                        if ((bool)Combat.MeleeAttackWithWeapon(
                             Attacker: Flickerer,
                             Defender: flickerTarget,
                             Weapon: primaryWeapon,
@@ -696,25 +802,24 @@ namespace XRL.World.Parts
                             HitModifier: 5,
                             Primary: true))
                         {
-                            FlickerTargetOverride = null;
-                            flickerTargets.Remove(flickerTarget);
+                            Debug.Entry(2, $"Target has likely lived, setting as {nameof(Flickerer)}.Target...", Indent: indent + 4, Toggle: getDoDebug());
+                            Flickerer.Target = flickerTarget;
                         }
                         else
                         {
-                            Flickerer.Target = flickerTarget;
+                            Debug.Entry(2, $"Target has likely died...", Indent: indent + 4, Toggle: getDoDebug());
                         }
 
-                        if (FlickerTargetOverride.IsInGraveyard() || FlickerTargetOverride.CurrentCell == null)
+                        if (FlickerTargetOverride != null && !GameObject.Validate(FlickerTargetOverride) || FlickerTargetOverride.IsInGraveyard() || FlickerTargetOverride.CurrentCell == null)
                         {
-                            if (!GameObject.Validate(FlickerTargetOverride))
-                            {
-                                FlickerTargetOverride = null;
-                            }
+                            Debug.Entry(2, $"nulling invalid {nameof(FlickerTargetOverride)}...", Indent: indent + 4, Toggle: getDoDebug());
+                            FlickerTargetOverride = null;
                         }
-
-                        if (!GameObject.Validate(flickerTarget) || flickerTarget.CurrentCell == null)
+                        if (flickerTarget != null && !GameObject.Validate(flickerTarget) || flickerTarget.IsInGraveyard() || flickerTarget.CurrentCell == null)
                         {
+                            Debug.Entry(2, $"removing invalid {nameof(flickerTarget)} from list and nulling...", Indent: indent + 4, Toggle: getDoDebug());
                             flickerTargets.Remove(flickerTarget);
+                            flickerTarget = null;
                         }
 
                         AfterBlinkEvent.Send(
@@ -730,12 +835,13 @@ namespace XRL.World.Parts
                     }
                     catch (Exception x)
                     {
+                        Debug.Entry(2, $"Caught Exception, nulling {nameof(FlickerTargetOverride)}...", Indent: indent + 4, Toggle: getDoDebug());
                         FlickerTargetOverride = null;
-                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
+                        MetricsManager.LogException($"{nameof(UD_CyberneticsOverclockedCentralNervousSystem)}.{nameof(Flicker)}, while loop", x);
                     }
                 }
 
-                if (flickerTargets.IsNullOrEmpty())
+                if (flickerTargets.IsNullOrEmpty() && flickers > 0 && didFlicker)
                 {
                     string message = "Omae Wa Mou Shindeiru";
                     string messageColor = "C";
@@ -753,7 +859,7 @@ namespace XRL.World.Parts
 
                 if (currentOriginCell != originCell)
                 {
-                    Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
+                    Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 2, Toggle: getDoDebug());
                     SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
                     if (TryGetFlickerPath(
                         Flickerer: Flickerer,
@@ -776,6 +882,7 @@ namespace XRL.World.Parts
                     Flickerer.UseEnergy(1000 + flickerEnergyCost, "Cybernetics Ability Flicker Strike");
 
                     Flickerer.Physics.DidX(Verb: verb, Extra: $"back to {Flickerer.its} original location", EndMark: "!");
+                    Debug.LastIndent = indent;
                     return true;
                 }
                 else
@@ -795,6 +902,7 @@ namespace XRL.World.Parts
                     Popup.Show($"There's no room to {verb}!");
                 }
             }
+            Debug.LastIndent = indent;
             return false;
         }
         public bool Flicker(GameObject FlickerTargetOverride = null, bool Silent = false)
@@ -947,11 +1055,11 @@ namespace XRL.World.Parts
                     SB.Append("You do not have a target to focus your flicker strike on.").AppendLine();
                     SB.Append("Would you like to select one before using this ability?").AppendLine().AppendLine();
 
-                    SB.AppendColored("K", "- ").Append(yesString).Append(" to pick a target.").AppendLine();
+                    SB.AppendColored("K", "").Append(yesString).Append(" to pick a target.").AppendLine();
 
-                    SB.AppendColored("K", "- ").Append(noString).Append(" to perform flicker strike against random targets.").AppendLine();
+                    SB.AppendColored("K", "").Append(noString).Append(" to perform flicker strike against random targets.").AppendLine();
 
-                    SB.AppendColored("K", "- ").Append(cancelString).Append(" to do nothing.");
+                    SB.AppendColored("K", "").Append(cancelString).Append(" to do nothing.");
 
                     switch (Popup.ShowYesNoCancel(Event.FinalizeString(SB)))
                     {

@@ -168,6 +168,17 @@ namespace XRL.World.WorldBuilders
                 bool isMoonstairEmerald = color == moonstairEmerald;
                 bool isPricklePigEmerald = color == pricklePigEmerald;
 
+                Debug.LoopItem(4, $"Special Flags", Indent: indent + 2, Toggle: getDoDebug());
+
+                Debug.LoopItem(4, $"{nameof(isTombTopEmerald)}", $"{isTombTopEmerald}",
+                    Good: isTombTopEmerald, Indent: indent + 4, Toggle: getDoDebug());
+
+                Debug.LoopItem(4, $"{nameof(isMoonstairEmerald)}", $"{isMoonstairEmerald}",
+                    Good: isMoonstairEmerald, Indent: indent + 4, Toggle: getDoDebug());
+
+                Debug.LoopItem(4, $"{nameof(isPricklePigEmerald)}", $"{isPricklePigEmerald}",
+                    Good: isPricklePigEmerald, Indent: indent + 4, Toggle: getDoDebug());
+
                 if (!superBoss)
                 {
                     zoneTier = !isMoonstairEmerald ? Stat.RollCached("2d4") : 8;
