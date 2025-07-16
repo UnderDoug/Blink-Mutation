@@ -815,7 +815,7 @@ namespace XRL.World.Parts
                             || FlickerTargetOverride?.CurrentCell == null
                             || FlickerTargetOverride.IsInGraveyard())
                         {
-                            Debug.Entry(2, $"nulling invalid {nameof(FlickerTargetOverride)}...", Indent: indent + 4, Toggle: getDoDebug());
+                            Debug.Entry(2, $"Nulling invalid {nameof(FlickerTargetOverride)}...", Indent: indent + 4, Toggle: getDoDebug());
                             FlickerTargetOverride = null;
                         }
                         if (flickerTarget != null
@@ -823,7 +823,7 @@ namespace XRL.World.Parts
                             || flickerTarget?.CurrentCell == null
                             || flickerTarget.IsInGraveyard())
                         {
-                            Debug.Entry(2, $"removing invalid {nameof(flickerTarget)} from list and nulling...", Indent: indent + 4, Toggle: getDoDebug());
+                            Debug.Entry(2, $"Removing invalid {nameof(flickerTarget)} from list and nulling...", Indent: indent + 4, Toggle: getDoDebug());
                             flickerTargets.Remove(flickerTarget);
                             flickerTarget = null;
                         }

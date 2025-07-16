@@ -199,6 +199,7 @@ Compute power on the local lattice increases this implant's effectiveness." />
     <part Name="BroadcastPowerReceiver" ChargeRate="20" IsEMPSensitive="false" />
     <part Name="ZeroPointEnergyCollector" ChargeRate="20" World="*" IsEMPSensitive="false" />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="100" IsEMPSensitive="false" />
+    <part Name="ComputeNode" ChargeUse="0" Power="15" WorksOnSelf="false" WorksOnEquipper="true" IsEMPSensitive="false" />
     <part Name="ChaosEmeraldSetPiece" />
     <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />

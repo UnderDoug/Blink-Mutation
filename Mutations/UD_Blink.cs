@@ -432,7 +432,7 @@ namespace XRL.World.Parts.Mutation
             bool removed = false;
             if (ColdSteelActivatedAbilityID != Guid.Empty || Force)
             {
-                if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO))
+                if (removed = RemoveMyActivatedAbility(ref ColdSteelActivatedAbilityID, GO))
                 {
                     ColdSteelActivatedAbilityID = Guid.Empty;
                 }

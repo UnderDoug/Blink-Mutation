@@ -1,25 +1,21 @@
-﻿using System;
+﻿using Qud.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
-using Qud.UI;
+using UD_Blink_Mutation;
 using UnityEngine;
-
 using XRL.Core;
 using XRL.Rules;
 using XRL.UI;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
-
-using static XRL.World.Parts.Mutation.BaseMutation;
-
-using UD_Blink_Mutation;
-
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
+using static XRL.World.Parts.Mutation.BaseMutation;
+using static XRL.World.Statistic;
 using Debug = UD_Blink_Mutation.Debug;
 using SerializeField = UnityEngine.SerializeField;
 
@@ -328,12 +324,12 @@ namespace XRL.World.Parts
             {
                 int indent = Debug.LastIndent;
                 Debug.Entry(4,
-                    $"{nameof(ChaosEmeraldSetPiece)}." +
+                    $"{nameof(ChaosEmeraldSetBonus)}." +
                     $"{nameof(GrantBonus)}(" +
                     $"{nameof(ChaosEmeraldSetBonus)}, " +
                     $"{nameof(Wielder)}: {Wielder?.DebugName ?? NULL}" +
                     $"{nameof(BonusActive)}: {BonusActive})",
-                    Indent: indent, Toggle: doDebug);
+                    Indent: indent, Toggle: getDoDebug());
 
                 StatShifter statShifter = ChaosEmeraldSetBonus.StatShifter;
 
@@ -357,13 +353,14 @@ namespace XRL.World.Parts
                 if (chaosEmeraldsCount > 2)
                 {
                     // 3/7 Emeralds
-                    ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = ApplyMutationLevelAndCyberneticsCredits(Wielder, ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied);
+                    bool mAndCApplied = ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied;
+                    ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = ApplyMutationLevelAndCyberneticsCredits(Wielder, mAndCApplied);
                     currentChaosEmerald++;
                 }
                 if (chaosEmeraldsCount > 3)
                 {
                     // 4/7 Emeralds
-                    ChaosEmeraldSetBonus.mutationModRegeneration = AddMutationModRegeneration(ChaosEmeraldSetBonus, Wielder, currentChaosEmerald);
+                    AddMutationModRegeneration(ChaosEmeraldSetBonus, Wielder, currentChaosEmerald);
                     currentChaosEmerald++;
                 }
                 if (chaosEmeraldsCount > 4)
@@ -387,7 +384,7 @@ namespace XRL.World.Parts
 
                 // Always and scales off Emerald Count
                 
-                ChaosEmeraldSetBonus.mutationModBlink = AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldsCount);
+                AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldsCount);
 
                 ChaosEmeraldSetBonus.SetStatShifterDisplayName();
 
@@ -403,44 +400,54 @@ namespace XRL.World.Parts
 
         public static bool UnGrantBonus(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, bool BonusActive = false, bool Sync = true)
         {
+            int indent = Debug.LastIndent;
+            Debug.Entry(4,
+                $"{nameof(ChaosEmeraldSetBonus)}." +
+                $"{nameof(GrantBonus)}(" +
+                $"{nameof(Wielder)}: {Wielder?.DebugName ?? NULL}, " +
+                $"{nameof(BonusActive)}: {BonusActive})",
+                Indent: indent + 1, Toggle: getDoDebug());
+
             bool unGranted = false;
             if (BonusActive)
             {
-                int indent = Debug.LastIndent;
-                Debug.Entry(4,
-                    $"{nameof(ChaosEmeraldSetPiece)}." +
-                    $"{nameof(GrantBonus)}(" +
-                    $"{nameof(Wielder)}: {Wielder?.DebugName ?? NULL})",
-                    Indent: indent, Toggle: doDebug);
-
                 StatShifter statShifter = ChaosEmeraldSetBonus.StatShifter;
 
                 UnapplyResistances(ChaosEmeraldSetBonus);
 
                 UnapplySpeedBoosts(ChaosEmeraldSetBonus);
 
-                ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = UnapplyMutationLevelAndCyberneticsCredits(Wielder, ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied);
+                bool cAndMApplied = ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied;
+                ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = UnapplyMutationLevelAndCyberneticsCredits(Wielder, cAndMApplied);
 
-                ChaosEmeraldSetBonus.mutationModRegeneration = RemoveMutationModRegeneration(ChaosEmeraldSetBonus, Wielder);
+                RemoveMutationModRegeneration(ChaosEmeraldSetBonus, Wielder);
 
+                Debug.Entry(4, $"Calling {nameof(statShifter.RemoveStatShift)}()...",
+                    Indent: indent + 2, Toggle: getDoDebug());
                 statShifter.RemoveStatShift(Wielder, "Willpower");
 
+                Debug.Entry(4, $"Calling {nameof(Wielder.UnregisterEvent)}({nameof(ApplyEffectEvent)})...",
+                    Indent: indent + 2, Toggle: getDoDebug());
                 Wielder.UnregisterEvent(ChaosEmeraldSetBonus, ApplyEffectEvent.ID);
 
                 ChaosEmeraldSetBonus.DeactivateActivatedAbilityPowerUp();
                 ChaosEmeraldSetBonus.RemoveActivatedAbilityPowerUp(Wielder, true);
 
-                ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
+                RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
 
+                Debug.Entry(4, $"Calling {nameof(Wielder.UnregisterEvent)}({nameof(GetPsychicGlimmerEvent)})...",
+                    Indent: indent + 2, Toggle: getDoDebug());
                 Wielder.UnregisterEvent(ChaosEmeraldSetBonus, GetPsychicGlimmerEvent.ID);
                 if (Sync)
                 {
+                    Debug.Entry(4, $"Calling {nameof(Wielder.SyncMutationLevelAndGlimmer)}...", Indent: indent + 2, Toggle: getDoDebug());
                     Wielder.SyncMutationLevelAndGlimmer();
                 }
-
                 unGranted = true;
-                Debug.LastIndent = indent;
             }
+            Debug.LoopItem(4, $"{nameof(unGranted)}", $"{unGranted}",
+                Good: unGranted, Indent: indent + 1, Toggle: getDoDebug());
+            Debug.LastIndent = indent;
             return unGranted;
         }
         public bool UnGrantBonus(bool BonusActive = false, bool Sync = true)
@@ -450,58 +457,131 @@ namespace XRL.World.Parts
 
         public static Guid AddMutationModBlink(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, int ChaosEmeraldsCount)
         {
+            int indent = Debug.LastIndent;
             if (ChaosEmeraldSetBonus == null || Wielder == null || ChaosEmeraldsCount == 0)
             {
+                Debug.Entry(4, $"{nameof(AddMutationModBlink)}() called...",
+                    Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return Guid.Empty;
             }
             if (ChaosEmeraldSetBonus.mutationModBlink != Guid.Empty)
             {
-                Wielder.RequirePart<Mutations>().RemoveMutationMod(ChaosEmeraldSetBonus.mutationModBlink);
+                Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus.mutationModBlink)} not empty, removing...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+
+                ChaosEmeraldSetBonus.mutationModBlink = RemoveMutationModBlink(ChaosEmeraldSetBonus, Wielder);
             }
-            return Wielder.RequirePart<Mutations>().AddMutationMod(
+
+            Debug.Entry(4, $"adding {nameof(ChaosEmeraldSetBonus.mutationModBlink)}...",
+                Indent: indent + 2, Toggle: getDoDebug());
+
+            ChaosEmeraldSetBonus.mutationModBlink = Wielder.RequirePart<Mutations>().AddMutationMod(
                 Mutation: typeof(UD_Blink),
                 Variant: null,
                 Level: ChaosEmeraldsCount * 2,
                 SourceType: Mutations.MutationModifierTracker.SourceType.Unknown,
                 SourceName: ChaosEmeraldSetBonus.GenerateStatShifterDisplayName(ChaosEmeraldsCount));
+
+            if (ChaosEmeraldSetBonus.mutationModBlink != Guid.Empty)
+            {
+                Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus.mutationModBlink)} Added...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+            else
+            {
+                Debug.CheckNah(4, $"Unable to add {nameof(ChaosEmeraldSetBonus.mutationModBlink)}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+
+            Debug.LastIndent = indent;
+            return ChaosEmeraldSetBonus.mutationModBlink;
         }
         public static Guid RemoveMutationModBlink(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder)
         {
+            int indent = Debug.LastIndent;
+
+            Debug.Entry(4, $"{nameof(RemoveMutationModBlink)}() called...",
+                Indent: indent + 1, Toggle: getDoDebug());
+
             if (ChaosEmeraldSetBonus != null && Wielder != null && ChaosEmeraldSetBonus.mutationModBlink != Guid.Empty)
             {
                 Wielder.RequirePart<Mutations>().RemoveMutationMod(ChaosEmeraldSetBonus.mutationModBlink);
+
+                Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus.mutationModBlink)} removed...",
+                    Indent: indent + 2, Toggle: getDoDebug());
             }
+            else
+            {
+                Debug.CheckNah(4, $"Unable to remove {nameof(ChaosEmeraldSetBonus.mutationModBlink)}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+            Debug.LastIndent = indent;
             return Guid.Empty;
         }
-        
+
         public static Guid AddMutationModRegeneration(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, int ChaosEmeraldsCount)
         {
+            int indent = Debug.LastIndent;
             if (ChaosEmeraldSetBonus == null || Wielder == null || ChaosEmeraldsCount == 0)
             {
+                Debug.Entry(4, $"{nameof(AddMutationModRegeneration)}() called...",
+                    Indent: indent + 1, Toggle: getDoDebug());
+                Debug.LastIndent = indent;
                 return Guid.Empty;
             }
             if (ChaosEmeraldSetBonus.mutationModRegeneration != Guid.Empty)
             {
-                Wielder.RequirePart<Mutations>().RemoveMutationMod(ChaosEmeraldSetBonus.mutationModRegeneration);
+                Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus.mutationModRegeneration)} not empty, removing...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+
+                ChaosEmeraldSetBonus.mutationModRegeneration = RemoveMutationModRegeneration(ChaosEmeraldSetBonus, Wielder);
             }
-            return Wielder.RequirePart<Mutations>().AddMutationMod(
+
+            Debug.Entry(4, $"adding {nameof(ChaosEmeraldSetBonus.mutationModRegeneration)}...",
+                Indent: indent + 2, Toggle: getDoDebug());
+            
+            ChaosEmeraldSetBonus.mutationModRegeneration = Wielder.RequirePart<Mutations>().AddMutationMod(
                 Mutation: typeof(Regeneration),
                 Variant: null,
                 Level: 10,
                 SourceType: Mutations.MutationModifierTracker.SourceType.Unknown,
                 SourceName: ChaosEmeraldSetBonus.GenerateStatShifterDisplayName(ChaosEmeraldsCount));
-        }
-        public static Guid RemoveMutationModRegeneration(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder)
-        {
-            if (ChaosEmeraldSetBonus == null || Wielder == null)
-            {
-                return Guid.Empty;
-            }
 
             if (ChaosEmeraldSetBonus.mutationModRegeneration != Guid.Empty)
             {
-                Wielder.RequirePart<Mutations>().RemoveMutationMod(ChaosEmeraldSetBonus.mutationModRegeneration);
+                Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus.mutationModRegeneration)} Added...",
+                    Indent: indent + 2, Toggle: getDoDebug());
             }
+            else
+            {
+                Debug.CheckNah(4, $"Unable to add {nameof(ChaosEmeraldSetBonus.mutationModRegeneration)}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+
+            Debug.LastIndent = indent;
+            return ChaosEmeraldSetBonus.mutationModRegeneration;
+        }
+        public static Guid RemoveMutationModRegeneration(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder)
+        {
+            int indent = Debug.LastIndent;
+
+            Debug.Entry(4, $"{nameof(RemoveMutationModRegeneration)}() called...",
+                Indent: indent + 1, Toggle: getDoDebug());
+
+            if (ChaosEmeraldSetBonus != null && Wielder != null && ChaosEmeraldSetBonus.mutationModRegeneration != Guid.Empty)
+            {
+                Wielder.RequirePart<Mutations>().RemoveMutationMod(ChaosEmeraldSetBonus.mutationModRegeneration);
+
+                Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus.mutationModRegeneration)} removed...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+            else
+            {
+                Debug.CheckNah(4, $"Unable to remove {nameof(ChaosEmeraldSetBonus.mutationModRegeneration)}...",
+                    Indent: indent + 2, Toggle: getDoDebug());
+            }
+            Debug.LastIndent = indent;
             return Guid.Empty;
         }
 
@@ -509,7 +589,7 @@ namespace XRL.World.Parts
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(ApplyResistances)}({nameof(ChaosEmeraldsCount)}: {ChaosEmeraldsCount}) called...",
-                Indent: indent + 1, Toggle: doDebug);
+                Indent: indent + 1, Toggle: getDoDebug());
             int resistanceAmount = ChaosEmeraldsCount * 15;
             Debug.LastIndent = indent;
             return ChaosEmeraldSetBonus.StatShifter.SetStatShift("AcidResistance", resistanceAmount)
@@ -521,7 +601,7 @@ namespace XRL.World.Parts
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(UnapplyResistances)}() called...",
-                Indent: indent + 1, Toggle: doDebug);
+                Indent: indent + 1, Toggle: getDoDebug());
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "AcidResistance");
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "ColdResistance");
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "HeatResistance");
@@ -533,7 +613,7 @@ namespace XRL.World.Parts
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(ApplySpeedBoosts)}({nameof(ChaosEmeraldsCount)}: {ChaosEmeraldsCount}) called...", 
-                Indent: indent + 1, Toggle: doDebug);
+                Indent: indent + 1, Toggle: getDoDebug());
             int speedFactor = ChaosEmeraldSetBonus.PoweredUp ? 20 : 10;
             int moveSpeedFactor = ChaosEmeraldSetBonus.PoweredUp ? -35 : -20;
             Debug.LastIndent = indent;
@@ -543,7 +623,7 @@ namespace XRL.World.Parts
         public static void UnapplySpeedBoosts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(UnapplySpeedBoosts)}() called...", Indent: indent + 1, Toggle: doDebug);
+            Debug.Entry(4, $"{nameof(UnapplySpeedBoosts)}() called...", Indent: indent + 1, Toggle: getDoDebug());
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "Speed");
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "ColdResistance");
             Debug.LastIndent = indent;
@@ -552,13 +632,13 @@ namespace XRL.World.Parts
         public static bool ApplyMutationLevelAndCyberneticsCredits(GameObject Wielder, bool BonusApplied = false)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(ApplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: doDebug);
+            Debug.Entry(4, $"{nameof(ApplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: getDoDebug());
             if (!BonusApplied)
             {
                 Wielder.ModIntProperty("AllMutationLevelModifier", 1);
                 Wielder.ModIntProperty("CyberneticsLicenses", 6);
                 Wielder.ModIntProperty("FreeCyberneticsLicenses", 6);
-                return !BonusApplied;
+                BonusApplied = true;
             }
             Debug.LastIndent = indent;
             return BonusApplied;
@@ -566,22 +646,22 @@ namespace XRL.World.Parts
         public static bool UnapplyMutationLevelAndCyberneticsCredits(GameObject Wielder, bool BonusApplied = false)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(UnapplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: doDebug);
+            Debug.Entry(4, $"{nameof(UnapplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: getDoDebug());
             if (BonusApplied)
             {
                 Wielder.ModIntProperty("AllMutationLevelModifier", -1);
                 Wielder.ModIntProperty("CyberneticsLicenses", -6);
                 Wielder.ModIntProperty("FreeCyberneticsLicenses", -6);
-                return BonusApplied;
+                BonusApplied = false;
             }
             Debug.LastIndent = indent;
-            return !BonusApplied;
+            return BonusApplied;
         }
 
         public static bool ApplyPowerUpShifts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(ApplyPowerUpShifts)}() called...", Indent: indent + 1, Toggle: doDebug);
+            Debug.Entry(4, $"{nameof(ApplyPowerUpShifts)}() called...", Indent: indent + 1, Toggle: getDoDebug());
             Debug.LastIndent = indent;
             return ChaosEmeraldSetBonus.StatShifter.SetStatShift("Strength", PowerUpStatShiftAmount)
                 && ChaosEmeraldSetBonus.StatShifter.SetStatShift("Agility", PowerUpStatShiftAmount)
@@ -591,7 +671,7 @@ namespace XRL.World.Parts
         public static void UnapplyPowerUpShifts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(UnapplyPowerUpShifts)}() called...", Indent: indent + 1, Toggle: doDebug);
+            Debug.Entry(4, $"{nameof(UnapplyPowerUpShifts)}() called...", Indent: indent + 1, Toggle: getDoDebug());
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "Strength");
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "Agility");
             ChaosEmeraldSetBonus.StatShifter.RemoveStatShift(ChaosEmeraldSetBonus.ParentObject, "Toughness");
@@ -653,13 +733,13 @@ namespace XRL.World.Parts
 
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(ActivatedAbilityPowerUpToggled)}: {nameof(ToggledOn)}", $"{ToggledOn}", 
-                Indent: indent + 1, Toggle: doDebug);
+                Indent: indent + 1, Toggle: getDoDebug());
 
             if ((bool)ToggledOn)
             {
                 DrawChargeFromChaosEmeralds();
 
-                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: indent + 1, Toggle: doDebug);
+                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilitySetup)}() called...", Indent: indent + 1, Toggle: getDoDebug());
                 Flight.AbilitySetup(Creature, Creature, this);
 
                 AddActivatedAbilitySuperBeam(Creature);
@@ -687,7 +767,7 @@ namespace XRL.World.Parts
             }
             else
             {
-                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilityTeardown)}() called...", Indent: indent + 1, Toggle: doDebug);
+                Debug.Entry(4, $"{nameof(Flight)}.{nameof(Flight.AbilityTeardown)}() called...", Indent: indent + 1, Toggle: getDoDebug());
 
                 if (FlightFlying)
                 {
@@ -756,7 +836,7 @@ namespace XRL.World.Parts
 
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(FireSuperBeam)}({nameof(Creature)}", $"{Creature?.DebugName ?? NULL})", 
-                Indent: indent + 1, Toggle: doDebug);
+                Indent: indent + 1, Toggle: getDoDebug());
 
             if (Creature == null || !PoweredUp || !IsMyActivatedAbilityUsable(SuperBeamActivatedAbilityID))
             {
@@ -1062,6 +1142,10 @@ namespace XRL.World.Parts
             {
                 RemoveActivatedAbilitySuperBeam(ParentObject, true);
             }
+            if (SetPieces < 1 && BonusActive)
+            {
+                BonusActive = UnGrantBonus(BonusActive);
+            }
             base.TurnTick(TimeTick, Amount);
         }
         public override bool HandleEvent(EndTurnEvent E)
@@ -1104,10 +1188,6 @@ namespace XRL.World.Parts
                 }
             }
             SyncPowerUpAbilityName();
-            if (SetPieces < MaxSetPieces)
-            {
-                UnGrantBonus();
-            }
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
@@ -1214,16 +1294,16 @@ namespace XRL.World.Parts
                 GameObject actor = ParentObject;
 
                 ToggleMyActivatedAbility(PowerUpActivatedAbilityID, null, Silent: true, null);
-                Debug.Entry(3, "Power Up Toggled", Indent: indent + 1, Toggle: doDebug);
+                Debug.Entry(3, "Power Up Toggled", Indent: indent + 1, Toggle: getDoDebug());
 
-                Debug.Entry(3, "Proceeding to Power Up Ability Effects", Indent: indent + 1, Toggle: doDebug);
+                Debug.Entry(3, "Proceeding to Power Up Ability Effects", Indent: indent + 1, Toggle: getDoDebug());
                 ActivatedAbilityPowerUpToggled(actor, PoweredUp);
             }
             if (E.Command == COMMAND_NAME_SUPER_BEAM)
             {
                 GameObject actor = ParentObject;
 
-                Debug.Entry(3, "Super Beam Ability Activated", Indent: indent + 1, Toggle: doDebug);
+                Debug.Entry(3, "Super Beam Ability Activated", Indent: indent + 1, Toggle: getDoDebug());
                 if (FireSuperBeam(actor))
                 {
                     DeactivateActivatedAbilityPowerUp();
@@ -1270,8 +1350,7 @@ namespace XRL.World.Parts
                     $"{nameof(FireEvent)}(" +
                     $"{nameof(Event)} E) for: " +
                     $"{ParentObject?.DebugName ?? NULL}",
-                    Indent: indent, Toggle: doDebug);
-                
+                    Indent: indent, Toggle: getDoDebug());
             }
 
             Debug.LastIndent = indent;
@@ -1419,11 +1498,6 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
-        public override bool FireEvent(Event E)
-        {
-            
-            return base.FireEvent(E);
-        }
         public override bool HandleEvent(EffectAppliedEvent E)
         {
             CheckFlightOperation();
@@ -1449,13 +1523,17 @@ namespace XRL.World.Parts
                     $"{nameof(AfterBlinkEvent)} E) for: " +
                     $"{ParentObject?.DebugName ?? NULL} in " +
                     $"{nameof(Cell)}: [{E.Destination?.Location}]",
-                    Indent: indent, Toggle: doDebug);
+                    Indent: indent, Toggle: getDoDebug());
 
                 StunningForce.Concussion(E.Destination ?? E.Blinker.CurrentCell, E.Blinker, Level: 20, Distance: 1, E.Blinker.GetPhase());
 
                 Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
+        }
+        public override bool FireEvent(Event E)
+        {
+            return base.FireEvent(E);
         }
         public override bool Render(RenderEvent E)
         {

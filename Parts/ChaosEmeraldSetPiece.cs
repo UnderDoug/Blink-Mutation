@@ -46,7 +46,7 @@ namespace XRL.World.Parts
 
         public ChaosEmeraldSetBonus ChaosEmeraldSetBonus;
 
-        public int SetPieces => ChaosEmeraldSetBonus.GetEquippedChaosEmeraldsCount(ParentObject?.Equipped);
+        public int SetPieces => ChaosEmeraldSetBonus.GetEquippedChaosEmeraldsCount(ParentObject?.Equipped != null ? null : ParentObject);
 
         public ChaosEmeraldSetPiece()
         {
@@ -55,39 +55,66 @@ namespace XRL.World.Parts
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
-            Registrar.Register(UnequippedEvent.ID, EventOrder.EXTREMELY_LATE);
+            // Registrar.Register(UnequippedEvent.ID, EventOrder.EXTREMELY_LATE);
             base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
                 || ID == EquippedEvent.ID
+                || ID == UnequippedEvent.ID
                 || ID == GetShortDescriptionEvent.ID;
         }
         public override bool HandleEvent(EquippedEvent E)
         {
+            int indent = Debug.LastIndent;
+            Debug.Entry(4,
+                $"{nameof(ChaosEmeraldSetPiece)}." +
+                $"{nameof(HandleEvent)}(" +
+                $"{nameof(EquippedEvent)} E)",
+                Indent: indent + 1, Toggle: getDoDebug());
+
             ChaosEmeraldSetBonus = E.Actor.RequirePart<ChaosEmeraldSetBonus>();
 
-            ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive, false);
-            ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus();
+            bool bonusActive = ChaosEmeraldSetBonus.BonusActive;
 
+            bonusActive = ChaosEmeraldSetBonus.UnGrantBonus(bonusActive, false);
+            ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus(bonusActive);
+
+            Debug.LastIndent = indent;
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(UnequippedEvent E)
         {
+            int indent = Debug.LastIndent;
+            Debug.Entry(4,
+                $"{nameof(ChaosEmeraldSetPiece)}." +
+                $"{nameof(HandleEvent)}(" +
+                $"{nameof(UnequippedEvent)} E)",
+                Indent: indent + 1, Toggle: getDoDebug());
+
             if (ChaosEmeraldSetBonus != null)
             {
-                ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive, false);
-                ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus();
+                Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus)} no null", Indent: indent + 1, Toggle: getDoDebug());
 
-                if (ChaosEmeraldSetBonus.GetEquippedChaosEmeraldsCount(ParentObject) < 1)
+                bool bonusActive = ChaosEmeraldSetBonus.BonusActive;
+                bonusActive = ChaosEmeraldSetBonus.UnGrantBonus(bonusActive);
+                if (ChaosEmeraldSetBonus.GetEquippedChaosEmeraldsCount(ParentObject) > 0)
                 {
-                    ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive);
+                    Debug.CheckYeh(4, $"{nameof(SetPieces)} > {0}", Indent: indent + 2, Toggle: getDoDebug());
+
                     ChaosEmeraldSetBonus.BonusActive = false;
                     E.Actor.RemovePart(ChaosEmeraldSetBonus);
                 }
+                else
+                {
+                    Debug.CheckNah(4, $"{nameof(SetPieces)} < {1}", Indent: indent + 2, Toggle: getDoDebug());
+                    ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus(bonusActive);
+                }
                 ChaosEmeraldSetBonus = null;
             }
+
+            Debug.LastIndent = indent;
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
