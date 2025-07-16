@@ -951,7 +951,7 @@ namespace XRL.World.Parts
 
             Cell originCell = Flickerer.CurrentCell;
 
-            GameObject pickedTarget = PickTarget.ShowPicker(
+            Cell pickedCell = PickTarget.ShowPicker(
                 Style: PickTarget.PickStyle.EmptyCell,
                 Radius: FlickerRadius,
                 Range: FlickerRadius,
@@ -959,10 +959,11 @@ namespace XRL.World.Parts
                 StartY: originCell.Y,
                 ObjectTest: GO => IsValidFlickerTarget(GO, Flickerer, BlinkRange),
                 EnforceRange: true,
-                Label: "Pick flicker target")
-                ?.GetFirstObject(GO => GO.IsCombatObject() && GO.IsHostileTowards(Flickerer));
+                Label: "Pick flicker target");
 
-            if (pickedTarget == null && Flickerer.IsPlayerControlled() && !Silent)
+            GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && GO.IsHostileTowards(Flickerer));
+
+            if (pickedCell !=null && pickedTarget == null && Flickerer.IsPlayerControlled() && !Silent)
             {
                 Popup.Show($"There are no hostile creatures in that location to flicker strike.");
             }
@@ -1050,8 +1051,9 @@ namespace XRL.World.Parts
             if (E.Command == COMMAND_UD_FLICKER_ABILITY && E.Actor == Implantee && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 bool doFlicker = true;
-                if (E.Actor.IsPlayerControlled() && E.Actor.Target == null)
+                if (E.Actor.IsPlayerControlled() && E.Actor.Target == null || !E.Actor.Target.IsHostileTowards(E.Actor))
                 {
+                    /*
                     StringBuilder SB = Event.NewStringBuilder();
 
                     string yesString = PopupMessage.YesNoCancelButton[0].text;
@@ -1080,6 +1082,10 @@ namespace XRL.World.Parts
                         case DialogResult.No:
                             break;
                     }
+                    */ //Gonna force picking a target if one is not already picked.
+
+                    E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
+                    doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
                 }
 
                 bool singleTarget = true;

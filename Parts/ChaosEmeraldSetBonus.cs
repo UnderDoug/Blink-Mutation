@@ -61,6 +61,8 @@ namespace XRL.World.Parts
 
         public bool BonusActive;
 
+        public bool MutationLevelAndCyberneticsCreditsApplied = false;
+
         public int SetPieces => GetEquippedChaosEmeraldsCount(ParentObject);
         public static int MaxSetPieces => 7;
 
@@ -207,22 +209,22 @@ namespace XRL.World.Parts
             return StatShifter.DefaultDisplayName = GenerateStatShifterDisplayName();
         }
 
-        public static bool CheckEquipped(GameObject Wielder)
+        public static bool CheckEquipped(GameObject Wielder, GameObject Exclude = null)
         {
-            return GetEquippedChaosEmeraldsCount(Wielder) > 0;
+            return GetEquippedChaosEmeraldsCount(Wielder, Exclude) > 0;
         }
-        public bool CheckEquipped()
+        public bool CheckEquipped(GameObject Exclude = null)
         {
-            return CheckEquipped(ParentObject);
+            return CheckEquipped(ParentObject, Exclude);
         }
 
-        public static IEnumerable<GameObject> GetEquippedChaosEmeralds(GameObject Wielder)
+        public static IEnumerable<GameObject> GetEquippedChaosEmeralds(GameObject Wielder, GameObject Exclude = null)
         {
             if (Wielder != null)
             {
                 foreach (GameObject equipment in Wielder.GetEquippedObjects())
                 {
-                    if (equipment.InheritsFrom("BaseChaosEmerald"))
+                    if (equipment.InheritsFrom("BaseChaosEmerald") && equipment != Exclude)
                     {
                         yield return equipment;
                     }
@@ -230,23 +232,23 @@ namespace XRL.World.Parts
             }
             yield break;
         }
-        public IEnumerable<GameObject> GetEquippedChaosEmeralds()
+        public IEnumerable<GameObject> GetEquippedChaosEmeralds(GameObject Exclude = null)
         {
-            return GetEquippedChaosEmeralds(ParentObject);
+            return GetEquippedChaosEmeralds(ParentObject, Exclude);
         }
 
-        public static int GetEquippedChaosEmeraldsCount(GameObject Wielder)
+        public static int GetEquippedChaosEmeraldsCount(GameObject Wielder, GameObject Exclude = null)
         {
             if (Wielder == null)
             {
                 return -1;
             }
-            List<GameObject> chaosEmeraldList = Event.NewGameObjectList(GetEquippedChaosEmeralds(Wielder));
+            List<GameObject> chaosEmeraldList = Event.NewGameObjectList(GetEquippedChaosEmeralds(Wielder, Exclude));
             return !chaosEmeraldList.IsNullOrEmpty() ? chaosEmeraldList.Count : 0;
         }
-        public int GetEquippedChaosEmeraldsCount()
+        public int GetEquippedChaosEmeraldsCount(GameObject Exclude = null)
         {
-            return GetEquippedChaosEmeraldsCount(ParentObject);
+            return GetEquippedChaosEmeraldsCount(ParentObject, Exclude);
         }
 
         public int GetLowestEmeraldCharge()
@@ -355,7 +357,7 @@ namespace XRL.World.Parts
                 if (chaosEmeraldsCount > 2)
                 {
                     // 3/7 Emeralds
-                    ApplyMutationLevelAndCyberneticsCredits(Wielder);
+                    ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = ApplyMutationLevelAndCyberneticsCredits(Wielder, ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied);
                     currentChaosEmerald++;
                 }
                 if (chaosEmeraldsCount > 3)
@@ -417,7 +419,7 @@ namespace XRL.World.Parts
 
                 UnapplySpeedBoosts(ChaosEmeraldSetBonus);
 
-                UnapplyMutationLevelAndCyberneticsCredits(Wielder);
+                ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = UnapplyMutationLevelAndCyberneticsCredits(Wielder, ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied);
 
                 ChaosEmeraldSetBonus.mutationModRegeneration = RemoveMutationModRegeneration(ChaosEmeraldSetBonus, Wielder);
 
@@ -547,23 +549,33 @@ namespace XRL.World.Parts
             Debug.LastIndent = indent;
         }
 
-        public static void ApplyMutationLevelAndCyberneticsCredits(GameObject Wielder)
+        public static bool ApplyMutationLevelAndCyberneticsCredits(GameObject Wielder, bool BonusApplied = false)
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(ApplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: doDebug);
-            Wielder.ModIntProperty("AllMutationLevelModifier", 1);
-            Wielder.ModIntProperty("CyberneticsLicenses", 6);
-            Wielder.ModIntProperty("FreeCyberneticsLicenses", 6);
+            if (!BonusApplied)
+            {
+                Wielder.ModIntProperty("AllMutationLevelModifier", 1);
+                Wielder.ModIntProperty("CyberneticsLicenses", 6);
+                Wielder.ModIntProperty("FreeCyberneticsLicenses", 6);
+                return !BonusApplied;
+            }
             Debug.LastIndent = indent;
+            return BonusApplied;
         }
-        public static void UnapplyMutationLevelAndCyberneticsCredits(GameObject Wielder)
+        public static bool UnapplyMutationLevelAndCyberneticsCredits(GameObject Wielder, bool BonusApplied = false)
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4, $"{nameof(UnapplyMutationLevelAndCyberneticsCredits)}() called...", Indent: indent + 1, Toggle: doDebug);
-            Wielder.ModIntProperty("AllMutationLevelModifier", -1);
-            Wielder.ModIntProperty("CyberneticsLicenses", -6);
-            Wielder.ModIntProperty("FreeCyberneticsLicenses", -6);
+            if (BonusApplied)
+            {
+                Wielder.ModIntProperty("AllMutationLevelModifier", -1);
+                Wielder.ModIntProperty("CyberneticsLicenses", -6);
+                Wielder.ModIntProperty("FreeCyberneticsLicenses", -6);
+                return BonusApplied;
+            }
             Debug.LastIndent = indent;
+            return !BonusApplied;
         }
 
         public static bool ApplyPowerUpShifts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus)
@@ -1293,8 +1305,11 @@ namespace XRL.World.Parts
         {
             if (IsObjectActivePartSubject(E.Actor))
             {
-                ActivatedAbilityEntry activatedAbility = FlightUser.GetActivatedAbility(FlightActivatedAbilityID);
-                E.Add(activatedAbility.DisplayName, FlightEvent, 20000, activatedAbility);
+                ActivatedAbilityEntry activatedAbility = FlightUser?.GetActivatedAbility(FlightActivatedAbilityID);
+                if (activatedAbility != null)
+                {
+                    E.Add(activatedAbility.DisplayName, FlightEvent, 20000, activatedAbility);
+                }
             }
             return base.HandleEvent(E);
         }

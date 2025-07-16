@@ -69,10 +69,7 @@ namespace XRL.World.Parts
             ChaosEmeraldSetBonus = E.Actor.RequirePart<ChaosEmeraldSetBonus>();
 
             ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive, false);
-            if (ChaosEmeraldSetBonus.GrantBonus())
-            {
-                ChaosEmeraldSetBonus.BonusActive = true;
-            }
+            ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus();
 
             return base.HandleEvent(E);
         }
@@ -81,16 +78,12 @@ namespace XRL.World.Parts
             if (ChaosEmeraldSetBonus != null)
             {
                 ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive, false);
-                if (ChaosEmeraldSetBonus.GrantBonus())
+                ChaosEmeraldSetBonus.BonusActive = ChaosEmeraldSetBonus.GrantBonus();
+
+                if (ChaosEmeraldSetBonus.GetEquippedChaosEmeraldsCount(ParentObject) < 1)
                 {
-                    ChaosEmeraldSetBonus.BonusActive = true;
-                }
-                if (ChaosEmeraldSetBonus.SetPieces == 0)
-                {
-                    if (ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive))
-                    {
-                        ChaosEmeraldSetBonus.BonusActive = false;
-                    }
+                    ChaosEmeraldSetBonus.UnGrantBonus(ChaosEmeraldSetBonus.BonusActive);
+                    ChaosEmeraldSetBonus.BonusActive = false;
                     E.Actor.RemovePart(ChaosEmeraldSetBonus);
                 }
                 ChaosEmeraldSetBonus = null;
