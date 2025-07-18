@@ -793,6 +793,8 @@ namespace XRL.World.Parts
 
                         Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
 
+                        bool didKill = false;
+
                         if ((bool)Combat.MeleeAttackWithWeapon(
                             Attacker: Flickerer,
                             Defender: flickerTarget,
@@ -807,6 +809,7 @@ namespace XRL.World.Parts
                         }
                         else
                         {
+                            didKill = true;
                             Debug.Entry(2, $"Target has likely died...", Indent: indent + 4, Toggle: getDoDebug());
                         }
 
@@ -838,6 +841,13 @@ namespace XRL.World.Parts
                             Kid: flickerTarget,
                             IsRetreat: false,
                             Path: path);
+
+                        if (OCCNS != null && !CyberFlickerFallsBackToRandom && didKill)
+                        {
+                            Debug.Entry(2, $"{nameof(CyberFlickerFallsBackToRandom)} disabled and target died, aborting flicker loop...", 
+                                Indent: indent + 4, Toggle: getDoDebug());
+                            break;
+                        }
                     }
                     catch (Exception x)
                     {

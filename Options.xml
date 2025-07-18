@@ -189,6 +189,22 @@
   </option>
   
   <option
+        ID="Option_UD_BlinkMutation_CyberFlickerFallsBackToRandom"
+        DisplayText="Enable cybernetic flicker strike falling back to random targets if target is killed mid-flicker strike."
+        Category="Mod: UD Blink Mutation"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, flicker strike (as granted by the overclocked central nervous system) will use any remaining flicker charges to strike random nearby hostile creatures.
+
+      While you get greater precision leaving this disabled, it's at a very slight average energy cost increase performing flicker strike any time the manoeuvre completes without fully depleting your flicker charges.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+  
+  <option
         ID="Option_UD_BlinkMutation_GenerateChaosEmeralds"
         DisplayText="Enable the addition of the famed 7 Chaos Emeralds to the game by this mod ({{r|new save}})."
         Category="Mod: UD Blink Mutation"

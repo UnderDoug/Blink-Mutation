@@ -341,7 +341,7 @@ namespace XRL.World.Parts.Mutation
         public override void CollectStats(Templates.StatCollector stats, int Level)
         {
             stats.Set("BornWith", MutationDescBornWithString, changes: false);
-            stats.Set("BlinkRange", GetBlinkRange(Level, BaseRange));
+            stats.Set("BlinkRange", GetBlinkRange(ParentObject, Level, BaseRange, nameof(CollectStats)));
             stats.Set(nameof(CellsPerRange), CellsPerRange);
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
@@ -350,8 +350,10 @@ namespace XRL.World.Parts.Mutation
 
         public override string GetLevelText(int Level)
         {
+            int blinkRange = GetBlinkRange(ParentObject, Level, BaseRange, nameof(GetLevelText));
+
             StringBuilder SB = Event.NewStringBuilder();
-            SB.Append("You may blink up to ").AppendRule($"{GetBlinkRange(Level, BaseRange)} tiles").Append(" in a direction of your choosing.");
+            SB.Append("You may blink up to ").AppendRule($"{blinkRange} tiles").Append(" in a direction of your choosing.");
             SB.AppendLine();
             SB.Append("With ").AppendColdSteel("Cold Steel").Append(" active, blinking through a hostile creature teleports you behind them and deals ");
             SB.AppendRule($"{GetColdSteelDamage(Level)} ").AppendColored("m", "unblockable").AppendRule(" damage.");

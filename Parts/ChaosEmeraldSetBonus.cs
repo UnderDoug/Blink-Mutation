@@ -218,11 +218,15 @@ namespace XRL.World.Parts
         {
             if (Wielder != null)
             {
-                foreach (GameObject equipment in Wielder.GetEquippedObjects())
+                List<GameObject> equippedItems = Event.NewGameObjectList(Wielder.GetEquippedObjects());
+                if (!equippedItems.IsNullOrEmpty())
                 {
-                    if (equipment.InheritsFrom("BaseChaosEmerald") && equipment != Exclude)
+                    foreach (GameObject equipment in equippedItems)
                     {
-                        yield return equipment;
+                        if (equipment != Exclude && equipment.InheritsFrom("BaseChaosEmerald"))
+                        {
+                            yield return equipment;
+                        }
                     }
                 }
             }
@@ -317,7 +321,7 @@ namespace XRL.World.Parts
             return GetSetPieceDescriptions(SetPieces);
         }
 
-        public static bool GrantBonus(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, bool BonusActive = false)
+        public static bool GrantBonus(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, GameObject ExludeSetPiece = null, bool BonusActive = false)
         {
             bool granted = false;
             if(!BonusActive)
@@ -333,49 +337,49 @@ namespace XRL.World.Parts
 
                 StatShifter statShifter = ChaosEmeraldSetBonus.StatShifter;
 
-                int chaosEmeraldsCount = GetEquippedChaosEmeraldsCount(Wielder);
+                int chaosEmeraldCount = GetEquippedChaosEmeraldsCount(Wielder, ExludeSetPiece);
                 int currentChaosEmerald = 1;
 
                 Wielder.RegisterEvent(ChaosEmeraldSetBonus, GetPsychicGlimmerEvent.ID, Serialize: true);
 
-                if (chaosEmeraldsCount > 0)
+                if (chaosEmeraldCount > 0)
                 {
                     // 2/7 Emeralds
-                    ApplySpeedBoosts(ChaosEmeraldSetBonus, chaosEmeraldsCount);
+                    ApplySpeedBoosts(ChaosEmeraldSetBonus, chaosEmeraldCount);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 1)
+                if (chaosEmeraldCount > 1)
                 {
                     // 1/7 Emeralds
-                    ApplyResistances(ChaosEmeraldSetBonus, chaosEmeraldsCount);
+                    ApplyResistances(ChaosEmeraldSetBonus, chaosEmeraldCount);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 2)
+                if (chaosEmeraldCount > 2)
                 {
                     // 3/7 Emeralds
                     bool mAndCApplied = ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied;
                     ChaosEmeraldSetBonus.MutationLevelAndCyberneticsCreditsApplied = ApplyMutationLevelAndCyberneticsCredits(Wielder, mAndCApplied);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 3)
+                if (chaosEmeraldCount > 3)
                 {
                     // 4/7 Emeralds
                     AddMutationModRegeneration(ChaosEmeraldSetBonus, Wielder, currentChaosEmerald);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 4)
+                if (chaosEmeraldCount > 4)
                 {
                     // 5/7 Emeralds
-                    statShifter.SetStatShift("Willpower", 3 + chaosEmeraldsCount);
+                    statShifter.SetStatShift("Willpower", 3 + chaosEmeraldCount);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 5)
+                if (chaosEmeraldCount > 5)
                 {
                     // 6/7 Emeralds
                     Wielder.RegisterEvent(ChaosEmeraldSetBonus, ApplyEffectEvent.ID, EventOrder.EXTREMELY_EARLY, true);
                     currentChaosEmerald++;
                 }
-                if (chaosEmeraldsCount > 6)
+                if (chaosEmeraldCount > 6)
                 {
                     // 7/7 Emeralds
                     ChaosEmeraldSetBonus.PowerUpActivatedAbilityID = ChaosEmeraldSetBonus.AddActivatedAbilityPowerUp(Wielder);
@@ -384,7 +388,7 @@ namespace XRL.World.Parts
 
                 // Always and scales off Emerald Count
                 
-                AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldsCount);
+                AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldCount);
 
                 ChaosEmeraldSetBonus.SetStatShifterDisplayName();
 
@@ -393,9 +397,9 @@ namespace XRL.World.Parts
             }
             return granted;
         }
-        public bool GrantBonus(bool BonusActive = false)
+        public bool GrantBonus(GameObject ExcludeSetPiece = null, bool BonusActive = false)
         {
-            return GrantBonus(this, ParentObject, BonusActive);
+            return GrantBonus(this, ParentObject, ExcludeSetPiece, BonusActive);
         }
 
         public static bool UnGrantBonus(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, bool BonusActive = false, bool Sync = true)
@@ -453,6 +457,16 @@ namespace XRL.World.Parts
         public bool UnGrantBonus(bool BonusActive = false, bool Sync = true)
         {
             return UnGrantBonus(this, ParentObject, BonusActive, Sync);
+        }
+
+        public void SyncBonuses(GameObject ExcludeSetPiece = null)
+        {
+            UnGrantBonus(BonusActive, ExcludeSetPiece == null);
+            BonusActive = false;
+            if (GetEquippedChaosEmeraldsCount(ExcludeSetPiece) > 0)
+            {
+                BonusActive = GrantBonus(ExcludeSetPiece, BonusActive);
+            }
         }
 
         public static Guid AddMutationModBlink(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, int ChaosEmeraldsCount)
@@ -1121,6 +1135,7 @@ namespace XRL.World.Parts
             return base.WantEvent(ID, Cascade)
                 || ID == EndTurnEvent.ID
                 || (DebugChaosEmeraldSetBonusDebugDescriptions && ID == GetShortDescriptionEvent.ID)
+                || ID == NeedPartSupportEvent.ID
                 || ID == CommandEvent.ID
                 || ID == GetDisplayNameEvent.ID
                 || ID == BeforeAbilityManagerOpenEvent.ID
@@ -1283,6 +1298,14 @@ namespace XRL.World.Parts
                     factor *= 2;
                 }
                 E.Level += SetPieces * factor;
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(NeedPartSupportEvent E)
+        {
+            if (E.Type == nameof(ChaosEmeraldSetBonus) && !PartSupportEvent.Check(E, this))
+            {
+                ParentObject.RemovePart(this);
             }
             return base.HandleEvent(E);
         }

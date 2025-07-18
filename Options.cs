@@ -56,6 +56,7 @@ namespace UD_Blink_Mutation
         // Checkbox settings
         [OptionFlag] public static bool ObnoxiousYelling;
         [OptionFlag] public static bool AllowWeGoAgain;
+        [OptionFlag] public static bool CyberFlickerFallsBackToRandom;
         [OptionFlag] public static bool GenerateChaosEmeralds;
 
     } //!-- public static class Options
