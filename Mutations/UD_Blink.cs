@@ -260,6 +260,10 @@ namespace XRL.World.Parts.Mutation
         }
         public static int GetBlinkRange(GameObject Blinker, int Level = 0, int BaseRange = 3, string Context = null)
         {
+            if (Blinker == null)
+            {
+                return GetBlinkRange(Level, BaseRange);
+            }
             if (Blinker.TryGetPart(out UD_Blink blink))
             {
                 Level = Level == 0 ? blink.Level : Level;
