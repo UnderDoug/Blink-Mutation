@@ -1,16 +1,14 @@
-﻿using ConsoleLib.Console;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 
-using Qud.UI;
-
+using XRL.Rules;
 using XRL.UI;
 using XRL.Wish;
-using XRL.World.Anatomy;
 using XRL.World.AI.Pathfinding;
+using XRL.World.Anatomy;
 using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
 
@@ -21,7 +19,6 @@ using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
 
-using Color = UnityEngine.Color;
 using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
@@ -54,6 +51,7 @@ namespace XRL.World.Parts
 
             return doDebug;
         }
+        private static bool DoDebugDescriptions => DebugCyberBlinkDebugDescriptions;
 
         public static readonly string COMMAND_UD_BLINK_CYBER_ABILITY = "Command_UD_Blink_Cyber_Ability";
         public static readonly string COMMAND_UD_BLINK_CYBER = "Command_UD_Cyber_Blink";
@@ -1003,11 +1001,121 @@ namespace XRL.World.Parts
                 || ID == EffectAppliedEvent.ID
                 || ID == EffectRemovedEvent.ID;
         }
+        public override bool HandleEvent(GetShortDescriptionEvent E)
+        {
+            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone && E.Object == Implantee)
+            {
+                StringBuilder SB = Event.NewStringBuilder();
+
+                SB.AppendColored("M", $"Overclocked Central Nervous System").Append(": ");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"General");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseBlinkRange}").Append($"){HONLY}{nameof(BaseBlinkRange)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseMaxFlickerCharges}").Append($"){HONLY}{nameof(BaseMaxFlickerCharges)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{EnergyPerFlickerCharge}").Append($"){HONLY}{nameof(EnergyPerFlickerCharge)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{BaseFlickerChargeRechargeTurns}").Append($"){HONLY}{nameof(BaseFlickerChargeRechargeTurns)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{ComputePower}").Append($"){HONLY}{nameof(ComputePower)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{RangeComputePowerDivisor}").Append($"){HONLY}{nameof(RangeComputePowerDivisor)}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("g", $"{FlickerChargeComputePowerDivisor}").Append($"){HONLY}{nameof(FlickerChargeComputePowerDivisor)}");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"Mechanics");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{FlickerRadius}").Append($"){HONLY}{nameof(FlickerRadius)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("g", $"{CellsPerRange}").Append($"){HONLY}{nameof(CellsPerRange)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{EffectiveRange}").Append($"){HONLY}{nameof(EffectiveRange)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("c", $"{RangeFromComputePower}").Append($"){HONLY}{nameof(RangeFromComputePower)}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("c", $"{FlickerChargeFromComputePower}").Append($"){HONLY}{nameof(FlickerChargeFromComputePower)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("c", $"{MaxFlickerCharges}").Append($"){HONLY}{nameof(MaxFlickerCharges)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("c", $"{FlickerCharges}").Append($"){HONLY}{nameof(FlickerCharges)}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append("(").AppendColored("c", $"{BaseFlickerChargeRechargeTurns}").Append($"){HONLY}{nameof(BaseFlickerChargeRechargeTurns)}");
+                SB.AppendLine();
+
+                SB.AppendColored("W", $"State");
+                SB.AppendLine();
+                SB.Append(VANDR).Append("(").AppendColored("c", $"{FlickerChargeTurnCounter}").Append($"){HONLY}{nameof(FlickerChargeTurnCounter)}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{HaveFlickerCharges.YehNah()}]{HONLY}{nameof(HaveFlickerCharges)}: ").AppendColored("B", $"{HaveFlickerCharges}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{MidAction.YehNah(true)}]{HONLY}{nameof(MidAction)}: ").AppendColored("B", $"{MidAction}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{MidBlink.YehNah(true)}]{HONLY}{nameof(MidBlink)}: ").AppendColored("B", $"{MidBlink}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{MidFlicker.YehNah(true)}]{HONLY}{nameof(MidFlicker)}: ").AppendColored("B", $"{MidFlicker}");
+                SB.AppendLine();
+                SB.Append(VANDR).Append($"[{AllowWeGoAgain.YehNah()}]{HONLY}{nameof(AllowWeGoAgain)}: ").AppendColored("B", $"{AllowWeGoAgain}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah(!AllowWeGoAgain)}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
+                SB.AppendLine();
+
+                E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(GetDebugInternalsEvent E)
+        {
+            if (E.Object == Implantee)
+            {
+                // Range
+                E.AddEntry(this, nameof(BlinkRange), BlinkRange);
+                E.AddEntry(this, nameof(FlickerRadius), FlickerRadius);
+                E.AddEntry(this, nameof(BaseBlinkRange), BaseBlinkRange);
+                E.AddEntry(this, nameof(CellsPerRange), CellsPerRange);
+                E.AddEntry(this, nameof(EffectiveRange), EffectiveRange);
+
+                // Flicker
+                E.AddEntry(this, nameof(FlickerCharges), FlickerCharges);
+                E.AddEntry(this, nameof(MaxFlickerCharges), MaxFlickerCharges);
+                E.AddEntry(this, nameof(BaseMaxFlickerCharges), BaseMaxFlickerCharges);
+                E.AddEntry(this, nameof(EnergyPerFlickerCharge), EnergyPerFlickerCharge);
+                E.AddEntry(this, nameof(BaseFlickerChargeRechargeTurns), BaseFlickerChargeRechargeTurns);
+                E.AddEntry(this, nameof(BaseFlickerChargeRechargeTurns), BaseFlickerChargeRechargeTurns);
+                E.AddEntry(this, nameof(FlickerChargeTurnCounter), FlickerChargeTurnCounter);
+
+                // ComputePower
+                E.AddEntry(this, nameof(ComputePower), ComputePower);
+                E.AddEntry(this, nameof(RangeComputePowerDivisor), RangeComputePowerDivisor);
+                E.AddEntry(this, nameof(RangeFromComputePower), RangeFromComputePower);
+                E.AddEntry(this, nameof(FlickerChargeComputePowerDivisor), FlickerChargeComputePowerDivisor);
+                E.AddEntry(this, nameof(FlickerChargeFromComputePower), FlickerChargeFromComputePower);
+
+                // Bools
+                E.AddEntry(this, nameof(HaveFlickerCharges), HaveFlickerCharges);
+                E.AddEntry(this, nameof(IsNothinPersonnelKid), IsNothinPersonnelKid);
+                E.AddEntry(this, nameof(MidAction), MidAction);
+                E.AddEntry(this, nameof(MidBlink), MidBlink);
+                E.AddEntry(this, nameof(MidFlicker), MidFlicker);
+                E.AddEntry(this, nameof(AllowWeGoAgain), AllowWeGoAgain);
+                E.AddEntry(this, nameof(WeGoAgain), WeGoAgain);
+            }
+            return base.HandleEvent(E);
+        }
         public override bool HandleEvent(ImplantedEvent E)
         {
             AddActivatedAbilityBlink(E.Implantee);
             AddActivatedAbilityColdSteel(E.Implantee);
             AddActivatedAbilityFlicker(E.Implantee);
+            E.Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID);
+            E.Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(UnimplantedEvent E)
@@ -1015,6 +1123,8 @@ namespace XRL.World.Parts
             RemoveActivatedAbilityBlink(E.Implantee, true);
             RemoveActivatedAbilityColdSteel(E.Implantee, true);
             RemoveActivatedAbilityFlicker(E.Implantee, true);
+            E.Implantee.UnregisterEvent(this, GetShortDescriptionEvent.ID);
+            E.Implantee.UnregisterEvent(this, GetDebugInternalsEvent.ID);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(EndTurnEvent E)
@@ -1047,21 +1157,27 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY && E.Actor == Implantee)
+            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY 
+                && E.Actor == Implantee)
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY && E.Actor == Implantee && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
+            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY 
+                && E.Actor == Implantee 
+                && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
             {
                 CommandEvent.Send(
                     Actor: E.Actor,
                     Command: COMMAND_UD_BLINK_CYBER,
                     Handler: ParentObject);
             }
-            if (E.Command == COMMAND_UD_FLICKER_ABILITY && E.Actor == Implantee && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
+            if (E.Command == COMMAND_UD_FLICKER_ABILITY 
+                && E.Actor == Implantee 
+                && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 bool doFlicker = true;
-                if (E.Actor.IsPlayerControlled() && E.Actor.Target == null || !E.Actor.Target.IsHostileTowards(E.Actor))
+                if (E.Actor.IsPlayerControlled() 
+                    && (E.Actor.Target == null || !E.Actor.Target.IsHostileTowards(E.Actor)))
                 {
                     /*
                     StringBuilder SB = Event.NewStringBuilder();
@@ -1115,7 +1231,8 @@ namespace XRL.World.Parts
                         Handler: ParentObject);
                 }
             }
-            if (E.Command == COMMAND_UD_BLINK_CYBER && E.Actor == Implantee)
+            if (E.Command == COMMAND_UD_BLINK_CYBER 
+                && E.Actor == Implantee)
             {
                 if (GameObject.Validate(E.Actor) && !MidAction)
                 {
@@ -1213,7 +1330,9 @@ namespace XRL.World.Parts
                     }
                 }
             }
-            if (E.Command == COMMAND_UD_FLICKER && E.Actor == Implantee && !MidAction)
+            if (E.Command == COMMAND_UD_FLICKER 
+                && E.Actor == Implantee 
+                && !MidAction)
             {
                 MidFlicker = true;
                 try

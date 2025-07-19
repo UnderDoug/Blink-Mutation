@@ -47,6 +47,7 @@ namespace UD_Blink_Mutation
         [OptionFlag] public static int DebugVerbosity;
         [OptionFlag] public static bool DebugIncludeInMessage;
         [OptionFlag] public static bool DebugBlinkDebugDescriptions;
+        [OptionFlag] public static bool DebugCyberBlinkDebugDescriptions;
         [OptionFlag] public static bool DebugAI_UD_BlinkerDebugDescriptions;
         [OptionFlag] public static bool DebugAI_UD_FlickererDebugDescriptions;
         [OptionFlag] public static bool DebugAI_UD_SquareUpDebugDescriptions;

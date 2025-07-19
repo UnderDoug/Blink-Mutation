@@ -87,8 +87,7 @@ namespace XRL.World.Parts.Mutation
         public string MutationDescBornWithString => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
         public bool IsAnimatedBall => 
-            IsBornThisWay(ParentObject)
-         && PrickleBallAnimation != null
+            PrickleBallAnimation != null
          && ParentObject.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric) 
          && animatedMaterialGeneric.TileAnimationFrames == PrickleBallAnimation.TileAnimationFrames;
 
@@ -234,7 +233,9 @@ namespace XRL.World.Parts.Mutation
         public static bool IsBornThisWay(GameObject Blinker)
         {
             if (Blinker == null)
+            {
                 return true;
+            }
 
             bool startedWithBlink =
                 Blinker.TryGetPart(out UD_Blink blink)
@@ -460,6 +461,7 @@ namespace XRL.World.Parts.Mutation
         {
             RemoveActivatedAbilityBlink(GO, Force: true);
             RemoveActivatedAbilityColdSteel(GO, Force: true);
+            RemovePrickleBallAnimation(GO, PrickleBallAnimation);
             return base.Unmutate(GO);
         }
         public override bool Render(RenderEvent E)
@@ -1503,7 +1505,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (ParentObject.CurrentZone == The.ActiveZone)
             {
-                if (ParentObject.HasEffectDescendedFrom<Running>() && !IsAnimatedBall)
+                if (BornThisWay && ParentObject.HasEffectDescendedFrom<Running>() && !IsAnimatedBall)
                 {
                     AddPrickleBallAnimation();
                 }
@@ -1953,6 +1955,23 @@ namespace XRL.World.Parts.Mutation
             }
 
             return blink;
+        }
+
+        [WishCommand(Command = "tidy up prickle-ball animation")]
+        // gimme coldsteel damage maxLevel
+        public static void TidyUpAnimationWish()
+        {
+            if (The.Player.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric))
+            {
+                if (!The.Player.TryGetPart(out UD_Blink uD_Blink))
+                {
+                    uD_Blink = new();
+                }
+                if (uD_Blink.PrickleBallAnimation.TileAnimationFrames == animatedMaterialGeneric.TileAnimationFrames)
+                {
+                    The.Player.RemovePart(animatedMaterialGeneric);
+                }
+            }
         }
 
         [WishCommand(Command = "gimme blinker")]

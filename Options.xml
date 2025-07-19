@@ -44,16 +44,36 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugBlinkDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show Blink internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{m|Blink}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the Blink mutation will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the {{m|Blink}} mutation will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|Blink}}:
       {{W|General}}: Mutation Level information.
+      {{W|Mechanics}}: Information specific to the function of Blinking.
+      {{W|State}}: Current internal flags used to determine different actions happening.
+
+      The default is {{w|Disabled}}.
+    </helptext>
+  </option>
+	
+  <option
+        ID="Option_UD_BlinkMutation_DebugCyberBlinkDebugDescriptions"
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{C|Overclocked Central Nervous System}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        Category="Debug"
+        Type="Checkbox"
+        Default="No"
+    >
+    <helptext>
+      When enabled, internal debug information relating to the {{C|Overclocked Central Nervous System}} cybernetic will be displayed when [{{W|l}}]ooking at anything affected by the relevant part.
+
+      {{M|Overclocked Central Nervous System}}:
+      {{W|General}}: Mutation Level information.
+      {{W|Mechanics}}: Information specific to the function of Blinking/Flicker Striking.
       {{W|State}}: Current internal flags used to determine different actions happening.
 
       The default is {{w|Disabled}}.
@@ -62,13 +82,13 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugAI_UD_BlinkerDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_Blinker internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{m|AI_UD_Blinker}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the AI_UD_Blinker AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the {{m|AI_UD_Blinker}} AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|AI_UD_Blinker}}:
       {{W|Blink}}: Current blink stats.
@@ -81,13 +101,13 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugAI_UD_FlickererDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_Flickerer internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{C|AI_UD_Flickerer}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the AI_UD_Flickerer AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the {{C|AI_UD_Flickerer}} AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|AI_UD_Flickerer}}:
       {{W|Flicker}}: Current flicker stats.
@@ -100,13 +120,13 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugAI_UD_SquareUpDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show AI_UD_SquareUp internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{R|AI_UD_Sq{{Y|u}}are{{Y|U}}p}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the AI_UD_SquareUp AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the {{R|AI_UD_Sq{{Y|u}}are{{Y|U}}p}} AI part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|AI_UD_SquareUP}}:
       {{W|Target}}: Current target and squared up target information.
@@ -118,13 +138,13 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugChaosEmeraldSetBonusDebugDescriptions"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show ChaosEmeraldSetBonus internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Show {{rainbow|ChaosEmeraldSetBonus}} internal debug information in relevant ShortDescriptions displayed in the [{{W|l}}]ook UI."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, internal debug information relating to the Chaos Emerald Set Bonus part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
+      When enabled, internal debug information relating to the {{rainbow|Chaos Emerald Set Bonus}} part will be displayed when [{{W|l}}]ooking at anything with the relevant part.
 
       {{M|ChaosEmeraldSetBonus}}:
       {{W|General}}: Values relating to number of pieces, some of the multipliers used, and the strength of some associated abilities.
@@ -137,13 +157,13 @@
 	
   <option
         ID="Option_UD_BlinkMutation_DebugIgnorePlayerWhenSquaringUp"
-        DisplayText="{{nothinpersonnel|Blink Mutation}}: Ignore the player when AI_UD_SquareUp is squaring up for a worthy opponent."
+        DisplayText="{{nothinpersonnel|Blink Mutation}}: Ignore the player when {{R|AI_UD_Sq{{Y|u}}are{{Y|U}}p}} is squaring up for a worthy opponent."
         Category="Debug"
         Type="Checkbox"
         Default="No"
     >
     <helptext>
-      When enabled, creatures with the AI_UD_SquareUp behaviour will ignore the player as a viable opponent to make it easier to observe how they'd react in the player's absence.
+      When enabled, creatures with the {{R|AI_UD_Sq{{Y|u}}are{{Y|U}}p}} behaviour will ignore the player as a viable opponent to make it easier to observe how they'd react in the player's absence.
 
       The default is {{w|Disabled}}.
     </helptext>
