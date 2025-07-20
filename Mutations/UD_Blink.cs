@@ -945,10 +945,13 @@ namespace XRL.World.Parts.Mutation
             bool shouts = hasBlink && blink.Shouts;
             bool doNani = hasBlink && blink.DoNani;
 
+            bool allowSecondPerson = Grammar.AllowSecondPerson;
+            Grammar.AllowSecondPerson = false;
             string shout = GameText.VariableReplace(blink?.Shout, Blinker, Kid);
             string shoutColor = blink?.ShoutColor ?? "m";
             string nani = GameText.VariableReplace(blink?.Nani, Blinker, Kid);
             string naniColor = blink?.NaniColor ?? "r";
+            Grammar.AllowSecondPerson = allowSecondPerson;
 
             Debug.Entry(2, $"Preloading sound clip {BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
             SoundManager.PreloadClipSet(BLINK_SOUND);
@@ -1251,9 +1254,9 @@ namespace XRL.World.Parts.Mutation
                 Amount: ref amount,
                 Message: "from %t attack!",
                 Attributes: "Umbral ColdSteel nothinpersonnel",
-                DeathReason: "psssh...you took %t's cold steel personnely...",
-                ThirdPersonDeathReason: "psssh..." + Kid.it + Kid.GetVerb("take") + " %t's cold steel personnely...",
-                Owner: null,
+                DeathReason: $"psssh...you took {Blinker.t()}'s cold steel personnely...",
+                ThirdPersonDeathReason: $"psssh...{Kid.it + Kid.GetVerb("take")} {Blinker.t()}'s cold steel personnely...",
+                Owner: Blinker,
                 Attacker: Blinker,
                 ShowDamageType: "{{coldsteel|Cold Steel}} damage"
                 );
