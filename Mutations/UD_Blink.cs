@@ -1709,9 +1709,9 @@ namespace XRL.World.Parts.Mutation
                                 To: currentCell, 
                                 Life: 8, 
                                 Color1: "C", 
-                                Symbol1: "\u203C", 
+                                Symbol1: "\u0013", 
                                 Color2: "Y", 
-                                Symbol2: "\u221E"
+                                Symbol2: "\u00EC"
                                 );
 
                             energyCost = (int)(energyCost * WeGoAgainEnergyFactor);

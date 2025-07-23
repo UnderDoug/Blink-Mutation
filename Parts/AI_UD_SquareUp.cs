@@ -14,6 +14,7 @@ using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
 using SerializeField = UnityEngine.SerializeField;
+using XRL.World.AI;
 
 namespace XRL.World.Parts
 {
@@ -49,21 +50,47 @@ namespace XRL.World.Parts
 
         private static bool IgnorePlayer => DebugIgnorePlayerWhenSquaringUp;
 
-        private bool RecentlyAcquiredTarget = false;
+        private bool RecentlyAcquiredTarget;
 
-        public long AcquiredTargetTurnThreshold = 8L;
-        private long StoredTurnTickForAcquiredTarget = 0L;
+        public long AcquiredTargetTurnThreshold;
+        private long StoredTurnsForAcquiredTarget = 0;
 
-        public long SquareUpCacheTurnThreshold = 3600L;
-        private long StoredTurnTickForSquareUpCache = 0L;
+        public long SquareUpCacheTurnThreshold;
+        private long StoredTurnsForSquareUpCache = 0;
 
-        public Dictionary<string, int> SquareUpCache = new();
+        private long StoredGameTurn = 0L;
 
-        public GameObject CurrentSquareUpTarget = null;
+        public Dictionary<string, int> SquareUpCache;
+        public Dictionary<string, long> MercyList;
 
-        public bool IgnoreSameCreatureType = false;
+        public GameObject CurrentSquareUpTarget;
 
-        public bool IgnoreSameFaction = false;
+        public bool IgnoreSameCreatureType;
+
+        public bool IgnoreSameFaction;
+
+        public bool IsMerciful;
+
+        public int MercyThreshold;
+
+        public long MercyPeriod;
+
+        public AI_UD_SquareUp()
+        {
+            RecentlyAcquiredTarget = false;
+
+            AcquiredTargetTurnThreshold = 8L;
+            SquareUpCacheTurnThreshold = 3600L;
+
+            SquareUpCache = new();
+            CurrentSquareUpTarget = null;
+
+            IgnoreSameCreatureType = false;
+            IgnoreSameFaction = false;
+            IsMerciful = false;
+            MercyThreshold = 15;
+            MercyPeriod = 1200L;
+        }
 
         public static GameObject GetMoreWorthyOpponent(GameObject Squarer, GameObject FirstOpponent, GameObject SecondOpponent, ref Dictionary<string, int> SquareUpCache, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false)
         {
@@ -255,7 +282,7 @@ namespace XRL.World.Parts
             return GetSquareUpScore(ParentObject, Target, ref SquareUpCache, Weight, WeightReason, IgnoreSameCreatureType, IgnoreSameFaction);
         }
 
-        public static bool SquareUp(GameObject Squarer, bool RecentlyAcquiredTarget, out bool TargetAcquired, out GameObject SquareUpTarget, ref Dictionary<string, int> SquareUpCache)
+        public static bool SquareUp(GameObject Squarer, bool RecentlyAcquiredTarget, out bool TargetAcquired, out GameObject SquareUpTarget, ref Dictionary<string, int> SquareUpCache, bool IsMerciful, List<string> MercyList)
         {
             Debug.Entry(4,
                 $"* {nameof(AI_UD_SquareUp)}."
@@ -289,12 +316,15 @@ namespace XRL.World.Parts
                 if (!opponentList.IsNullOrEmpty())
                 {
                     Squarer.Think($"I have a list of opponents I will square up");
+                    GameObject originalTarget = Squarer.Target;
                     GameObject firstOpponent = Squarer.Target;
                     string unknownOpponent = "an unnamed opponent";
                     string firstOpponentName = $"[{firstOpponent?.ID ?? "null"}]" + (firstOpponent?.Render?.DisplayName ?? firstOpponent?.Blueprint ?? unknownOpponent);
+                    string secondOpponentName = null;
                     foreach (GameObject secondOpponent in opponentList)
                     {
-                        string secondOpponentName = $"[{secondOpponent?.ID ?? "null"}]" + (secondOpponent?.Render?.DisplayName ?? secondOpponent?.Blueprint ?? unknownOpponent);
+                        firstOpponentName = $"[{firstOpponent?.ID ?? "null"}]" + (firstOpponent?.Render?.DisplayName ?? firstOpponent?.Blueprint ?? unknownOpponent);
+                        secondOpponentName = $"[{secondOpponent?.ID ?? "null"}]" + (secondOpponent?.Render?.DisplayName ?? secondOpponent?.Blueprint ?? unknownOpponent);
                         if (secondOpponent == Squarer)
                         {
                             Squarer.Think($"Fighting myself would be pointless, I'm guaranteed to win!");
@@ -314,6 +344,25 @@ namespace XRL.World.Parts
                                 continue;
                             }
                         }
+                        if (IsMerciful && !MercyList.IsNullOrEmpty())
+                        {
+                            if (MercyList.Contains(firstOpponent.ID))
+                            {
+                                Squarer.Think($"I've defeated my second prospective opponent, {firstOpponentName}, I will show them mercy!");
+                                firstOpponent = secondOpponent;
+                                continue;
+                            }
+                            if (MercyList.Contains(secondOpponent.ID))
+                            {
+                                Squarer.Think($"I've defeated my second prospective opponent, {secondOpponentName}, I will show them mercy!");
+                                continue;
+                            }
+                        }
+                        if (firstOpponent == null)
+                        {
+                            firstOpponent = secondOpponent;
+                            continue;
+                        }
                         firstOpponent = GetMoreWorthyOpponent(Squarer, firstOpponent, secondOpponent, ref SquareUpCache);
                     }
                     if (firstOpponent != null)
@@ -321,6 +370,7 @@ namespace XRL.World.Parts
                         if (firstOpponent != Squarer.Target)
                         {
                             Squarer.Think($"I will fight {firstOpponentName}!");
+                            SquareUpTarget = firstOpponent;
                             Squarer.Brain.PushGoal(new Kill(firstOpponent, true));
                             if (Squarer.Brain.Goals.Count > 0)
                             {
@@ -331,9 +381,8 @@ namespace XRL.World.Parts
                         }
                         else
                         {
-                            Squarer.Think($"My opponent, {firstOpponent.Render?.DisplayName ?? "an unnamed opponent"}, remains unchanged!");
+                            Squarer.Think($"My opponent, {firstOpponentName}, remains unchanged!");
                         }
-                        SquareUpTarget = firstOpponent;
                         TargetAcquired = true;
                     }
                 }
@@ -355,43 +404,78 @@ namespace XRL.World.Parts
         }
         public bool SquareUp(out bool TargetAcquired)
         {
-            return SquareUp(ParentObject, RecentlyAcquiredTarget, out TargetAcquired, out CurrentSquareUpTarget, ref SquareUpCache);
+            MercyList ??= new();
+            return SquareUp(ParentObject, RecentlyAcquiredTarget, out TargetAcquired, out CurrentSquareUpTarget, ref SquareUpCache, IsMerciful, new(MercyList.Keys));
         }
         public bool SquareUp()
         {
-            return SquareUp(ParentObject, RecentlyAcquiredTarget, out RecentlyAcquiredTarget, out CurrentSquareUpTarget, ref SquareUpCache);
+            MercyList ??= new();
+            return SquareUp(ParentObject, RecentlyAcquiredTarget, out RecentlyAcquiredTarget, out CurrentSquareUpTarget, ref SquareUpCache, IsMerciful, new(MercyList.Keys));
         }
 
-        public override void TurnTick(long TimeTick, int Amount)
+        public void ProcessTurnAcquiredTarget(long PassedTurns = 1L)
         {
-            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == The.ActiveZone)
+            if (RecentlyAcquiredTarget && (StoredTurnsForAcquiredTarget += PassedTurns) > AcquiredTargetTurnThreshold)
             {
-                Debug.Entry(4,
-                    $"~ {nameof(AI_UD_SquareUp)}."
-                    + $"{nameof(TurnTick)}()"
-                    + $" For: {ParentObject?.DebugName ?? NULL}",
-                    Indent: 0, Toggle: getDoDebug());
-
-                if (RecentlyAcquiredTarget && TimeTick - StoredTurnTickForAcquiredTarget > AcquiredTargetTurnThreshold)
+                ParentObject.Think($"I could look for a more worthy opponent.");
+                StoredTurnsForAcquiredTarget = 0;
+                RecentlyAcquiredTarget = false;
+            }
+        }
+        public void ProcessTurnSquareUpCache(long PassedTurns = 1L)
+        {
+            SquareUpCache ??= new();
+            if (!SquareUpCache.IsNullOrEmpty() && (StoredTurnsForSquareUpCache += PassedTurns) > SquareUpCacheTurnThreshold)
+            {
+                ParentObject.Think($"I will square up opponents I've already squared up before, they might be stronger now!");
+                StoredTurnsForSquareUpCache = 0;
+                SquareUpCache = new();
+            }
+        }
+        public void ProcessTurnMercy(long PassedTurns = 1L)
+        {
+            Dictionary<string, long> mercyListIterator = MercyList ??= new();
+            if (!mercyListIterator.IsNullOrEmpty())
+            {
+                foreach ((string opponent, long remainingTurns) in mercyListIterator)
                 {
-                    ParentObject.Think($"I could look for a more worthy opponent");
-                    StoredTurnTickForAcquiredTarget = TimeTick;
-                    RecentlyAcquiredTarget = false;
-                }
-                if (!SquareUpCache.IsNullOrEmpty() && TimeTick - StoredTurnTickForSquareUpCache > SquareUpCacheTurnThreshold)
-                {
-                    ParentObject.Think($"I will square up opponents I've already squared up before, they might be stronger now!");
-                    StoredTurnTickForSquareUpCache = TimeTick;
-                    SquareUpCache = new();
+                    if (remainingTurns < PassedTurns)
+                    {
+                        MercyList.Remove(opponent);
+                    }
+                    else
+                    {
+                        MercyList[opponent] = remainingTurns - PassedTurns;
+                    }
                 }
             }
-            base.TurnTick(TimeTick, Amount);
         }
-        public override bool WantTurnTick()
+        public void ShowMercy()
         {
-            return base.WantTurnTick()
-                || true;
+            if (IsMerciful 
+                && GameObject.Validate(ref CurrentSquareUpTarget) 
+                && CurrentSquareUpTarget.TryGetHitpointPercent(out int hitpointsPercent) 
+                && hitpointsPercent < MercyThreshold)
+            {
+                MercyList ??= new();
+                MercyList.TryAdd(CurrentSquareUpTarget.ID, MercyPeriod);
+                if (ParentObject.Brain.FindGoal(nameof(Kill)) is Kill killGoal && killGoal._Target == CurrentSquareUpTarget)
+                {
+                    killGoal.FailToParent();
+                }
+                ParentObject.Brain.Forgive(CurrentSquareUpTarget);
+            }
         }
+
+        public void ProcessTurnValidSquareUpTarget()
+        {
+            if (CurrentSquareUpTarget != null && !GameObject.Validate(CurrentSquareUpTarget))
+            {
+                ParentObject.Think($"My square up opponent is gone, I will stop trying to fight them!");
+                CurrentSquareUpTarget = null;
+            }
+        }
+
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             base.Register(Object, Registrar);
@@ -399,12 +483,58 @@ namespace XRL.World.Parts
         public override bool WantEvent(int ID, int Cascade)
         {
             return base.WantEvent(ID, Cascade)
+                || ID == EndTurnEvent.ID
+                || ID == ZoneActivatedEvent.ID
                 || (DoDebugDescriptions && ID == GetShortDescriptionEvent.ID)
                 || ID == GetItemElementsEvent.ID
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
                 || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
                 || (!RecentlyAcquiredTarget && ID == PooledEvent<AIBoredEvent>.ID)
                 || ID == KilledEvent.ID;
+        }
+        public override bool HandleEvent(EndTurnEvent E)
+        {
+            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == The.ActiveZone && The.Game != null)
+            {
+                Debug.Entry(4,
+                    $"@ {nameof(AI_UD_SquareUp)}."
+                    + $"{nameof(HandleEvent)}("
+                    + $"{nameof(EndTurnEvent)} E)"
+                    + $" for: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 0, Toggle: getDoDebug());
+
+                long turnsPassed = The.Game.Turns - StoredGameTurn;
+                StoredGameTurn = The.Game.Turns;
+
+                ProcessTurnAcquiredTarget(turnsPassed);
+                ProcessTurnSquareUpCache(turnsPassed);
+                ProcessTurnMercy(turnsPassed);
+                ProcessTurnValidSquareUpTarget();
+                ShowMercy();
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(ZoneActivatedEvent E)
+        {
+            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == E.Zone && The.Game != null)
+            {
+                Debug.Entry(4,
+                    $"@ {nameof(AI_UD_SquareUp)}."
+                    + $"{nameof(HandleEvent)}("
+                    + $"{nameof(ZoneActivatedEvent)} E)"
+                    + $" for: {ParentObject?.DebugName ?? NULL}",
+                    Indent: 0, Toggle: getDoDebug());
+
+                long turnsPassed = The.Game.Turns - StoredGameTurn;
+                StoredGameTurn = The.Game.Turns;
+
+                ProcessTurnAcquiredTarget(turnsPassed);
+                ProcessTurnSquareUpCache(turnsPassed);
+                ProcessTurnMercy(turnsPassed);
+                ProcessTurnValidSquareUpTarget();
+                ShowMercy();
+            }
+            return base.HandleEvent(E);
         }
         public override bool HandleEvent(GetItemElementsEvent E)
         {
@@ -416,7 +546,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone && The.Game != null)
             {
                 GameObject currentTarget = ParentObject?.Target;
 
@@ -427,9 +557,9 @@ namespace XRL.World.Parts
 
                 SB.AppendColored("W", $"Target");
                 SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("o", $"{CurrentSquareUpTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(CurrentSquareUpTarget)}");
+                SB.Append(VANDR).Append("(").AppendColored("R", $"{CurrentSquareUpTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(CurrentSquareUpTarget)}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
+                SB.Append(TANDR).Append("(").AppendColored("R", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
                 SB.AppendLine();
 
                 SB.AppendColored("W", $"State");
@@ -442,15 +572,21 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{IgnoreSameFaction.YehNah()}]{HONLY}{nameof(IgnoreSameFaction)}: ").AppendColored("B", $"{IgnoreSameFaction}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("C", $"{The.Game?.TimeTicks}").Append($"){HONLY}Current{nameof(The.Game.TimeTicks)}");
+                SB.Append(VANDR).Append($"[{IsMerciful.YehNah()}]{HONLY}{nameof(IsMerciful)}: ").AppendColored("B", $"{IsMerciful}");
                 SB.AppendLine();
-                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{AcquiredTargetTurnThreshold}").Append($"){HONLY}{nameof(AcquiredTargetTurnThreshold)}");
+                SB.Append(TANDR).Append("(").AppendColored("C", $"{The.Game.Turns}").Append($"){HONLY}Current{nameof(The.Game.Turns)}");
                 SB.AppendLine();
-                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnTickForAcquiredTarget}").Append($"){HONLY}{nameof(StoredTurnTickForAcquiredTarget)}");
+                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{AcquiredTargetTurnThreshold}").Append($"){HONLY}{nameof(AcquiredTargetTurnThreshold)}");
                 SB.AppendLine();
-                SB.Append(NBSP).Append(VANDR).Append("(").AppendColored("c", $"{SquareUpCacheTurnThreshold}").Append($"){HONLY}{nameof(SquareUpCacheTurnThreshold)}");
+                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForAcquiredTarget}").Append($"){HONLY}{nameof(StoredTurnsForAcquiredTarget)}");
                 SB.AppendLine();
-                SB.Append(NBSP).Append(TANDR).Append("(").AppendColored("c", $"{StoredTurnTickForSquareUpCache}").Append($"){HONLY}{nameof(StoredTurnTickForSquareUpCache)}");
+                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{SquareUpCacheTurnThreshold}").Append($"){HONLY}{nameof(SquareUpCacheTurnThreshold)}");
+                SB.AppendLine();
+                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForSquareUpCache}").Append($"){HONLY}{nameof(StoredTurnsForSquareUpCache)}");
+                SB.AppendLine();
+                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{MercyThreshold}").Append($"){HONLY}{nameof(MercyThreshold)}");
+                SB.AppendLine();
+                SB.AppendColored("K", "\xFF").Append(TANDR).Append("(").AppendColored("c", $"{MercyPeriod}").Append($"){HONLY}{nameof(MercyPeriod)}");
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
@@ -502,7 +638,7 @@ namespace XRL.World.Parts
                 ParentObject.Think($"I have secured victory over my opponent! I will look for another one!");
                 CurrentSquareUpTarget = null;
                 RecentlyAcquiredTarget = false;
-                StoredTurnTickForAcquiredTarget = The.Game.TimeTicks;
+                StoredTurnsForAcquiredTarget = 0;
             }
             return base.HandleEvent(E);
         }

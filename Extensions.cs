@@ -2174,5 +2174,24 @@ namespace UD_Blink_Mutation
                 && GO.CurrentCell.CosmeticDistanceto(Actor.CurrentCell.Location) < Radius + 1;
         }
 
+        public static int GetStatisticPercent(this Statistic Statistic)
+        {
+            return Statistic == null ? -1 : (int)Math.Round(Statistic.Value / Statistic.BaseValue * 100.0);
+        }
+        public static bool TryGetStatisticPercent(this Statistic Statistic, out int Percent)
+        {
+            Percent = GetStatisticPercent(Statistic);
+            return !(Percent < 0);
+        }
+
+        public static int GetHitpointPercent(this GameObject GO)
+        {
+            return GetStatisticPercent(GO?.GetStat("Hitpoints"));
+        }
+        public static bool TryGetHitpointPercent(this GameObject GO, out int Percent)
+        {
+            return TryGetStatisticPercent(GO?.GetStat("Hitpoints"), out Percent);
+        }
+
     } //!-- public static class Extensions
 }

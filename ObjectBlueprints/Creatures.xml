@@ -83,7 +83,7 @@
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="4" />
     <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <part Name="AISelfPreservation" Threshold="20" />
-    <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" />
+    <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" IsMerciful="true" MercyThreshold="25" />
     <stat Name="Level" Value="16" />
     <stat Name="Hitpoints" Value="34" />
     <tag Name="Subtype" Value="Relic Hunter" />
