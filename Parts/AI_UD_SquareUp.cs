@@ -68,6 +68,8 @@ namespace XRL.World.Parts
         public bool IgnoreSameCreatureType;
 
         public bool IgnoreSameFaction;
+        [SerializeField]
+        private bool _IgnoreSameFactionCache;
 
         public bool IsMerciful;
 
@@ -90,6 +92,25 @@ namespace XRL.World.Parts
             IsMerciful = false;
             MercyThreshold = 15;
             MercyPeriod = 1200L;
+        }
+
+        public override void Attach()
+        {
+            base.Attach();
+            SetIgnoreSameFaction(IgnoreSameFaction);
+        }
+
+        public bool GetIgnoreSameFaction()
+        {
+            return IgnoreSameFaction;
+        }
+        public bool SetIgnoreSameFaction(bool Value, bool Cache = true)
+        {
+            if (Cache)
+            {
+                _IgnoreSameFactionCache = Value;
+            }
+            return IgnoreSameFaction = Value;
         }
 
         public static GameObject GetMoreWorthyOpponent(GameObject Squarer, GameObject FirstOpponent, GameObject SecondOpponent, ref Dictionary<string, int> SquareUpCache, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false)
@@ -200,10 +221,19 @@ namespace XRL.World.Parts
                 Squarer.Think($"{opponentName} is the same type of creature as me and I already know I'm a better fighter than them!");
                 return -1;
             }
-
-            if (IgnoreSameFaction && Squarer.Blueprint == Opponent.Blueprint)
+            bool isSquarerWarden = Squarer.GetPropertyOrTag("Role") == "Warden";
+            string wardenVillageFaction = null;
+            if (isSquarerWarden)
             {
-                Squarer.Think($"{opponentName} is from the same faction as me and fighting them would be rude!");
+                wardenVillageFaction = Squarer.GetStringProperty("staticFaction1");
+                string[] WardenStaticFactionArray = wardenVillageFaction.Split(',');
+                wardenVillageFaction = WardenStaticFactionArray[0];
+            }
+            string squarerFaction = Squarer.GetPrimaryFaction();
+            string opponentFaction = Opponent.GetPrimaryFaction();
+            if (IgnoreSameFaction && (squarerFaction == opponentFaction || (isSquarerWarden && wardenVillageFaction == opponentFaction)))
+            {
+                Squarer.Think($"{opponentName} {Opponent.are()} from the same faction as me and fighting {Opponent.it} would be rude!");
                 return -1;
             }
 
@@ -279,7 +309,7 @@ namespace XRL.World.Parts
         }
         public int GetSquareUpScore(GameObject Target, int Weight = 0, string WeightReason = "")
         {
-            return GetSquareUpScore(ParentObject, Target, ref SquareUpCache, Weight, WeightReason, IgnoreSameCreatureType, IgnoreSameFaction);
+            return GetSquareUpScore(ParentObject, Target, ref SquareUpCache, Weight, WeightReason, IgnoreSameCreatureType, GetIgnoreSameFaction());
         }
 
         public static bool SquareUp(GameObject Squarer, bool RecentlyAcquiredTarget, out bool TargetAcquired, out GameObject SquareUpTarget, ref Dictionary<string, int> SquareUpCache, bool IsMerciful, List<string> MercyList)
@@ -321,6 +351,7 @@ namespace XRL.World.Parts
                     string unknownOpponent = "an unnamed opponent";
                     string firstOpponentName = $"[{firstOpponent?.ID ?? "null"}]" + (firstOpponent?.Render?.DisplayName ?? firstOpponent?.Blueprint ?? unknownOpponent);
                     string secondOpponentName = null;
+                    bool skipThought = true;
                     foreach (GameObject secondOpponent in opponentList)
                     {
                         firstOpponentName = $"[{firstOpponent?.ID ?? "null"}]" + (firstOpponent?.Render?.DisplayName ?? firstOpponent?.Blueprint ?? unknownOpponent);
@@ -336,28 +367,39 @@ namespace XRL.World.Parts
                             {
                                 Squarer.Think($"My first prospective opponent is the player and they are unworthy of fighting me!");
                                 firstOpponent = secondOpponent;
+                                skipThought = true;
                                 continue;
                             }
                             if (secondOpponent == The.Player)
                             {
-                                Squarer.Think($"My second prospective opponent is the player and they are unworthy of fighting me!");
+                                if (!skipThought)
+                                {
+                                    skipThought = false;
+                                    Squarer.Think($"My second prospective opponent is the player and they are unworthy of fighting me!");
+                                }
                                 continue;
                             }
                         }
                         if (IsMerciful && !MercyList.IsNullOrEmpty())
                         {
-                            if (MercyList.Contains(firstOpponent.ID))
+                            if (MercyList.Contains(firstOpponent?.ID))
                             {
-                                Squarer.Think($"I've defeated my second prospective opponent, {firstOpponentName}, I will show them mercy!");
+                                Squarer.Think($"I've defeated my first prospective opponent, {firstOpponentName}, I will show them mercy!");
                                 firstOpponent = secondOpponent;
+                                skipThought = true;
                                 continue;
                             }
-                            if (MercyList.Contains(secondOpponent.ID))
+                            if (MercyList.Contains(secondOpponent?.ID))
                             {
-                                Squarer.Think($"I've defeated my second prospective opponent, {secondOpponentName}, I will show them mercy!");
+                                if (!skipThought)
+                                {
+                                    skipThought = false;
+                                    Squarer.Think($"I've defeated my second prospective opponent, {secondOpponentName}, I will show them mercy!");
+                                }
                                 continue;
                             }
                         }
+                        skipThought = false;
                         if (firstOpponent == null)
                         {
                             firstOpponent = secondOpponent;
@@ -371,13 +413,11 @@ namespace XRL.World.Parts
                         {
                             Squarer.Think($"I will fight {firstOpponentName}!");
                             SquareUpTarget = firstOpponent;
-                            Squarer.Brain.PushGoal(new Kill(firstOpponent, true));
-                            if (Squarer.Brain.Goals.Count > 0)
-                            {
-                                Squarer.Brain.Goals.Peek().TakeAction();
-                                TargetAcquired = true;
-                                didSquare = true;
-                            }
+                            Squarer.Brain.WantToKill(firstOpponent, $"because {firstOpponent.it} looks like a worthy opponent!", true);
+                            Squarer.AddOpinion<OpinionGoad>(firstOpponent);
+                            Squarer.Target = firstOpponent;
+                            TargetAcquired = true;
+                            didSquare = true;
                         }
                         else
                         {
@@ -490,6 +530,7 @@ namespace XRL.World.Parts
                 || ID == PooledEvent<TakeOnRoleEvent>.ID
                 || (!RecentlyAcquiredTarget && ID == SingletonEvent<BeginTakeActionEvent>.ID)
                 || (!RecentlyAcquiredTarget && ID == PooledEvent<AIBoredEvent>.ID)
+                || ID == AIHelpBroadcastEvent.ID
                 || ID == KilledEvent.ID;
         }
         public override bool HandleEvent(EndTurnEvent E)
@@ -557,9 +598,9 @@ namespace XRL.World.Parts
 
                 SB.AppendColored("W", $"Target");
                 SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("R", $"{CurrentSquareUpTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(CurrentSquareUpTarget)}");
+                SB.Append(VANDR).Append("(").AppendColored("o", $"{CurrentSquareUpTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(CurrentSquareUpTarget)}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("R", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
+                SB.Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
                 SB.AppendLine();
 
                 SB.AppendColored("W", $"State");
@@ -570,23 +611,23 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{IgnoreSameCreatureType.YehNah()}]{HONLY}{nameof(IgnoreSameCreatureType)}: ").AppendColored("B", $"{IgnoreSameCreatureType}");
                 SB.AppendLine();
-                SB.Append(VANDR).Append($"[{IgnoreSameFaction.YehNah()}]{HONLY}{nameof(IgnoreSameFaction)}: ").AppendColored("B", $"{IgnoreSameFaction}");
+                SB.Append(VANDR).Append($"[{GetIgnoreSameFaction().YehNah()}]{HONLY}{nameof(IgnoreSameFaction)}: ").AppendColored("B", $"{GetIgnoreSameFaction()}");
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{IsMerciful.YehNah()}]{HONLY}{nameof(IsMerciful)}: ").AppendColored("B", $"{IsMerciful}");
                 SB.AppendLine();
                 SB.Append(TANDR).Append("(").AppendColored("C", $"{The.Game.Turns}").Append($"){HONLY}Current{nameof(The.Game.Turns)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{AcquiredTargetTurnThreshold}").Append($"){HONLY}{nameof(AcquiredTargetTurnThreshold)}");
+                SB.AppendNBSP(2).Append(VANDR).Append("(").AppendColored("c", $"{AcquiredTargetTurnThreshold}").Append($"){HONLY}{nameof(AcquiredTargetTurnThreshold)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForAcquiredTarget}").Append($"){HONLY}{nameof(StoredTurnsForAcquiredTarget)}");
+                SB.AppendNBSP(2).Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForAcquiredTarget}").Append($"){HONLY}{nameof(StoredTurnsForAcquiredTarget)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{SquareUpCacheTurnThreshold}").Append($"){HONLY}{nameof(SquareUpCacheTurnThreshold)}");
+                SB.AppendNBSP(2).Append(VANDR).Append("(").AppendColored("c", $"{SquareUpCacheTurnThreshold}").Append($"){HONLY}{nameof(SquareUpCacheTurnThreshold)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForSquareUpCache}").Append($"){HONLY}{nameof(StoredTurnsForSquareUpCache)}");
+                SB.AppendNBSP(2).Append(VANDR).Append("(").AppendColored("c", $"{StoredTurnsForSquareUpCache}").Append($"){HONLY}{nameof(StoredTurnsForSquareUpCache)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(VANDR).Append("(").AppendColored("c", $"{MercyThreshold}").Append($"){HONLY}{nameof(MercyThreshold)}");
+                SB.AppendNBSP(2).Append(VANDR).Append("(").AppendColored("c", $"{MercyThreshold}").Append($"){HONLY}{nameof(MercyThreshold)}");
                 SB.AppendLine();
-                SB.AppendColored("K", "\xFF").Append(TANDR).Append("(").AppendColored("c", $"{MercyPeriod}").Append($"){HONLY}{nameof(MercyPeriod)}");
+                SB.AppendNBSP(2).Append(TANDR).Append("(").AppendColored("c", $"{MercyPeriod}").Append($"){HONLY}{nameof(MercyPeriod)}");
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
@@ -595,6 +636,25 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(TakeOnRoleEvent E)
         {
+            List<string> roles = new()
+            {
+                "Mayor",
+                "Warden",
+                "Tinker",
+                "Apothecary",
+                "Merchant",
+            };
+            if (!GetIgnoreSameFaction())
+            {
+                if (roles.Contains(E.Role))
+                {
+                    SetIgnoreSameFaction(true, false);
+                }
+                else
+                {
+                    SetIgnoreSameFaction(_IgnoreSameFactionCache);
+                }
+            }
             // ParentObject.RemovePart(this);
             return base.HandleEvent(E);
         }
@@ -607,6 +667,18 @@ namespace XRL.World.Parts
                 + $" For: {ParentObject?.DebugName ?? NULL}",
                 Indent: 0, Toggle: getDoDebug());
 
+            if (ParentObject.HasPropertyOrTag("VillagePet") && !GetIgnoreSameFaction())
+            {
+                SetIgnoreSameFaction(true, false);
+            }
+            List<string> roles = new()
+            {
+                "Mayor",
+                "Warden",
+                "Tinker",
+                "Apothecary",
+                "Merchant",
+            };
             if (SquareUp())
             {
                 return false;
@@ -639,6 +711,16 @@ namespace XRL.World.Parts
                 CurrentSquareUpTarget = null;
                 RecentlyAcquiredTarget = false;
                 StoredTurnsForAcquiredTarget = 0;
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(AIHelpBroadcastEvent E)
+        {
+            if (E.Actor == ParentObject && E.Target == CurrentSquareUpTarget && E.Cause == HelpCause.Assault)
+            {
+                ParentObject.Think($"I want all the glory of battle to myself!");
+                E.Target = null;
+                return false;
             }
             return base.HandleEvent(E);
         }

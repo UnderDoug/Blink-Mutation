@@ -11,6 +11,7 @@ using Genkit;
 using XRL;
 using XRL.CharacterBuilds;
 using XRL.CharacterBuilds.Qud;
+using XRL.Language;
 using XRL.Rules;
 using XRL.UI;
 using XRL.World;
@@ -144,6 +145,14 @@ namespace UD_Blink_Mutation
         {
             // different from AppendRules (plural) since this doesn't force a new-line.
             sb.AppendColored("rules", value);
+            return sb;
+        }
+        public static StringBuilder AppendNBSP(this StringBuilder sb, int count = 1)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                sb.AppendColored("K", "\xFF");
+            }
             return sb;
         }
 
@@ -1144,11 +1153,11 @@ namespace UD_Blink_Mutation
 
         public static string Are(this GameObject Object)
         {
-            return Object.IsPlural ? "Are" : "Is";
+            return Object.IsPlural || (Object.IsPlayer() && Grammar.AllowSecondPerson) ? "Are" : "Is";
         }
         public static string are(this GameObject Object)
         {
-            return Object.IsPlural ? "are" : "is";
+            return Object.IsPlural || (Object.IsPlayer() && Grammar.AllowSecondPerson) ? "are" : "is";
         }
         public static string SplitCamelCase(this string @string)
         {
