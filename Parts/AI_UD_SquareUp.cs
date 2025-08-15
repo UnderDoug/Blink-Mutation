@@ -475,7 +475,7 @@ namespace XRL.World.Parts
         }
         public void ProcessTurnMercy(long PassedTurns = 1L)
         {
-            Dictionary<string, long> mercyListIterator = new(MercyList ?? new());
+            Dictionary<string, long> mercyListIterator = MercyList ??= new();
             if (!mercyListIterator.IsNullOrEmpty())
             {
                 foreach ((string opponent, long remainingTurns) in mercyListIterator)
