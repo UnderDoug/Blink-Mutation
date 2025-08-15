@@ -7,7 +7,4 @@
     <Title>UD Blink Mutation</Title>
   </PropertyGroup>
   <Import Project="../Mods.csproj" />
-  <ItemGroup>
-    <ProjectReference Include="..\UD_Modding_Toolbox\UD_Modding_Toolbox.csproj" />
-  </ItemGroup>
 </Project>

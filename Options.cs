@@ -5,12 +5,6 @@ using XRL;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
 using XRL.World.WorldBuilders;
-
-using UD_Modding_Toolbox;
-
-using static UD_Modding_Toolbox.Const;
-using static UD_Modding_Toolbox.Utils;
-
 using static UD_Blink_Mutation.Const;
 
 namespace UD_Blink_Mutation

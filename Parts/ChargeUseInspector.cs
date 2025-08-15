@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Policy;
 using System.Text;
 
-using UD_Modding_Toolbox;
-
-using static UD_Modding_Toolbox.Const;
-using static UD_Modding_Toolbox.Utils;
+using XRL.UI;
+using XRL.World.Tinkering;
 
 using UD_Blink_Mutation;
-
+using Debug = UD_Blink_Mutation.Debug;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;

@@ -1,11 +1,16 @@
-﻿using XRL.World;
+﻿using System.Collections.Generic;
+
+using XRL;
+using XRL.World;
+using XRL.World.Parts;
+using XRL.World.Anatomy;
 using XRL.World.Parts.Mutation;
 
-using UD_Modding_Toolbox;
-
-using static UD_Modding_Toolbox.Const;
-
+using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
+using static UD_Blink_Mutation.Utils;
+using Debug = UD_Blink_Mutation.Debug;
+using SerializeField = UnityEngine.SerializeField;
 
 namespace UD_Blink_Mutation
 {
