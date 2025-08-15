@@ -1,6 +1,10 @@
 using System;
 
-using Debug = UD_Blink_Mutation.Debug;
+using UD_Modding_Toolbox;
+
+using static UD_Modding_Toolbox.Const;
+using static UD_Modding_Toolbox.Utils;
+
 using static UD_Blink_Mutation.Const;
 
 namespace XRL.World.Parts

@@ -5,5 +5,9 @@
     "version": "0.0.2",
     "author": "{{K-g-G-Y-G-g-K alternation|UnderDoug}}",
     "tags": "Mutation,Balance,Harmony,Meme",
-    "PreviewImage": "preview.png"
+    "PreviewImage": "preview.png",
+    "LoadAfter": "UD_Modding_Toolbox",
+    "Dependencies": {
+        "UD_Modding_Toolbox": ">=0.0.1"
+    }
 }

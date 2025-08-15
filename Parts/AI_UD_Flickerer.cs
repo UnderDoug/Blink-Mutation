@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 using XRL.Rules;
 using XRL.UI;
-using XRL.World.AI.GoalHandlers;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
 
+using UD_Modding_Toolbox;
+
+using static UD_Modding_Toolbox.Const;
+
 using UD_Blink_Mutation;
 
-using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
-using static UD_Blink_Mutation.Utils;
-using Debug = UD_Blink_Mutation.Debug;
 using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts

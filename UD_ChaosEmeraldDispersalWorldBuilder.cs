@@ -3,23 +3,18 @@ using System.Collections.Generic;
 
 using Genkit;
 
-using XRL;
 using XRL.Language;
 using XRL.Rules;
 using XRL.UI;
 using XRL.Wish;
-using XRL.World;
 using XRL.World.Parts;
-using XRL.World.Parts.Mutation;
 using XRL.World.ZoneBuilders;
 
-using UD_Blink_Mutation;
+using UD_Modding_Toolbox;
 
-using static UD_Blink_Mutation.Const;
+using static UD_Modding_Toolbox.Const;
+
 using static UD_Blink_Mutation.Options;
-using static UD_Blink_Mutation.Utils;
-using Debug = UD_Blink_Mutation.Debug;
-using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.WorldBuilders
 {
