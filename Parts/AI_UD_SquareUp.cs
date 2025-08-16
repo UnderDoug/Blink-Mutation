@@ -3,18 +3,18 @@ using System.Collections.Generic;
 using System.Text;
 
 using XRL.Rules;
+using XRL.World.AI;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
+
+using SerializeField = UnityEngine.SerializeField;
 
 using UD_Blink_Mutation;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
-using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
-using SerializeField = UnityEngine.SerializeField;
-using XRL.World.AI;
 
 namespace XRL.World.Parts
 {

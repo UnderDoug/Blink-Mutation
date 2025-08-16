@@ -5,13 +5,13 @@ using System.Text;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.Parts.Mutation;
 
+using SerializeField = UnityEngine.SerializeField;
+
 using UD_Blink_Mutation;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
-using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
-using SerializeField = UnityEngine.SerializeField;
 
 namespace XRL.World.Parts
 {
