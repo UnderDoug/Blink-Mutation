@@ -345,6 +345,7 @@ namespace XRL.World.Parts
             stats.Set(nameof(CellsPerRange), CellsPerRange);
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, Implantee), GetCooldownTurns());
+            stats.Set("PowerUse", $"less than 1%");
         }
         public virtual void CollectColdSteelStats(Templates.StatCollector stats)
         {
@@ -356,6 +357,7 @@ namespace XRL.World.Parts
             stats.Set(nameof(MaxFlickerCharges), MaxFlickerCharges);
             stats.Set(nameof(FlickerChargeRechargeTurns), FlickerChargeRechargeTurns);
             stats.Set(nameof(FlickerRadius), FlickerRadius);
+            stats.Set("PowerUse", $"less than 1%");
         }
 
         public static IEnumerable<GameObject> GetFlickerTargets(GameObject Flickerer, List<Cell> CellsInFlickerRadius)

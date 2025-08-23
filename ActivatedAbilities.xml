@@ -19,6 +19,7 @@
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
       <statline Name="EffectiveRange" DisplayName="Effective range" />
       <statline Name="Cooldown" />
+      <statline Name="PowerUse" DisplayName="Power use" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="m" Detail="y" />
@@ -50,6 +51,7 @@
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
       <statline Name="EffectiveRange" DisplayName="Effective range" />
       <statline Name="Cooldown" />
+      <statline Name="PowerUse" DisplayName="Power use" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="W" Detail="w" />
@@ -81,6 +83,7 @@
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
       <statline Name="EffectiveRange" DisplayName="Effective range" />
       <statline Name="Cooldown" />
+      <statline Name="PowerUse" DisplayName="Power use" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Blink.png" Foreground="C" Detail="Y" />
@@ -109,6 +112,7 @@
       <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
       <statline Name="FlickerChargeRechargeTurns" DisplayName="Flicker charge recharge rate" />
       <statline Name="FlickerRadius" DisplayName="Radius" />
+      <statline Name="PowerUse" DisplayName="Power use" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Flicker.png" Foreground="C" Detail="Y" />
@@ -126,6 +130,7 @@
       <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
       <statline Name="FlickerChargeRechargeTurns" DisplayName="Flicker charge recharge rate" />
       <statline Name="FlickerRadius" DisplayName="Radius" />
+      <statline Name="PowerUse" DisplayName="Power use" />
     </description>
     <!-- Foreground is black pixels, Detail is white pixels -->
     <UITile Tile="Abilities/UD_BlinkMutation_Flicker.png" Foreground="W" Detail="w" />

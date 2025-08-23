@@ -348,6 +348,7 @@ namespace XRL.World.Parts.Mutation
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
+            stats.Set("PowerUse", $"less than 1%");
         }
 
         public override string GetLevelText(int Level)
@@ -362,7 +363,7 @@ namespace XRL.World.Parts.Mutation
             SB.AppendLine();
             SB.Append("Cooldown: ").AppendRule(GetCooldownTurns(Level).Things("turn"));
             SB.AppendLine();
-            SB.Append("Power Use: ").AppendRule("less than 1%");
+            SB.Append("Power use: ").AppendRule("less than 1%");
 
             return Event.FinalizeString(SB);
         }

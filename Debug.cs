@@ -380,7 +380,7 @@ namespace UD_Blink_Mutation
         {
             foreach (GameObject @object in The.ActiveZone.GetObjects())
             {
-                UD_CellHighlighter highlighter = @object.RequirePart<UD_CellHighlighter>();
+                UDBM_CellHighlighter highlighter = @object.RequirePart<UDBM_CellHighlighter>();
                 @object.RemovePart(highlighter);
             }
         }
@@ -399,7 +399,7 @@ namespace UD_Blink_Mutation
                     gameObject = Object;
             }
             gameObject = Cell.GetHighestRenderLayerObject();
-            UD_CellHighlighter highlighter = gameObject.RequirePart<UD_CellHighlighter>();
+            UDBM_CellHighlighter highlighter = gameObject.RequirePart<UDBM_CellHighlighter>();
             if (Priority >= highlighter.HighlightPriority)
             {
                 highlighter.HighlightPriority = Priority;
@@ -504,7 +504,7 @@ namespace UD_Blink_Mutation
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class UD_CellHighlighter : IScribedPart
+    public class UDBM_CellHighlighter : IScribedPart
     {
         public static readonly int ICON_COLOR_PRIORITY = 999;
 
@@ -516,7 +516,7 @@ namespace XRL.World.Parts
 
         public bool DoHighlight;
 
-        public UD_CellHighlighter()
+        public UDBM_CellHighlighter()
         {
             BackgroundColor = "k";
             DoHighlight = 
