@@ -540,6 +540,16 @@ namespace XRL.World.Parts
                     return false;
                 }
             }
+            Debug.Entry(2, $"Checking is overburdened...", Indent: indent + 1, Toggle: getDoDebug());
+            if (Flickerer.IsOverburdened())
+            {
+                if (!Silent)
+                {
+                    Flickerer.Fail($"You cannot {verb} while overburdened.");
+                }
+                Debug.LastIndent = indent;
+                return false;
+            }
             Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 2, Toggle: getDoDebug());
             if (!Flickerer.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {

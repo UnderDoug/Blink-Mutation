@@ -925,6 +925,16 @@ namespace XRL.World.Parts.Mutation
                     return false;
                 }
             }
+            Debug.Entry(2, $"Checking is overburdened...", Indent: indent + 1, Toggle: getDoDebug());
+            if (Blinker.IsOverburdened())
+            {
+                if (!Silent)
+                {
+                    Blinker.Fail($"You cannot {verb} while overburdened.");
+                }
+                Debug.LastIndent = indent;
+                return false;
+            }
             Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
