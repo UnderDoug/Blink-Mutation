@@ -72,6 +72,8 @@ namespace XRL.World.Parts
         public Guid PowerUpActivatedAbilityID;
         public Guid SuperBeamActivatedAbilityID;
 
+        public static int GlimmerPerEmerald => 35;
+
         public bool PoweredUp => IsMyActivatedAbilityToggledOn(PowerUpActivatedAbilityID, ParentObject);
         public static int PowerUpStatShiftAmount => 10;
 
@@ -83,7 +85,6 @@ namespace XRL.World.Parts
         private bool CoolingOff = false;
 
         public static string PowerUpAbilityName => "Super Transformation".Color("supertransformation");
-
 
         public int BlinkCapOverride = -1;
 
@@ -1297,7 +1298,7 @@ namespace XRL.World.Parts
         {
             if (SetPieces > 0)
             {
-                int factor = 35;
+                int factor = GlimmerPerEmerald;
                 if (PoweredUp)
                 {
                     factor *= 2;
