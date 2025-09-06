@@ -83,7 +83,7 @@
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="4" />
     <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
     <part Name="AISelfPreservation" Threshold="20" />
-    <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" IsMerciful="true" MercyThreshold="25" />
+    <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" IgnoreCreatures="Prickle Pig" IsMerciful="true" MercyThreshold="25" />
     <stat Name="Level" Value="16" />
     <stat Name="Hitpoints" Value="34" />
     <tag Name="Subtype" Value="Relic Hunter" />
@@ -166,6 +166,7 @@
           TileColor="&amp;R" DetailColor="c" />
     <part Name="ModSturdy" />
     <part Name="NoDamage" />
+    <part Name="NoRust" />
     <part Name="NaturalEquipment" />
     <part Name="Metal" />
     <part Name="Physics" Category="Natural Armor" IsReal="false" />
@@ -174,6 +175,7 @@
     <part Name="TinkerItem" Bits="0" CanDisassemble="false" CanBuild="false" />
     <part Name="Examiner" EpistemicStatus="2" Complexity="0" />
     <intproperty Name="Natural" Value="1" />
+    <tag Name="NoEffects" />
     <tag Name="ExcludeFromDynamicEncounters" />
     <tag Name="NaturalGear" />
     <tag Name="NoDefaultBehavior" />
