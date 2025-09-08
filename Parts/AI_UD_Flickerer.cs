@@ -537,7 +537,7 @@ namespace XRL.World.Parts
                                 BlinkRange: BlinkRange,
                                 OriginCell: currentOriginCell,
                                 DestinationCell: destinationCell,
-                                Path: out FindPath path))
+                                Path: out BlinkPath path))
                             {
                                 cellsInFlickerRadius.Remove(destinationCell);
                                 continue;
@@ -599,7 +599,7 @@ namespace XRL.World.Parts
                                 BlinkRange: BlinkRange,
                                 OriginCell: currentOriginCell,
                                 DestinationCell: originCell,
-                                Path: out FindPath path)
+                                Path: out BlinkPath path)
                                 && UD_CyberneticsOverclockedCentralNervousSystem.PerformFlickerMove(
                                     Flickerer: E.Actor,
                                     OriginCell: currentOriginCell,

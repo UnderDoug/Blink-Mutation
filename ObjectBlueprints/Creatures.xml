@@ -101,8 +101,9 @@
     <part Name="Description" Short="A small disaffected spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
     <mutation Name="UD_Blink" DisplayName="Blink" 
               Level="10" TileColor="K"
-              Shouts="true" Shout="=object.t= =verb:aren't:afterpronoun= even good enough to be my fake!" ShoutColor="r"
+              Shouts="true" Shout="You're not even good enough to be my fake!" ShoutColor="r"
               PhysicalFeatures="false" />
+    <!-- Shout="=object.t= =verb:aren't:afterpronoun= even good enough to be my fake!" -->
     <intproperty Name="RapidLevel_UD_Blink" Value="6" />
     <intproperty Name="RapidLevel_Blink" Value="6" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="6" />

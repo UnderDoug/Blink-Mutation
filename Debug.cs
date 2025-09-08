@@ -396,7 +396,9 @@ namespace UD_Blink_Mutation
             {
                 gameObject ??= Object;
                 if (Object.Render.RenderLayer >= gameObject.Render.RenderLayer)
+                {
                     gameObject = Object;
+                }
             }
             gameObject = Cell.GetHighestRenderLayerObject();
             UDBM_CellHighlighter highlighter = gameObject.RequirePart<UDBM_CellHighlighter>();
@@ -435,37 +437,36 @@ namespace UD_Blink_Mutation
         }
 
         [WishCommand(Command = "debug blink path")]
-        public static void DebugBlinkPathWish(string Iteration)
+        public static void DebugBlinkPathWish(string Path)
         {
             RemoveCellHighlighting();
-            if (int.TryParse(Iteration, out int iteration) && (iteration == 0 || iteration >= UD_Blink.PathCache.Count) || Iteration == "clear")
+            if (The.Player.GetPart<UD_Blink>() is not UD_Blink playerBlinkSkill)
             {
                 return;
             }
-            UD_Blink.BlinkPath blinkPath = null;
-            if (Iteration.ToLower() == "last")
+            BlinkPaths blinkPaths = playerBlinkSkill.PathCache;
+            if ((int.TryParse(Path, out int index) && (index < 0 || index > blinkPaths.Count - 1)) 
+                || Path == null || Path == "clear") // debug blink path
             {
-                blinkPath = UD_Blink.PathCache[UD_Blink.PathCache.Count];
+                return;
+            }
+            BlinkPath blinkPath = null;
+            if (Path.ToLower() == "last") // debug blink path last
+            {
+                blinkPath = blinkPaths[^1];
                 
             }
-            else if (Iteration.ToLower() == "first")
+            else if (Path.ToLower() == "first") // debug blink path first
             {
-                blinkPath = UD_Blink.PathCache[1];
+                blinkPath = blinkPaths[0];
             }
-            else if (Iteration.ToLower() == "selected")
+            else if (Path.ToLower() == "selected") // debug blink path selected
             {
-                foreach ((int _, UD_Blink.BlinkPath cachedBlinkPath) in UD_Blink.PathCache)
-                {
-                    if (cachedBlinkPath != null && cachedBlinkPath.Selected)
-                    {
-                        blinkPath = cachedBlinkPath;
-                        break;
-                    }
-                }
+                blinkPath = blinkPaths;
             }
             else
             {
-                blinkPath = UD_Blink.PathCache[iteration];
+                blinkPath = blinkPaths[index];
             }
             if (blinkPath == null || blinkPath.Steps.IsNullOrEmpty())
             {
@@ -473,32 +474,32 @@ namespace UD_Blink_Mutation
             }
             foreach (Cell step in blinkPath.Steps)
             {
-                if (step == blinkPath.Steps[^1])
-                {
-                    step.HighlightCyan(5, true);
-                    continue;
-                }
-                int rangeStep = Math.Min(The.Player.GetPart<UD_Blink>().GetBlinkRange() - 1, blinkPath.Steps.Count - 1);
-                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep])
-                {
-                    step.HighlightGreen(4, true);
-                    continue;
-                }
-                if (step == blinkPath.KidCell)
-                {
-                    step.HighlightRed(3, true);
-                    continue;
-                }
                 if (step == blinkPath.KidCell)
                 {
                     step.HighlightPurple(3, true);
                     continue;
                 }
-                step.HighlightBlue(1, true);
+                int rangeStep = Math.Min(playerBlinkSkill.GetBlinkRange() - 1, blinkPath.Count - 1);
+                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep])
+                {
+                    step.HighlightGreen(4, true);
+                    continue;
+                }
+                step.HighlightBlue(2, true);
             }
+            foreach (BlinkPath path in blinkPaths)
+            {
+                path?.EndCell?.HighlightYellow(1, true);
+            }
+            blinkPath?.EndCell?.HighlightCyan(5, true);
+            blinkPath?.KidDestination?.HighlightRed(3, true);
         }
-
-    } //!-- public static class Debug
+        [WishCommand(Command = "debug blink path")]
+        public static void DebugBlinkPathWish()
+        {
+            DebugBlinkPathWish(null);
+        }
+    }
 }
 
 namespace XRL.World.Parts

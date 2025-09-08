@@ -381,36 +381,31 @@ namespace XRL.World.Parts
             yield break;
         }
 
-        public static bool TryGetFlickerPath(GameObject Flickerer, int BlinkRange, Cell OriginCell, Cell DestinationCell, out FindPath Path)
+        public static bool TryGetFlickerPath(GameObject Flickerer, int BlinkRange, Cell OriginCell, Cell DestinationCell, out BlinkPath Path)
         {
             Path = null;
 
-            FindPath posiblePath = new(
-                        StartCell: OriginCell,
-                        EndCell: DestinationCell,
-                        PathGlobal: true,
-                        Looker: Flickerer,
-                        MaxWeight: 10,
-                        IgnoreCreatures: true);
+            BlinkPaths possiblePaths = new()
+            {
+                new(Flickerer, OriginCell, DestinationCell)
+            };
+            possiblePaths.InitializePaths(Flickerer, BlinkRange);
+            BlinkPath possiblePath = possiblePaths;
 
-            if (posiblePath.Steps.Contains(OriginCell))
+            if (UD_Blink.IsValidDestinationCell(Flickerer, DestinationCell, BlinkRange, possiblePath.Steps.Count))
             {
-                posiblePath.Steps.Remove(OriginCell);
-            }
-            if (UD_Blink.IsValidDestinationCell(Flickerer, DestinationCell, BlinkRange, posiblePath.Steps.Count))
-            {
-                Path = posiblePath;
+                Path = possiblePath;
             }
             return Path != null;
         }
-        public static bool GetFlickerPaths(GameObject Flickerer, int BlinkRange, Cell OriginCell, List<Cell> FlickerTargetAdjacentCells, out Dictionary<Cell, FindPath> DestinationPaths)
+        public static bool GetFlickerPaths(GameObject Flickerer, int BlinkRange, Cell OriginCell, List<Cell> FlickerTargetAdjacentCells, out Dictionary<Cell, BlinkPath> DestinationPaths)
         {
             DestinationPaths = new();
             if (Flickerer != null && BlinkRange > 0 && OriginCell != null && !FlickerTargetAdjacentCells.IsNullOrEmpty())
             {
                 foreach (Cell possibleDestination in FlickerTargetAdjacentCells)
                 {
-                    if (TryGetFlickerPath(Flickerer, BlinkRange, OriginCell, possibleDestination, out FindPath posiblePath))
+                    if (TryGetFlickerPath(Flickerer, BlinkRange, OriginCell, possibleDestination, out BlinkPath posiblePath))
                     {
                         DestinationPaths.TryAdd(possibleDestination, posiblePath);
                     }
@@ -419,7 +414,7 @@ namespace XRL.World.Parts
             return !DestinationPaths.IsNullOrEmpty();
         }
 
-        public static bool CheckBeforeBlinkEvent(GameObject Flickerer, int BlinkRange, Cell DestinationCell, GameObject FlickerTarget, FindPath Path, bool Silent = false)
+        public static bool CheckBeforeBlinkEvent(GameObject Flickerer, int BlinkRange, Cell DestinationCell, GameObject FlickerTarget, BlinkPath Path, bool Silent = false)
         {
             int indent = Debug.LastIndent;
             if (Flickerer != null && DestinationCell != null && FlickerTarget != null && Path != null)
@@ -447,7 +442,7 @@ namespace XRL.World.Parts
             return true;
         }
 
-        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, FindPath Path, out bool DidFlicker)
+        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, BlinkPath Path, out bool DidFlicker)
         {
             int indent = Debug.LastIndent;
             DidFlicker = HaveFlickered;
@@ -721,7 +716,7 @@ namespace XRL.World.Parts
                                 BlinkRange: BlinkRange,
                                 OriginCell: currentOriginCell,
                                 FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
-                                DestinationPaths: out Dictionary<Cell, FindPath> destinationPaths))
+                                DestinationPaths: out Dictionary<Cell, BlinkPath> destinationPaths))
                         {
                             Debug.CheckNah(3, $"{nameof(flickerTargetAdjacentCells)} is empty. Removing flicker target from list and attempting again", Indent: indent + 5, Toggle: getDoDebug());
                             flickerTargets.Remove(flickerTarget);
@@ -730,7 +725,7 @@ namespace XRL.World.Parts
 
                         Cell destinationCell = null;
 
-                        FindPath path = null;
+                        BlinkPath path = null;
 
                         Debug.Entry(2, $"Getting {nameof(path)} from {nameof(destinationPaths)}...", Indent: indent + 4, Toggle: getDoDebug());
                         while (path == null && !destinationPaths.IsNullOrEmpty())
@@ -887,7 +882,7 @@ namespace XRL.World.Parts
                         BlinkRange: BlinkRange,
                         OriginCell: currentOriginCell,
                         DestinationCell: originCell,
-                        Path: out FindPath finalPath))
+                        Path: out BlinkPath finalPath))
                     {
                         PerformFlickerMove(
                             Flickerer: Flickerer,

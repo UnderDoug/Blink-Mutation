@@ -39,7 +39,7 @@ namespace UD_Blink_Mutation
 
         public bool IsRetreat;
 
-        public FindPath Path;
+        public BlinkPath Path;
 
         public override int GetCascadeLevel()
         {
@@ -60,7 +60,7 @@ namespace UD_Blink_Mutation
             Path = null;
         }
 
-        public static AfterBlinkEvent FromPool(GameObject Blinker, UD_Blink Blink, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, FindPath Path = null)
+        public static AfterBlinkEvent FromPool(GameObject Blinker, UD_Blink Blink, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, BlinkPath Path = null)
         {
             int indent = Debug.LastIndent;
             Debug.Entry(4,
@@ -92,7 +92,7 @@ namespace UD_Blink_Mutation
             Debug.LastIndent = indent;
             return null;
         }
-        public static void Send(GameObject Blinker, UD_Blink Blink, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, FindPath Path = null)
+        public static void Send(GameObject Blinker, UD_Blink Blink, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, BlinkPath Path = null)
         {
             AfterBlinkEvent E = FromPool(Blinker, Blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
 

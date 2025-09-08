@@ -2,7 +2,7 @@
     "id": "UD_Blink_Mutation",
     "title": "{{m|Blink}} {{y|Mutation}}",
     "description": "Adds a physical alternative to teleport that blinks you a short distance in one of the orthogonal directions.\n\nAlso adds a bunch of homages to everyone's favourite {{B|blue}} speedy-boi, and his edgy purple class-mate (oc).",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "author": "{{K-g-G-Y-G-g-K alternation|UnderDoug}}",
     "tags": "Mutation,Balance,Harmony,Meme",
     "PreviewImage": "preview.png"

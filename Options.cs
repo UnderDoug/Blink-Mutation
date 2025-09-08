@@ -24,9 +24,9 @@ namespace UD_Blink_Mutation
             { nameof(UD_ChaosEmeraldDispersalWorldBuilder), true },
 
             // Events
-            { nameof(GetBlinkRangeEvent), true },
-            { nameof(BeforeBlinkEvent), true },
-            { nameof(AfterBlinkEvent), true },
+            { nameof(GetBlinkRangeEvent), false },
+            { nameof(BeforeBlinkEvent), false },
+            { nameof(AfterBlinkEvent), false },
 
             // AI Parts
             { nameof(AI_UD_SquareUp), true },

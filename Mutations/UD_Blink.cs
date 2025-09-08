@@ -1,13 +1,13 @@
 ﻿using ConsoleLib.Console;
+using Genkit;
+using Qud.API;
+using Sheeter;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
-
-using Genkit;
-using Qud.API;
+using UD_Blink_Mutation;
 using UnityEngine;
-
 using XRL.Core;
 using XRL.Language;
 using XRL.Rules;
@@ -16,12 +16,11 @@ using XRL.Wish;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
-
-using UD_Blink_Mutation;
-
+using XRL.World.Parts.Skill;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
+using static XRL.World.Parts.Mutation.UD_Blink;
 using Debug = UD_Blink_Mutation.Debug;
 
 namespace XRL.World.Parts.Mutation
@@ -80,6 +79,7 @@ namespace XRL.World.Parts.Mutation
 
         // Flags
         private bool MidBlink = false;
+        private int MidBlinkResetFallback = 0;
         public bool BornThisWay => IsBornThisWay(ParentObject);
         public string MutationDescBornWithString => GetBoolString(UDBM_BORNTHISWAY_BOOK.BookPagesAsList(), BornThisWay);
 
@@ -120,64 +120,7 @@ namespace XRL.World.Parts.Mutation
         public AnimatedMaterialGeneric PrickleBallAnimation => NewPrickleBallAnimationPart();
 
         [NonSerialized]
-        public static Dictionary<int, BlinkPath> PathCache = new();
-
-        [Serializable]
-        public class BlinkPath : IComposite
-        {
-            public bool Selected;
-            public FindPath Path;
-            public List<Cell> Steps => Path?.Steps;
-
-            public Cell Destination;
-            public GameObject Kid;
-            public Cell KidDestination;
-            public Cell KidCell;
-
-            public BlinkPath()
-            {
-                Selected = false;
-                Path = null;
-                Destination = null;
-                Kid = null;
-                KidDestination = null;
-                KidCell = null;
-            }
-            public BlinkPath(FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
-                : this()
-            {
-                this.Path = Path;
-                this.Destination = Destination;
-                this.Kid = Kid;
-                this.KidDestination = KidDestination;
-            }
-            public BlinkPath(bool Selected, FindPath Path, Cell Destination, GameObject Kid, Cell KidDestination, Cell KidCell)
-                : this(Path, Destination, Kid, KidDestination, KidCell)
-            {
-                this.Selected = Selected;
-            }
-
-            public override string ToString()
-            {
-                return ToString();
-            }
-            public string ToString(bool ShowSelected = false)
-            {
-                string output = string.Empty;
-                output += $"// ";
-                if (ShowSelected)
-                {
-                    output += $"{nameof(Selected)}: {Selected}, ";
-                }
-                output += $"{nameof(Path)}: {(Path != null ? "init".Quote() : NULL)}, ";
-                output += $"{nameof(Destination)}: [{Destination?.Location}], ";
-                output += $"{nameof(Kid)}: {Kid?.ShortDisplayNameStripped ?? NULL}, ";
-                output += $"{nameof(KidDestination)}: [{KidDestination?.Location}] ";
-                output += $"{nameof(KidCell)}: [{KidCell?.Location}] ";
-                output += "//";
-                return output;
-            }
-        }
+        public BlinkPaths PathCache = new();
 
         // Part Parameters
         public int BaseRange;
@@ -582,13 +525,15 @@ namespace XRL.World.Parts.Mutation
             return GetBlinkDirection(Blinker, BlinkRange, false, null, true, TargetCell);
         }
 
-        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out FindPath Path, bool IsNothinPersonnelKid = false)
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPath Path, bool IsNothinPersonnelKid = false)
         {
             Destination = null;
             Kid = null;
             KidDestination = null;
             Path = null;
             Cell origin = Blinker.CurrentCell;
+
+            UD_Blink blinkSkill = Blinker.GetPart<UD_Blink>();
 
             int indent = Debug.LastIndent;
             Debug.Entry(1,
@@ -620,7 +565,7 @@ namespace XRL.World.Parts.Mutation
             }
             if (Direction == null || Range < 1)
             {
-                Debug.CheckNah(2, $"Direction null or Range less than 1 Aborting...", Indent: indent + 2, Toggle: getDoDebug());
+                Debug.CheckNah(2, $"{nameof(Direction)} null or {nameof(Range)} less than 1 Aborting...", Indent: indent + 2, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(Direction)}", $"{(!Direction.IsNullOrEmpty() ? Direction : NULL)}",
                     Good: !Direction.IsNullOrEmpty(), Indent: indent + 3, Toggle: getDoDebug());
@@ -632,128 +577,40 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            Debug.Entry(2, $"Getting blinkPath...", Indent: indent + 1, Toggle: getDoDebug());
-            List<Cell> blinkPath = Event.NewCellList(GetBlinkCellsInDirection(Blinker, Direction, Range));
+            Debug.Entry(2, $"Getting blinkCells...", Indent: indent + 1, Toggle: getDoDebug());
+            List<Cell> blinkCells = Event.NewCellList(GetBlinkCellsInDirection(Blinker, Direction, Range));
 
-            if (blinkPath.Count < 1)
+            if (blinkCells.Count < 1)
             {
-                Debug.CheckNah(3, $"blinkPath.Count < 1, Aborting...", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(blinkCells)}.{nameof(blinkCells.Count)} < 1, Aborting...", Indent: indent + 1, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
             }
 
-            Cell previousCell = null;
-            Cell thisCell = null;
-            bool previousCellIsValid = false;
-            int cellCount = blinkPath.Count;
-            int iterationCounter = 1;
-            int previousiteration = 1;
-            int padding = $"{cellCount}".Length;
-            PathCache = new();
-            BlinkPath BlinkPath = new();
-            FindPath previousPath = null;
-            Debug.Entry(2, $"Validating blinkPath and acquiring destinations and target...", Indent: indent + 1, Toggle: getDoDebug());
-            for (int i = cellCount - 1; i >= 0; --i)
+            BlinkPaths pathCache = new();
+            if (blinkSkill != null)
             {
-                thisCell = blinkPath[i];
-                string iteration = $"{iterationCounter}".PadLeft(padding, ' ');
-                Debug.Divider(3, HONLY, 45, Indent: indent + 1, Toggle: getDoDebug());
-                Debug.LoopItem(3, $"{iteration}: (i:{i}) [{thisCell?.Location}]", 
-                    Indent: indent + 1, Toggle: getDoDebug());
-
-                Debug.LoopItem(3, $"Finding path between origin [{origin?.Location}] and this cell [{thisCell?.Location}]...", 
-                    Indent: indent + 2, Toggle: getDoDebug());
-
-                FindPath path = new(
-                    StartCell: origin, 
-                    EndCell: thisCell, 
-                    PathGlobal: true, 
-                    Looker: Blinker, 
-                    MaxWeight: 10,
-                    IgnoreCreatures: true);
-
-                Debug.LoopItem(3, $"Removing origin step from path...", Indent: indent + 2, Toggle: getDoDebug());
-                if (path.Steps.Contains(origin))
-                {
-                    Debug.CheckYeh(4, $"{nameof(origin)} found in {nameof(path)}.Steps", Indent: indent + 3, Toggle: getDoDebug());
-                    path.Steps.Remove(origin);
-                }
-                else
-                {
-                    Debug.CheckNah(4, $"{nameof(origin)} not found in {nameof(path)}.Steps", Indent: indent + 3, Toggle: getDoDebug());
-                }
-                Debug.LoopItem(4, $"{nameof(path)}.Steps no longer contains [{origin?.Location}]", $"{!path.Steps.Contains(origin)}",
-                    Good: !path.Steps.Contains(origin), Indent: indent + 2, Toggle: getDoDebug());
-
-                Debug.LoopItem(4, $"{nameof(path)} Steps Count", $"{path.Steps.Count}",
-                    Good: path.Steps.Count <= Range, Indent: indent + 3, Toggle: getDoDebug());
-
-                Debug.LoopItem(3, $"Checking for existing {nameof(Destination)} and {nameof(Kid)}...", Indent: indent + 1, Toggle: getDoDebug());
-                if (Destination != null && (!IsNothinPersonnelKid || Kid != null))
-                {
-                    Debug.CheckYeh(4, $"{nameof(Destination)}", $"[{Destination?.Location}]", Indent: indent + 3, Toggle: getDoDebug());
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid?.DebugName}", Indent: indent + 3, Toggle: getDoDebug());
-                    if (IsNothinPersonnelKid)
-                    {
-                        PathCache[previousiteration].KidDestination = KidDestination ??= thisCell;
-                        PathCache[previousiteration].Path = Path = path;
-                        Debug.LoopItem(4, $"Path is hard set to PathCache[{iterationCounter - 1}]", Indent: indent + 4, Toggle: getDoDebug());
-                    }
-                    Debug.LoopItem(4, $"{nameof(KidDestination)}", $"[{KidDestination?.Location}]", Indent: indent + 3, Toggle: getDoDebug());
-                    PathCache[previousiteration].Selected = true;
-                    break;
-                }
-                else
-                {
-                    Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                        Good: Destination != null, Indent: indent + 3, Toggle: getDoDebug());
-                    Debug.LoopItem(4, $"{nameof(Kid)}", $"{Kid?.DebugName ?? NULL}",
-                        Good: Kid != null, Indent: indent + 3, Toggle: getDoDebug());
-                }
-                
-                Debug.LoopItem(3, $"Finding Kid in this cell [{thisCell?.Location}]...", Indent: indent + 2, Toggle: getDoDebug());
-                if (IsNothinPersonnelKid && (Kid = FindKidInCell(Blinker, thisCell)) != null)
-                {
-                    Debug.CheckYeh(4, $"{nameof(Kid)}", $"{Kid.DebugName}", Indent: indent + 3, Toggle: getDoDebug());
-                    if (previousCellIsValid)
-                    {
-                        BlinkPath.KidDestination = KidDestination ??= previousCell;
-                        BlinkPath.Path = Path = previousPath;
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"[{KidDestination.Location}]", Indent: indent + 3, Toggle: getDoDebug());
-                    }
-                    else
-                    {
-                        Debug.CheckYeh(4, $"{nameof(KidDestination)}", $"previousCell invalid", Indent: indent + 3, Toggle: getDoDebug());
-                    }
-                }
-                else
-                {
-                    Debug.CheckNah(4, $"{nameof(Kid)}", $"{NULL}", Indent: indent + 3, Toggle: getDoDebug());
-                }
-
-                Debug.LoopItem(3, $"Checking validity of this cell...", Indent: indent + 2, Toggle: getDoDebug());
-                if (previousCellIsValid = IsValidDestinationCell(Blinker, thisCell, Range, path.Steps.Count))
-                {
-                    BlinkPath.Destination = Destination ??= thisCell;
-                    BlinkPath.Path = Path ??= path;
-                    if (Path == path)
-                    {
-                        Debug.LoopItem(4, $"Path is soft set to PathCache[{iterationCounter}]", Indent: indent + 3, Toggle: getDoDebug());
-                    }
-                }
-                Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
-                    Good: Destination != null, Indent: indent + 3, Toggle: getDoDebug());
-
-                if (i == 0) BlinkPath.Selected = true;
-                PathCache.TryAdd(iterationCounter, BlinkPath);
-
-                previousCell = thisCell;
-                previousPath = path;
-                previousiteration = iterationCounter++;
-                
-                Debug.LoopItem(3, $"End {iteration}: (i:{i}) ////", Indent: indent + 1, Toggle: getDoDebug());
+                blinkSkill.PathCache = new();
+                pathCache = blinkSkill.PathCache;
             }
-            Debug.Divider(3, HONLY, 45, Indent: indent + 1, Toggle: getDoDebug());
+
+            for (int i = 0; i < blinkCells.Count; i++)
+            {
+                int index = blinkCells.Count - 1 - i;
+                pathCache.Add(new(Blinker, origin, blinkCells[index]));
+            }
+
+            if (!pathCache.IsNullOrEmpty())
+            {
+                pathCache.InitializePaths(Blinker, Range);
+            }
+
+            Debug.Entry(2, $"Selecting {nameof(BlinkPath)}...", Indent: indent + 1, Toggle: getDoDebug());
+            Path = pathCache.SelectBlinkPath(IsNothinPersonnelKid);
+
+            Destination = Path?.Destination;
+            Kid = Path?.Kid;
+            KidDestination = Path?.KidDestination;
 
             Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
                 Good: Destination != null, Indent: indent + 1, Toggle: getDoDebug());
@@ -772,47 +629,49 @@ namespace XRL.World.Parts.Mutation
             return TryGetBlinkDestination(Blinker, Direction, Range, out Destination, out _, out _, out _, false);
         }
 
-        public static GameObject FindKidInCell(GameObject Blinker, Cell cell)
+        public static GameObject FindKidInCell(GameObject Blinker, Cell Cell)
         {
-            GameObject kid = null;
-            foreach (GameObject @object in cell.GetObjectsWithPart(nameof(Combat)))
+            if (Blinker == null || Cell == null)
             {
-                if (@object.IsHostileTowards(Blinker))
+                return null;
+            }
+            foreach (GameObject combatObject in Cell.GetObjectsWithPart(nameof(Combat)))
+            {
+                if (combatObject.IsHostileTowards(Blinker))
                 {
-                    kid = @object;
-                    break;
+                    return combatObject;
                 }
             }
-            return kid;
+            return null;
         }
-        public static bool IsValidDestinationCell(GameObject Blinker, Cell Destination, int Range, int Steps)
+        public static bool IsValidDestinationCell(GameObject Blinker, Cell Destination, int Range, int Steps, bool suppressDebug = false)
         {
             int indent = Debug.LastIndent;
 
             if (Blinker == null)
             {
-                Debug.CheckNah(3, $"{nameof(Blinker)} is null", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Blinker)} is null", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
 
             if (Destination == null)
             {
-                Debug.CheckNah(3, $"{nameof(Destination)} is null", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Destination)} is null", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
 
             if (Range < 1)
             {
-                Debug.CheckNah(3, $"{nameof(Range)} is 0 or less", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Range)} is 0 or less", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
 
             if (Steps < 1)
             {
-                Debug.CheckNah(3, $"{nameof(Steps)} is less than 1", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Steps)} is less than 1", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
@@ -823,14 +682,14 @@ namespace XRL.World.Parts.Mutation
             {
                 Debug.CheckNah(3, 
                     $"{nameof(Range)} x {nameof(speedFactor)} ({factoredRange}) is less than {nameof(Steps)} ({Steps})", 
-                    Indent: indent + 1, Toggle: getDoDebug());
+                    Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
 
             if (Destination.IsSolidFor(Blinker))
             {
-                Debug.CheckNah(3, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug());
+                Debug.CheckNah(3, $"{nameof(Destination)} is solid for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                 Debug.LastIndent = indent;
                 return false;
             }
@@ -841,7 +700,7 @@ namespace XRL.World.Parts.Mutation
                 {
                     if (potentialAir.TryGetPart(out StairsDown stairsDown) && stairsDown.PullDown && stairsDown.IsValidForPullDown(Blinker))
                     {
-                        Debug.CheckNah(4, $"{nameof(Destination)} empty space for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug());
+                        Debug.CheckNah(4, $"{nameof(Destination)} empty space for {nameof(Blinker)}", Indent: indent + 1, Toggle: getDoDebug() && !suppressDebug);
                         Debug.LastIndent = indent;
                         return false;
                     }
@@ -855,19 +714,15 @@ namespace XRL.World.Parts.Mutation
         {
             if (Blinker != null && Direction != null && Range > 1)
             {
-                Cell origin = Blinker.CurrentCell;
-                Cell currentCell = origin;
-
-                for (int i = 1; i <= Range; i++)
+                if (Directions.DirectionList.Contains(Direction))
                 {
-                    currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: false);
-                    if (currentCell != null)
+                    Cell origin = Blinker.CurrentCell;
+                    Cell currentCell = origin;
+
+                    for (int i = 0; i < Range; i++)
                     {
+                        currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: false);
                         yield return currentCell;
-                    }
-                    else
-                    {
-                        yield break;
                     }
                 }
             }
@@ -979,7 +834,7 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Initializing Path...", Indent: indent + 1, Toggle: getDoDebug());
-            FindPath Path = null;
+            BlinkPath Path = null;
 
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
             if (Destination == null || (IsNothinPersonnelKid && KidDestination != null))
@@ -997,7 +852,8 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Checking {nameof(Destination)} adjacency to {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
-            if (Blinker.CurrentCell.GetAdjacentCells().Contains(Destination))
+            if (((!IsNothinPersonnelKid || Kid == null) && Blinker.CurrentCell.GetAdjacentCells().Contains(Destination)) 
+                || (IsNothinPersonnelKid && Kid != null && Blinker.CurrentCell.GetAdjacentCells().Contains(KidDestination)))
             {
                 Debug.CheckNah(3, $"{nameof(Destination)} is adjacent to {nameof(Blinker)}", Indent: indent + 2, Toggle: getDoDebug());
                 if (Blinker.IsPlayer())
@@ -1053,7 +909,10 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Playing world sound {BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
-            Blinker?.PlayWorldSound(BLINK_SOUND);
+            if (Blinker.IsInActiveZone() || Destination.InActiveZone)
+            {
+                Blinker?.PlayWorldSound(BLINK_SOUND);
+            }
 
             Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
             PlayAnimation(Blinker, Destination, Path);
@@ -1211,7 +1070,65 @@ namespace XRL.World.Parts.Mutation
                 $"{nameof(Blink)}() [{TICK}] Blunk",
                 Indent: indent, Toggle: getDoDebug());
 
+            if (Blinker.IsAflame())
+            {
+                int temperatureAdjustment = Blinker.Physics.FlameTemperature - 1 - Blinker.Temperature;
+                temperatureAdjustment = Math.Max(-200, temperatureAdjustment);
+                Blinker.TemperatureChange(temperatureAdjustment, IgnoreResistance: true, Phase: 5, Min: -50);
+                List<string> extinguishing = new()
+                {
+                    "extinguishing",
+                    "snuffing out",
+                    "winking out",
+                    "suffocating",
+                };
+                List<string> pullsAt = new()
+                {
+                    "tugs at",
+                    "pulls at",
+                    "drags at",
+                    "sucks at",
+                };
+                string effectOn;
+                if (!Blinker.IsAflame())
+                {
+                    effectOn = extinguishing.GetRandomElementCosmetic();
+                }
+                else
+                {
+                    effectOn = pullsAt.GetRandomElementCosmetic();
+                }
+                string message =
+                    Stat.RandomCosmetic(0, 99) < 50
+                    ? $"{Blinker.Poss("speed")} creates a vacuum in {Blinker.its} wake, {effectOn.GetRandomElementCosmetic()} the flames engulfing {Blinker.them}!"
+                    : $"The vacuum created in the wake of {Blinker.poss("speed")} {effectOn.GetRandomElementCosmetic()} the flames engulfing {Blinker.them}!";
+
+                Blinker.EmitMessage(message, Blinker);
+            }
+            if (Blinker.GetInventoryAndEquipment(GO => GO.IsAflame()) is List<GameObject> aflameHeldObjects && !aflameHeldObjects.IsNullOrEmpty())
+            {
+                foreach (GameObject aflameHeldObject in aflameHeldObjects)
+                {
+                    int temperatureAdjustment = aflameHeldObject.Physics.FlameTemperature - 1 - aflameHeldObject.Temperature;
+                    temperatureAdjustment = Math.Max(-200, temperatureAdjustment);
+                    aflameHeldObject.TemperatureChange(temperatureAdjustment, IgnoreResistance: true, Phase: 5, Min: -50);
+                }
+                List<string> lashingAt = new()
+                {
+                    "lashing at",
+                    "consuming",
+                    "devouring",
+                    "whipping at",
+                };
+                string objects = "object" + (aflameHeldObjects.Count > 1 ? "s" : "");
+                Blinker.EmitMessage($"{Blinker.Poss("speed")} reduced the flames {lashingAt.GetRandomElementCosmetic()} the {objects} {Blinker.itis} holding!", Blinker);
+            }
+
             AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
+            if (!Blinker.IsPlayer())
+            {
+                blink.PathCache.Reset();
+            }
             Debug.LastIndent = indent;
             return didBlink;
         }
@@ -1277,10 +1194,17 @@ namespace XRL.World.Parts.Mutation
             return !blink.IsSteelCold;
         }
 
-        public static void PlayAnimation(GameObject Blinker, Cell Destination, FindPath Path)
+        public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path)
         {
             if (Blinker == null || Destination == null)
+            {
                 return;
+            }
+
+            if (!Blinker.IsInActiveZone() && !Destination.InActiveZone)
+            {
+                return;
+            }
 
             AnimatedMaterialGeneric prickleBallAnimation = null;
             UD_Blink blink = Blinker.GetPart<UD_Blink>();
@@ -1351,12 +1275,12 @@ namespace XRL.World.Parts.Mutation
                     };
                     ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
 
-                    for (int i = 0; i <= pathStepsCount + 5; i++)
+                    for (int i = 0; i < pathStepsCount + 6; i++)
                     {
                         scrapBuffer.RenderBase();
                         foreach (Cell step in Path.Steps)
                         {
-                            if (Blinker.IsVisible() || step.IsVisible())
+                            if (step != Path.KidCell && (Blinker.IsVisible() || step.IsVisible()))
                             {
                                 string color = colors.Sample();
                                 string particle = particles.Sample();
@@ -1524,6 +1448,12 @@ namespace XRL.World.Parts.Mutation
                 {
                     RemovePrickleBallAnimation();
                 }
+
+                if (MidBlinkResetFallback++ > 3)
+                {
+                    MidBlinkResetFallback = 0;
+                    MidBlink = false;
+                }
             }
             base.TurnTick(TimeTick, Amount);
         }
@@ -1665,83 +1595,92 @@ namespace XRL.World.Parts.Mutation
                 if (GameObject.Validate(E.Actor) && !MidBlink)
                 {
                     MidBlink = true;
-
-                    int blinkRange = GetBlinkRange();
-                    bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
-                    bool isMovement = !isRetreat && E.TargetCell != null;
-
-                    string Direction = null;
-                    string blinkThink = "hurr durr, i blinking";
-                    if (!E.Actor.IsPlayerControlled())
+                    try
                     {
-                        Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
+                        int blinkRange = GetBlinkRange();
+                        bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isMovement = !isRetreat && E.TargetCell != null;
 
-                        if (isRetreat)
+                        string Direction = null;
+                        string blinkThink = "hurr durr, i blinking";
+                        if (!E.Actor.IsPlayerControlled())
                         {
-                            blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
+                            Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
+
+                            if (isRetreat)
+                            {
+                                blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
+                            }
+                            else if (isMovement)
+                            {
+                                blinkThink = $"I don't think you have any idea how fast I really am";
+                            }
+                            else
+                            {
+                                blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
+                            }
+
+                            E.Actor.Think(blinkThink);
                         }
-                        else if (isMovement)
+
+                        bool blunk = Blink(
+                            Blinker: E.Actor,
+                            Direction: Direction,
+                            BlinkRange: blinkRange,
+                            Destination: E.TargetCell,
+                            IsNothinPersonnelKid: IsNothinPersonnelKid,
+                            Kid: E.Target,
+                            IsRetreat: isRetreat,
+                            Silent: false
+                            );
+
+                        if (blunk)
                         {
-                            blinkThink = $"I don't think you have any idea how fast I really am";
+                            blinkThink = $"I blunk and ";
+                            int energyCost = 1000;
+                            if (AllowWeGoAgain && WeGoAgain)
+                            {
+                                WeGoingAgain(false);
+
+                                Cell currentCell = ParentObject.CurrentCell;
+                                Arrive(
+                                    From: currentCell.GetCellFromDirection(Direction),
+                                    To: currentCell,
+                                    Life: 8,
+                                    Color1: "C",
+                                    Symbol1: "\u0013",
+                                    Color2: "Y",
+                                    Symbol2: "\u00EC"
+                                    );
+
+                                energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
+                                blinkThink += $"We Go Again";
+                            }
+                            else
+                            {
+                                CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(Level));
+                                blinkThink += $"I am knackered";
+                            }
+
+                            UseEnergy(energyCost, "Physical Mutation Blink");
                         }
                         else
                         {
-                            blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
+                            blinkThink = "I blunked out :(";
                         }
-
-                        E.Actor.Think(blinkThink);
-                    }
-
-                    bool blunk = Blink(
-                        Blinker: E.Actor,
-                        Direction: Direction,
-                        BlinkRange: blinkRange,
-                        Destination: E.TargetCell,
-                        IsNothinPersonnelKid: IsNothinPersonnelKid,
-                        Kid: E.Target,
-                        IsRetreat: isRetreat,
-                        Silent: false
-                        );
-
-                    if (blunk)
-                    {
-                        blinkThink = $"I blunk and ";
-                        int energyCost = 1000;
-                        if (AllowWeGoAgain && WeGoAgain)
+                        if (!E.Actor.IsPlayerControlled())
                         {
-                            WeGoingAgain(false);
-
-                            Cell currentCell = ParentObject.CurrentCell;
-                            Arrive(
-                                From: currentCell.GetCellFromDirection(Direction), 
-                                To: currentCell, 
-                                Life: 8, 
-                                Color1: "C", 
-                                Symbol1: "\u0013", 
-                                Color2: "Y", 
-                                Symbol2: "\u00EC"
-                                );
-
-                            energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
-                            blinkThink += $"We Go Again";
+                            E.Actor.Think(blinkThink);
                         }
-                        else
-                        {
-                            CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetCooldownTurns(Level));
-                            blinkThink += $"I am knackered";
-                        }
-
-                        UseEnergy(energyCost, "Physical Mutation Blink");
                     }
-                    else
+                    catch (Exception x)
                     {
-                        blinkThink = "I blunked out :(";
+                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
                     }
-                    if (!E.Actor.IsPlayerControlled())
+                    finally
                     {
-                        E.Actor.Think(blinkThink);
+                        MidBlink = false;
                     }
-                    MidBlink = false;
                 }
             }
             return base.HandleEvent(E);
@@ -1970,7 +1909,7 @@ namespace XRL.World.Parts.Mutation
 
         [WishCommand(Command = "tidy up prickle-ball animation")]
         // gimme coldsteel damage maxLevel
-        public static void TidyUpAnimationWish()
+        public static void TidyUpAnimation_WishHandler()
         {
             if (The.Player.TryGetPart(out AnimatedMaterialGeneric animatedMaterialGeneric))
             {
@@ -1986,7 +1925,7 @@ namespace XRL.World.Parts.Mutation
         }
 
         [WishCommand(Command = "gimme blinker")]
-        public static void GimmeBlinkerWish()
+        public static void GimmeBlinker_WishHandler()
         {
             UD_Blink playerBlink = The.Player.GetPart<UD_Blink>();
             int blinkerLevel = 10;
@@ -2012,7 +1951,7 @@ namespace XRL.World.Parts.Mutation
 
         [WishCommand(Command = "gimme coldsteel dealt")]
         // gimme coldsteel dealt count level
-        public static void GimmeColdSteelDealtWish(string Parameters)
+        public static void GimmeColdSteelDealt_WishHandler(string Parameters)
         {
             int level = 0;
             int count = 0;
@@ -2065,7 +2004,7 @@ namespace XRL.World.Parts.Mutation
 
         [WishCommand(Command = "gimme coldsteel damage")]
         // gimme coldsteel damage maxLevel
-        public static void GimmeColdSteelDamageWish(string Parameters)
+        public static void GimmeColdSteelDamage_WishHandler(string Parameters)
         {
             int maxLevel = 0;
 
@@ -2110,6 +2049,105 @@ namespace XRL.World.Parts.Mutation
 
                 Debug.Entry(4, $"Level {level}: {damage} ({minString}, {avgString}, {maxString})", 
                     Indent: 1, Toggle: getDoDebug());
+            }
+        }
+
+        [WishCommand(Command = "gotta go fast")]
+        public static void GottaGoFast_WishHandler()
+        {
+        
+            List<string> speedyItems = new()
+            {
+                "Palladium Mesh Tabard",
+                "Zetachrome Apex",
+                "Zetachrome Gloves",
+                "Spring Boots",
+                "Anti-Gravity Boots",
+                "Antimatter Cell",
+                "Antimatter Cell",
+                "Antimatter Cell",
+                "Floating Glowsphere",
+            };
+
+            GameObject speedyItem = null;
+            foreach (string blueprint in speedyItems)
+            {
+                speedyItem = GameObject.Create(blueprint);
+                if (speedyItem == null)
+                {
+                    MetricsManager.LogModWarning(ThisMod, blueprint);
+                    continue;
+                }
+                speedyItem.ApplyModification(nameof(ModGigantic));
+                if (speedyItem.HasPart<EnergyCell>())
+                {
+                    speedyItem.ApplyModification(nameof(ModRadioPowered));
+                }
+                speedyItem.MakeUnderstood();
+                The.Player.ReceiveObject(speedyItem);
+                if (!speedyItem.HasPart<EnergyCell>())
+                {
+                    The.Player.AutoEquip(speedyItem, Silent: true);
+                }
+            }
+
+            Mutations mutations = The.Player.RequirePart<Mutations>();
+            mutations.AddMutation(nameof(MultipleLegs), 10);
+            mutations.AddMutation(nameof(UD_Blink), 10);
+            mutations.AddMutation(nameof(HeightenedSpeed), 10);
+
+
+            bool popUpSuppress = Popup.Suppress;
+            Popup.Suppress = true;
+            The.Player.AwardXP(750000); 
+            Popup.Suppress = popUpSuppress;
+
+            The.Player.GetStat("MP").BaseValue += 10;
+            The.Player.GetStat("Willpower").BaseValue = 32;
+            The.Player.GetStat("Strength").BaseValue = 32;
+
+            List<string> skillsToLearn = new()
+            {
+                nameof(Acrobatics),
+                nameof(Acrobatics_Jump),
+                nameof(Endurance),
+                nameof(Endurance_ShakeItOff),
+                nameof(Endurance_Weathered),
+                nameof(Endurance_Calloused),
+                nameof(Tactics),
+                nameof(Tactics_Charge),
+                nameof(Cudgel),
+                nameof(Cudgel_Expertise),
+                nameof(Cudgel_Bludgeon),
+                nameof(Cudgel_Slam),
+                nameof(Cudgel_ChargingStrike),
+                nameof(Cudgel_Backswing),
+                nameof(Cudgel_Conk),
+                nameof(Cudgel_SmashUp),
+                nameof(SingleWeaponFighting),
+                nameof(SingleWeaponFighting_OpportuneAttacks),
+                nameof(SingleWeaponFighting_WeaponExpertise),
+                nameof(SingleWeaponFighting_PenetratingStrikes),
+            };
+
+            The.Player.AddSkills(skillsToLearn);
+
+            if (The.Player.GetPart<UD_Blink>() is UD_Blink blink)
+            {
+                mutations.LevelMutation(blink, 10);
+            }
+            if (The.Player.GetPart<HeightenedSpeed>() is HeightenedSpeed heightenedSpeed)
+            {
+                mutations.LevelMutation(heightenedSpeed, 10);
+            }
+        }
+        [WishCommand(Command = "blink borked")]
+        public static void BlinkBorked_WishHandler()
+        {
+            if (The.Player.GetPart<UD_Blink>() is UD_Blink blink)
+            {
+                blink.MidBlink = false;
+                TidyUpAnimation_WishHandler();
             }
         }
     }

@@ -160,8 +160,8 @@
     <part Name="Physics" Weight="0" />
     <part Name="Description" Short="Palladium nano-fibres writhe in anticipation of their coupling with living nerve fibres. Their agitation is almost audible." />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
-    <part Name="Render" DisplayName="{{Y|overclocked central nervous system}}" 
-          Tile="Items/OverclockedCentralNervousSystem.png" 
+    <part Name="Render" DisplayName="{{Y|overclocked central nervous system}}"
+          Tile="Items/Overclocked_Central_Nervous_System.png"
           TileColor="&amp;r" DetailColor="C" />
     <part Name="CyberneticsBaseItem" Slots="Back,Body,Head" Cost="4" BehaviorDescription="You gain the ability to blink a short distance in a direction of your choosing optionally attacking an enemy you pass through.
 You gain the ability to flicker between multiple enemies performing an attack against each as you do so.
