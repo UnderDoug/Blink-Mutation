@@ -17,6 +17,7 @@ using XRL.World.AI.Pathfinding;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Skill;
+using XRL.World.Skills;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
@@ -718,7 +719,6 @@ namespace XRL.World.Parts.Mutation
                 {
                     Cell origin = Blinker.CurrentCell;
                     Cell currentCell = origin;
-
                     for (int i = 0; i < Range; i++)
                     {
                         currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: false);
@@ -1100,12 +1100,13 @@ namespace XRL.World.Parts.Mutation
                 }
                 string message =
                     Stat.RandomCosmetic(0, 99) < 50
-                    ? $"{Blinker.Poss("speed")} creates a vacuum in {Blinker.its} wake, {effectOn.GetRandomElementCosmetic()} the flames engulfing {Blinker.them}!"
-                    : $"The vacuum created in the wake of {Blinker.poss("speed")} {effectOn.GetRandomElementCosmetic()} the flames engulfing {Blinker.them}!";
+                    ? $"{Blinker.Poss("speed")} creates a vacuum in {Blinker.its} wake, {effectOn} the flames engulfing {Blinker.them}!"
+                    : $"The vacuum created in the wake of {Blinker.poss("speed")} {effectOn} the flames engulfing {Blinker.them}!";
 
                 Blinker.EmitMessage(message, Blinker);
             }
-            if (Blinker.GetInventoryAndEquipment(GO => GO.IsAflame()) is List<GameObject> aflameHeldObjects && !aflameHeldObjects.IsNullOrEmpty())
+            if (Blinker.GetInventoryAndEquipment(GO => GO.IsAflame()) is List<GameObject> aflameHeldObjects 
+                && !aflameHeldObjects.IsNullOrEmpty())
             {
                 foreach (GameObject aflameHeldObject in aflameHeldObjects)
                 {
@@ -1194,7 +1195,7 @@ namespace XRL.World.Parts.Mutation
             return !blink.IsSteelCold;
         }
 
-        public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path)
+        public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path, int MaxMiliseconds = 500)
         {
             if (Blinker == null || Destination == null)
             {
@@ -1234,7 +1235,7 @@ namespace XRL.World.Parts.Mutation
             CombatJuice.BlockUntilFinished(
                 Entry: blinkPunch,
                 Hide: null, // new List<GameObject>() { Blinker },
-                MaxMilliseconds: 500,
+                MaxMilliseconds: MaxMiliseconds,
                 Interruptible: false
                 );
 
@@ -1265,10 +1266,19 @@ namespace XRL.World.Parts.Mutation
                         { "-", 1 },
                         { "|", 1 },
                     };
+                    string tileColor = null;
+                    if (blink.TileColor != null)
+                    {
+                        tileColor = blink.TileColor;
+                        if (!tileColor.StartsWith("&"))
+                        {
+                            tileColor = $"&{tileColor[0]}";
+                        }
+                    }
                     Dictionary<string, int> colors = new()
                     {
                         { "&K", 2 },
-                        { "&m", 4 },
+                        { tileColor ?? "&m", 4 },
                         { "&y", 3 },
                         { "&c", 2 },
                         { "&C", 1 },
@@ -2067,6 +2077,7 @@ namespace XRL.World.Parts.Mutation
                 "Antimatter Cell",
                 "Antimatter Cell",
                 "Floating Glowsphere",
+                "Sniper Rifle",
             };
 
             GameObject speedyItem = null;
@@ -2090,11 +2101,15 @@ namespace XRL.World.Parts.Mutation
                     The.Player.AutoEquip(speedyItem, Silent: true);
                 }
             }
+            speedyItem = GameObject.Create("Lead Slug");
+            speedyItem.Count = 5000;
+            The.Player.ReceiveObject(speedyItem);
 
             Mutations mutations = The.Player.RequirePart<Mutations>();
             mutations.AddMutation(nameof(MultipleLegs), 10);
             mutations.AddMutation(nameof(UD_Blink), 10);
             mutations.AddMutation(nameof(HeightenedSpeed), 10);
+            mutations.AddMutation(nameof(PhotosyntheticSkin), 10);
 
 
             bool popUpSuppress = Popup.Suppress;
@@ -2130,7 +2145,29 @@ namespace XRL.World.Parts.Mutation
                 nameof(SingleWeaponFighting_PenetratingStrikes),
             };
 
-            The.Player.AddSkills(skillsToLearn);
+            // The.Player.AddSkills(skillsToLearn);
+
+            List<string> skillsAndPowers = new(SkillFactory.Factory.SkillByClass.Keys);
+            skillsAndPowers.AddRange(SkillFactory.Factory.PowersByClass.Keys);
+            if (!skillsAndPowers.IsNullOrEmpty())
+            {
+                foreach (string skillClass in skillsAndPowers)
+                {
+                    if (skillClass.StartsWith(nameof(CookingAndGathering))
+                        || skillClass.StartsWith(nameof(Discipline))
+                        || skillClass.StartsWith(nameof(Acrobatics))
+                        || skillClass.StartsWith(nameof(Tactics))
+                        || skillClass.StartsWith(nameof(SingleWeaponFighting))
+                        || skillClass.StartsWith(nameof(Cudgel))
+                        || skillClass.StartsWith(nameof(Endurance))
+                        || skillClass.StartsWith(nameof(Customs))
+                        || skillClass.StartsWith(nameof(Pistol))
+                        || skillClass.StartsWith(nameof(Survival)))
+                    {
+                        The.Player.AddSkill(skillClass);
+                    }
+                }
+            }
 
             if (The.Player.GetPart<UD_Blink>() is UD_Blink blink)
             {

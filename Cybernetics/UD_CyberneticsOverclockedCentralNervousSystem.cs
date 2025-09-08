@@ -453,7 +453,7 @@ namespace XRL.World.Parts
                 if (OriginCell.IsVisible() && DestinationCell.IsVisible())
                 {
                     Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
-                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, Path);
+                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, Path, 125);
                 }
 
                 Debug.Entry(2, $"Direct Moving To [{DestinationCell?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
