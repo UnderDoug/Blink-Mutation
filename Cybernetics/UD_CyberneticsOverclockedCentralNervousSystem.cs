@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
+using UD_Blink_Mutation;
 using XRL.UI;
 using XRL.Wish;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Anatomy;
 using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
-
-using UD_Blink_Mutation;
-
+using XRL.World.Parts.Skill;
+using XRL.World.Skills;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
+using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
 
 namespace XRL.World.Parts
@@ -171,10 +171,7 @@ namespace XRL.World.Parts
             bool removed = false;
             if (BlinkActivatedAbilityID != Guid.Empty || Force)
             {
-                if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO))
-                {
-                    BlinkActivatedAbilityID = Guid.Empty;
-                }
+                removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO);
             }
             return removed && BlinkActivatedAbilityID == Guid.Empty;
         }
@@ -213,10 +210,7 @@ namespace XRL.World.Parts
             bool removed = false;
             if (ColdSteelActivatedAbilityID != Guid.Empty || Force)
             {
-                if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO))
-                {
-                    ColdSteelActivatedAbilityID = Guid.Empty;
-                }
+                removed = RemoveMyActivatedAbility(ref ColdSteelActivatedAbilityID, GO);
             }
             return removed && ColdSteelActivatedAbilityID == Guid.Empty;
         }
@@ -253,10 +247,7 @@ namespace XRL.World.Parts
             bool removed = false;
             if (FlickerActivatedAbilityID != Guid.Empty || Force)
             {
-                if (removed = RemoveMyActivatedAbility(ref FlickerActivatedAbilityID, GO))
-                {
-                    FlickerActivatedAbilityID = Guid.Empty;
-                }
+                removed = RemoveMyActivatedAbility(ref FlickerActivatedAbilityID, GO);
             }
             return removed && FlickerActivatedAbilityID == Guid.Empty;
         }
@@ -369,6 +360,10 @@ namespace XRL.World.Parts
                     List<GameObject> cellObjects = 
                         Event.NewGameObjectList(flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)));
 
+                    if (Flickerer.Target != null && CellsInFlickerRadius.Contains(Flickerer.Target.CurrentCell))
+                    {
+                        cellObjects.Insert(0, Flickerer.Target);
+                    }
                     if (!cellObjects.IsNullOrEmpty())
                     {
                         foreach (GameObject gameObject in cellObjects)
@@ -569,7 +564,7 @@ namespace XRL.World.Parts
 
             if (primaryWeapon == null)
             {
-                if (!Silent && Flickerer.IsPlayerControlled())
+                if (!Silent && Flickerer.IsPlayer())
                 {
                     Popup.Show($"You don't have a primary weapon with which to {verb} strike!");
                 }
@@ -606,7 +601,7 @@ namespace XRL.World.Parts
                             FlickerTargetAdjacentCells: flickerTargetOverrideAdjacentCells,
                             DestinationPaths: out _))
                     {
-                        if (!Silent && Flickerer.IsPlayerControlled())
+                        if (!Silent && Flickerer.IsPlayer())
                         {
                             Popup.Show($"Your target cannot be reached to {verb} strike!");
                         }
@@ -622,9 +617,11 @@ namespace XRL.World.Parts
 
                 List<GameObject> flickerTargets = Event.NewGameObjectList(GetFlickerTargets(Flickerer, cellsInFlickerRadius));
 
+
+
                 if (flickerTargets.IsNullOrEmpty())
                 {
-                    if (Flickerer.IsPlayerControlled() && !Silent)
+                    if (Flickerer.IsPlayer() && !Silent)
                     {
                         Popup.Show($"There are no nearby hostiles to {verb} strike!");
                     }
@@ -689,7 +686,7 @@ namespace XRL.World.Parts
                             }
                         }
 
-                        if (Flickerer.IsPlayerControlled() && !flickerTarget.IsVisible())
+                        if (Flickerer.IsPlayer() && !flickerTarget.IsVisible())
                         {
                             Debug.CheckNah(3, 
                                 $"{nameof(flickerTarget)} is not visible. " +
@@ -903,7 +900,7 @@ namespace XRL.World.Parts
                 }
                 else
                 {
-                    if (!Silent && Flickerer.IsPlayerControlled())
+                    if (!Silent && Flickerer.IsPlayer())
                     {
                         Popup.Show($"There are no nearby hostiles to {verb} strike!");
                     }
@@ -913,7 +910,7 @@ namespace XRL.World.Parts
             }
             else
             {
-                if (!Silent && Flickerer.IsPlayerControlled())
+                if (!Silent && Flickerer.IsPlayer())
                 {
                     Popup.Show($"There's no room to {verb}!");
                 }
@@ -936,7 +933,7 @@ namespace XRL.World.Parts
 
         public static bool IsValidFlickerTarget(GameObject GO, GameObject Flickerer, int BlinkRange)
         {
-            if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsVisible() && !GO.IsHostileTowards(Flickerer))
+            if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsVisible()) // && !GO.IsHostileTowards(Flickerer))
             {
                 return false;
             }
@@ -971,11 +968,11 @@ namespace XRL.World.Parts
                 EnforceRange: true,
                 Label: "Pick flicker target");
 
-            GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && GO.IsHostileTowards(Flickerer));
+            GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject()); // && GO.IsHostileTowards(Flickerer));
 
-            if (pickedCell !=null && pickedTarget == null && Flickerer.IsPlayerControlled() && !Silent)
+            if (pickedCell !=null && pickedTarget == null && Flickerer.IsPlayer() && !Silent)
             {
-                Popup.Show($"There are no hostile creatures in that location to flicker strike.");
+                Popup.Show($"There are no creatures in that location to flicker strike.");
             }
 
             return pickedTarget;
@@ -1005,7 +1002,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone && E.Object == Implantee)
+            if (DoDebugDescriptions && E.Object == Implantee)
             {
                 StringBuilder SB = Event.NewStringBuilder();
 
@@ -1116,8 +1113,8 @@ namespace XRL.World.Parts
             AddActivatedAbilityBlink(E.Implantee);
             AddActivatedAbilityColdSteel(E.Implantee);
             AddActivatedAbilityFlicker(E.Implantee);
-            E.Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID);
-            E.Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID);
+            E.Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
+            E.Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(UnimplantedEvent E)
@@ -1159,8 +1156,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY 
-                && E.Actor == Implantee)
+            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY && E.Actor == Implantee)
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
@@ -1178,8 +1174,8 @@ namespace XRL.World.Parts
                 && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 bool doFlicker = true;
-                if (E.Actor.IsPlayerControlled() 
-                    && (E.Actor.Target == null || !E.Actor.Target.IsHostileTowards(E.Actor)))
+                GameObject originalTarget = E.Actor.Target;
+                if (E.Actor.IsPlayer() && (E.Actor.Target == null)) // || !E.Actor.Target.IsHostileTowards(E.Actor)))
                 {
                     /*
                     StringBuilder SB = Event.NewStringBuilder();
@@ -1217,11 +1213,21 @@ namespace XRL.World.Parts
                 }
 
                 bool singleTarget = true;
-                if (!E.Actor.IsPlayerControlled())
+                if (!E.Actor.IsPlayer())
                 {
                     List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
                     nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
                     singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
+                }
+                else
+                {
+                    GameObject target = E.Actor.Target;
+                    if (target != null && !target.IsHostileTowards(E.Actor)
+                        && Popup.ShowYesNo($"{target.T()} is not hostile to you, flicker strike {target.them} anyway?") != DialogResult.Yes)
+                    {
+                        doFlicker = false;
+                        E.Actor.Target = originalTarget;
+                    }
                 }
 
                 if (doFlicker)
@@ -1233,20 +1239,19 @@ namespace XRL.World.Parts
                         Handler: ParentObject);
                 }
             }
-            if (E.Command == COMMAND_UD_BLINK_CYBER 
-                && E.Actor == Implantee)
+            if (E.Command == COMMAND_UD_BLINK_CYBER && E.Actor == Implantee)
             {
                 if (GameObject.Validate(E.Actor) && !MidAction)
                 {
                     MidBlink = true;
                     try
                     {
-                        bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
                         bool isMovement = !isRetreat && E.TargetCell != null;
 
                         string Direction = null;
                         string blinkThink = "hurr durr, i blinking";
-                        if (!E.Actor.IsPlayerControlled())
+                        if (!E.Actor.IsPlayer())
                         {
                             Direction = UD_Blink.GetBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
 
@@ -1317,7 +1322,7 @@ namespace XRL.World.Parts
                         {
                             blinkThink = "I blunked out :(";
                         }
-                        if (!E.Actor.IsPlayerControlled())
+                        if (!E.Actor.IsPlayer())
                         {
                             E.Actor.Think(blinkThink);
                         }
@@ -1566,30 +1571,9 @@ namespace XRL.World.Parts
         {
             UD_CyberneticsOverclockedCentralNervousSystem OCCNS = base.DeepCopy(Parent, MapInv) as UD_CyberneticsOverclockedCentralNervousSystem;
 
-            if (OCCNS.BlinkActivatedAbilityID != Guid.Empty)
-            {
-                OCCNS.RemoveActivatedAbilityBlink(Force: true);
-                if (Parent.Implantee != null)
-                {
-                    OCCNS.AddActivatedAbilityBlink(Parent.Implantee, Force: true, Silent: true);
-                }
-            }
-            if (OCCNS.ColdSteelActivatedAbilityID != Guid.Empty)
-            {
-                OCCNS.RemoveActivatedAbilityColdSteel(Force: true);
-                if (Parent.Implantee != null)
-                {
-                    OCCNS.AddActivatedAbilityColdSteel(Parent, Force: true, Silent: true);
-                }
-            }
-            if (OCCNS.FlickerActivatedAbilityID != Guid.Empty)
-            {
-                OCCNS.RemoveActivatedAbilityFlicker(Force: true);
-                if (Parent.Implantee != null)
-                {
-                    OCCNS.AddActivatedAbilityFlicker(Parent, Force: true, Silent: true);
-                }
-            }
+            OCCNS.BlinkActivatedAbilityID = Guid.Empty;
+            OCCNS.ColdSteelActivatedAbilityID = Guid.Empty;
+            OCCNS.FlickerActivatedAbilityID = Guid.Empty;
 
             return OCCNS;
         }
@@ -1598,6 +1582,9 @@ namespace XRL.World.Parts
         {
             if (Implantee != null)
             {
+                Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
+                Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
+
                 if (BlinkActivatedAbilityID == Guid.Empty)
                 {
                     AddActivatedAbilityBlink(Implantee, Force: true, Silent: true);
@@ -1613,39 +1600,152 @@ namespace XRL.World.Parts
             }
         }
 
-        [WishCommand(Command = "OC_CNS test kit")]
-        public static void CNS_TestKit_WishHandler()
+        public override void FinalizeRead(SerializationReader Reader)
         {
+            base.FinalizeRead(Reader);
+            if (Implantee != null)
+            {
+                Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
+                Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
+                SyncFlickerAbilityName();
+            }
+        }
+
+        [WishCommand(Command = "OC_CNS test kit")]
+        public static void CNS_TestKit_WishHandler(string Parameters)
+        {
+            bool isLeveledUp = !Parameters.IsNullOrEmpty() && Parameters.ToLower().Contains("level");
+
             GameObject implant = GameObjectFactory.Factory.CreateObject("UD_OverclockedCentralNervousSystem");
             // The.Player.ReceiveObject(implant);
             implant.MakeUnderstood();
             The.Player.Body.GetFirstPart("Back").Implant(implant);
 
-            for (int i = 0; i < 25; i++)
+            List<(string blueprint, int count, List<string> mods)> speedyItems = new()
             {
-                GameObject cyberneticsCreditWedge3 = GameObjectFactory.Factory.CreateObject("CyberneticsCreditWedge3");
-                The.Player.ReceiveObject(cyberneticsCreditWedge3);
-                if (i < 10)
+                ("Palladium Mesh Tabard", 2, new(){ nameof(ModOverloaded), nameof(ModSturdy) }),
+                ("High-Powered Magnet", 1, null),
+                ("Precision Nanon Fingers", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
+                ("Quartzfur Gloves", 1, new(){ nameof(ModSixFingered), nameof(ModSturdy), nameof(ModRefractive), }),
+                ("Zetachrome Lune", 1, new(){ nameof(ModReinforced), nameof(ModFlexiweaved), nameof(ModRefractive), }),
+                ("Psychodyne Helmet", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModCoProcessor), }),
+                ("Spring Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModCleated), }),
+                ("Anti-Gravity Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModHardened), }),
+                ("Antimatter Cell", 8, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
+                ("Wristcalc", 3, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
+                ("VISAGE", 1, new(){ nameof(ModNav), nameof(ModPolarized), nameof(ModJacked), }),
+                ("BattleAxe8", 3, new(){ nameof(ModSerrated), nameof(ModCounterweighted), nameof(ModSharp), }),
+                ("Flawless Crysteel Shield", 1, new(){ nameof(ModSpiked), nameof(ModHardened), nameof(ModRefractive), }),
+                ("Sniper", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
+                ("Lead Slug", 5500, null),
+                ("NectarTonic", 8, null),
+                ("CyberneticsCreditWedge3", 25, null),
+                ("PalladiumElectrodeposits", 10, null),
+                ("PenetratingRadar", 1, null),
+                ("StasisEntangler", 1, null),
+                ("Pentaceps", 1, null),
+                ("HighFidelityMatterRecompositer", 1, null),
+                ("RealHomosapien_ZetachromeHandBones", 1, null),
+                ("GiantHands", 1, null),
+            };
+
+            GameObject speedyItem = null;
+            foreach ((string blueprint, int count, List<string> mods) in speedyItems)
+            {
+                speedyItem = GameObject.Create(blueprint);
+                if (speedyItem == null)
                 {
-                    GameObject palladiumElectrodeposits = GameObjectFactory.Factory.CreateObject("PalladiumElectrodeposits");
-                    The.Player.ReceiveObject(palladiumElectrodeposits);
-                    palladiumElectrodeposits.MakeUnderstood();
+                    MetricsManager.LogModWarning(ThisMod, blueprint);
+                    continue;
+                }
+                if (speedyItem.IsStackable())
+                {
+                    speedyItem.Count = count;
+                    if (The.Player.HasPart("GigantismPlus") || The.Player.IsGiganticCreature)
+                    {
+                        speedyItem.ApplyModification(nameof(ModGigantic));
+                    }
+                    if (!mods.IsNullOrEmpty())
+                    {
+                        foreach (string mod in mods)
+                        {
+                            speedyItem.ApplyModification(mod, Actor: The.Player);
+                        }
+                    }
+                    speedyItem.MakeUnderstood();
+                    The.Player.ReceiveObject(speedyItem);
+                }
+                else
+                {
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i > 0)
+                        {
+                            speedyItem = GameObject.Create(blueprint);
+                        }
+                        if (The.Player.HasPart("GigantismPlus") || The.Player.IsGiganticCreature)
+                        {
+                            speedyItem.ApplyModification(nameof(ModGigantic));
+                        }
+                        if (!mods.IsNullOrEmpty())
+                        {
+                            foreach (string mod in mods)
+                            {
+                                speedyItem.ApplyModification(mod, Actor: The.Player);
+                            }
+                        }
+                        if (i == 0)
+                        {
+                            speedyItem.MakeUnderstood();
+                        }
+                        The.Player.ReceiveObject(speedyItem);
+
+                        if (!speedyItem.HasPart<EnergyCell>())
+                        {
+                            The.Player.AutoEquip(speedyItem, Silent: true);
+                        }
+                    }
                 }
             }
-            GameObject palladiumMeshTabbard = GameObjectFactory.Factory.CreateObject("Palladium Mesh Tabard");
-            The.Player.ReceiveObject(palladiumMeshTabbard);
-            palladiumMeshTabbard.MakeUnderstood();
 
-            GameObject antimatterCell = GameObjectFactory.Factory.CreateObject("Antimatter Cell");
-            The.Player.ReceiveObject(antimatterCell);
-            antimatterCell.MakeUnderstood();
+            The.Player.RequirePart<Mutations>().AddMutation("MultipleArms", 10);
+
+            if (isLeveledUp)
+            {
+                The.Player.RequirePart<Mutations>().AddMutation("MultipleLegs", 10);
+
+                bool popUpSuppress = Popup.Suppress;
+                Popup.Suppress = true;
+                The.Player.AwardXP(750000);
+                Popup.Suppress = popUpSuppress;
+
+                List<string> skillsAndPowers = new(SkillFactory.Factory.SkillByClass.Keys);
+                skillsAndPowers.AddRange(SkillFactory.Factory.PowersByClass.Keys);
+                if (!skillsAndPowers.IsNullOrEmpty())
+                {
+                    foreach (string skillClass in skillsAndPowers)
+                    {
+                        if (skillClass.StartsWith(nameof(CookingAndGathering))
+                            || skillClass.StartsWith(nameof(Discipline))
+                            || skillClass.StartsWith(nameof(Acrobatics))
+                            || skillClass.StartsWith(nameof(Tactics))
+                            || skillClass.StartsWith(nameof(SingleWeaponFighting))
+                            || skillClass.StartsWith(nameof(Cudgel))
+                            || skillClass.StartsWith(nameof(Endurance))
+                            || skillClass.StartsWith(nameof(Customs))
+                            || skillClass.StartsWith(nameof(Pistol))
+                            || skillClass.StartsWith(nameof(Survival)))
+                        {
+                            The.Player.AddSkill(skillClass);
+                        }
+                    }
+                }
+            }
 
             The.Player.CurrentCell.GetFirstEmptyAdjacentCell().AddObject("CyberneticsTerminal2");
 
             The.Player.ModIntProperty("CyberneticsLicenses", 27);
             The.Player.ModIntProperty("FreeCyberneticsLicenses", 27);
-
-            The.Player.RequirePart<Mutations>().AddMutation("MultipleArms", 10);
         }
     }
 }

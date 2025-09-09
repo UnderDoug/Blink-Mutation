@@ -1231,11 +1231,12 @@ namespace XRL.World.Parts.Mutation
                     ToXOffset: 0f,
                     ToYOffset: 0f
                     );
-                        
+
+            int maxMiliseconds = Blinker.IsPlayer() ? MaxMiliseconds : (MaxMiliseconds / 3);
             CombatJuice.BlockUntilFinished(
                 Entry: blinkPunch,
                 Hide: null, // new List<GameObject>() { Blinker },
-                MaxMilliseconds: MaxMiliseconds,
+                MaxMilliseconds: maxMiliseconds,
                 Interruptible: false
                 );
 
@@ -1267,7 +1268,7 @@ namespace XRL.World.Parts.Mutation
                         { "|", 1 },
                     };
                     string tileColor = null;
-                    if (blink.TileColor != null)
+                    if (blink?.TileColor != null)
                     {
                         tileColor = blink.TileColor;
                         if (!tileColor.StartsWith("&"))
@@ -1285,7 +1286,8 @@ namespace XRL.World.Parts.Mutation
                     };
                     ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
 
-                    for (int i = 0; i < pathStepsCount + 6; i++)
+                    int range = Blinker.CurrentCell.CosmeticDistanceTo(Destination);
+                    for (int i = 0; i < range; i++)
                     {
                         scrapBuffer.RenderBase();
                         foreach (Cell step in Path.Steps)
@@ -2065,23 +2067,35 @@ namespace XRL.World.Parts.Mutation
         [WishCommand(Command = "gotta go fast")]
         public static void GottaGoFast_WishHandler()
         {
-        
-            List<string> speedyItems = new()
+            List<(string blueprint, int count, List<string> mods)> speedyItems = new()
             {
-                "Palladium Mesh Tabard",
-                "Zetachrome Apex",
-                "Zetachrome Gloves",
-                "Spring Boots",
-                "Anti-Gravity Boots",
-                "Antimatter Cell",
-                "Antimatter Cell",
-                "Antimatter Cell",
-                "Floating Glowsphere",
-                "Sniper Rifle",
+                ("Palladium Mesh Tabard", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy) }),
+                ("Precision Nanon Fingers", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
+                ("Zetachrome Lune", 1, new(){ nameof(ModReinforced), nameof(ModFlexiweaved), nameof(ModRefractive), }),
+                ("Psychodyne Helmet", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModCoProcessor), }),
+                ("Spring Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModCleated), }),
+                ("Anti-Gravity Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModHardened), }),
+                ("Antimatter Cell", 8, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
+                ("Wristcalc", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
+                ("VISAGE", 1, new(){ nameof(ModNav), nameof(ModPolarized), nameof(ModJacked), }),
+                ("BattleAxe8", 1, new(){ nameof(ModSerrated), nameof(ModCounterweighted), nameof(ModSharp), }),
+                ("Flawless Crysteel Shield", 1, new(){ nameof(ModSpiked), nameof(ModHardened), nameof(ModRefractive), }),
+                ("Floating Glowsphere", 1, null),
+                ("Sniper", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
+                ("Lead Slug", 5500, null),
+                ("NectarTonic", 8, null),
+                ("CyberneticsCreditWedge3", 25, null),
+                ("PalladiumElectrodeposits", 10, null),
+                ("PenetratingRadar", 1, null),
+                ("StasisEntangler", 1, null),
+                ("Pentaceps", 1, null),
+                ("HighFidelityMatterRecompositer", 1, null),
+                ("RealHomosapien_ZetachromeHandBones", 1, null),
+                ("GiantHands", 1, null),
             };
 
             GameObject speedyItem = null;
-            foreach (string blueprint in speedyItems)
+            foreach ((string blueprint, int count, List<string> mods) in speedyItems)
             {
                 speedyItem = GameObject.Create(blueprint);
                 if (speedyItem == null)
@@ -2089,28 +2103,64 @@ namespace XRL.World.Parts.Mutation
                     MetricsManager.LogModWarning(ThisMod, blueprint);
                     continue;
                 }
-                speedyItem.ApplyModification(nameof(ModGigantic));
-                if (speedyItem.HasPart<EnergyCell>())
+                if (speedyItem.IsStackable())
                 {
-                    speedyItem.ApplyModification(nameof(ModRadioPowered));
+                    speedyItem.Count = count;
+                    if (The.Player.HasPart("GigantismPlus") || The.Player.IsGiganticCreature)
+                    {
+                        speedyItem.ApplyModification(nameof(ModGigantic));
+                    }
+                    if (!mods.IsNullOrEmpty())
+                    {
+                        foreach (string mod in mods)
+                        {
+                            speedyItem.ApplyModification(mod, Actor: The.Player);
+                        }
+                    }
+                    speedyItem.MakeUnderstood();
+                    The.Player.ReceiveObject(speedyItem);
                 }
-                speedyItem.MakeUnderstood();
-                The.Player.ReceiveObject(speedyItem);
-                if (!speedyItem.HasPart<EnergyCell>())
+                else
                 {
-                    The.Player.AutoEquip(speedyItem, Silent: true);
+                    for (int i = 0; i < count; i++)
+                    {
+                        if (i > 0)
+                        {
+                            speedyItem = GameObject.Create(blueprint);
+                        }
+                        if (The.Player.HasPart("GigantismPlus") || The.Player.IsGiganticCreature)
+                        {
+                            speedyItem.ApplyModification(nameof(ModGigantic));
+                        }
+                        if (!mods.IsNullOrEmpty())
+                        {
+                            foreach (string mod in mods)
+                            {
+                                speedyItem.ApplyModification(mod, Actor: The.Player);
+                            }
+                        }
+                        if (i == 0)
+                        {
+                            speedyItem.MakeUnderstood();
+                        }
+                        The.Player.ReceiveObject(speedyItem);
+
+                        if (!speedyItem.HasPart<EnergyCell>())
+                        {
+                            The.Player.AutoEquip(speedyItem, Silent: true);
+                        }
+                    }
                 }
             }
-            speedyItem = GameObject.Create("Lead Slug");
-            speedyItem.Count = 5000;
-            The.Player.ReceiveObject(speedyItem);
 
             Mutations mutations = The.Player.RequirePart<Mutations>();
             mutations.AddMutation(nameof(MultipleLegs), 10);
-            mutations.AddMutation(nameof(UD_Blink), 10);
-            mutations.AddMutation(nameof(HeightenedSpeed), 10);
-            mutations.AddMutation(nameof(PhotosyntheticSkin), 10);
-
+            if (!The.Player.IsTrueKin())
+            {
+                mutations.AddMutation(nameof(UD_Blink), 10);
+                mutations.AddMutation(nameof(HeightenedSpeed), 10);
+                mutations.AddMutation(nameof(PhotosyntheticSkin), 10);
+            }
 
             bool popUpSuppress = Popup.Suppress;
             Popup.Suppress = true;

@@ -630,7 +630,7 @@ namespace XRL.World.Parts
                     }
                     else
                     {
-                        if (!E.Silent && E.Actor.IsPlayerControlled())
+                        if (!E.Silent && E.Actor.IsPlayer())
                         {
                             Popup.Show($"There's no room to {verb}!");
                         }

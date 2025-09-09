@@ -325,7 +325,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(ActorGetNavigationWeightEvent E)
         {
-            if (E.Actor == ParentObject && E.Actor.IsPlayerControlled() && !RecentlyBlunk && !E.Actor.IsFleeing() && E.Actor.HasGoal(nameof(Kill)))
+            if (E.Actor == ParentObject && E.Actor.IsPlayer() && !RecentlyBlunk && !E.Actor.IsFleeing() && E.Actor.HasGoal(nameof(Kill)))
             {
                 int penalty = 15;
                 Cell targetCell = E.Actor.Target.CurrentCell;
@@ -463,12 +463,12 @@ namespace XRL.World.Parts
                 MidBlink = true;
                 if (GameObject.Validate(E.Actor))
                 {
-                    bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                    bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
                     bool isMovement = !isRetreat && E.TargetCell != null;
 
                     string Direction = null;
                     string blinkThink = "hurr durr, i blinking";
-                    if (!E.Actor.IsPlayerControlled())
+                    if (!E.Actor.IsPlayer())
                     {
                         Direction = UD_Blink.GetBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target, isRetreat);
 
@@ -554,7 +554,7 @@ namespace XRL.World.Parts
                         RecentlyBlunk = !BlinkMutation.IsMyActivatedAbilityCoolingDown(BlinkMutation.BlinkActivatedAbilityID);
                         CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
                     }
-                    if (!E.Actor.IsPlayerControlled())
+                    if (!E.Actor.IsPlayer())
                     {
                         E.Actor.Think(blinkThink);
                     }
