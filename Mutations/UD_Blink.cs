@@ -120,7 +120,6 @@ namespace XRL.World.Parts.Mutation
 
         public AnimatedMaterialGeneric PrickleBallAnimation => NewPrickleBallAnimationPart();
 
-        [NonSerialized]
         public BlinkPaths PathCache = new();
 
         // Part Parameters
@@ -526,12 +525,12 @@ namespace XRL.World.Parts.Mutation
             return GetBlinkDirection(Blinker, BlinkRange, false, null, true, TargetCell);
         }
 
-        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPath Path, bool IsNothinPersonnelKid = false)
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false)
         {
             Destination = null;
             Kid = null;
             KidDestination = null;
-            Path = null;
+            BlinkPaths = null;
             Cell origin = Blinker.CurrentCell;
 
             UD_Blink blinkSkill = Blinker.GetPart<UD_Blink>();
@@ -588,30 +587,25 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            BlinkPaths pathCache = new();
-            if (blinkSkill != null)
-            {
-                blinkSkill.PathCache = new();
-                pathCache = blinkSkill.PathCache;
-            }
+            BlinkPaths = new();
 
             for (int i = 0; i < blinkCells.Count; i++)
             {
                 int index = blinkCells.Count - 1 - i;
-                pathCache.Add(new(Blinker, origin, blinkCells[index]));
+                BlinkPaths.Add(new(Blinker, origin, blinkCells[index]));
             }
 
-            if (!pathCache.IsNullOrEmpty())
+            if (!BlinkPaths.IsNullOrEmpty())
             {
-                pathCache.InitializePaths(Blinker, Range);
+                BlinkPaths.InitializePaths(Blinker, Range);
             }
 
             Debug.Entry(2, $"Selecting {nameof(BlinkPath)}...", Indent: indent + 1, Toggle: getDoDebug());
-            Path = pathCache.SelectBlinkPath(IsNothinPersonnelKid);
+            BlinkPaths.SelectBlinkPath(IsNothinPersonnelKid);
 
-            Destination = Path?.Destination;
-            Kid = Path?.Kid;
-            KidDestination = Path?.KidDestination;
+            Destination = BlinkPaths?.Path?.Destination;
+            Kid = BlinkPaths?.Path?.Kid;
+            KidDestination = BlinkPaths?.Path?.KidDestination;
 
             Debug.LoopItem(4, $"{nameof(Destination)}", $"[{Destination?.Location}]",
                 Good: Destination != null, Indent: indent + 1, Toggle: getDoDebug());
@@ -729,7 +723,7 @@ namespace XRL.World.Parts.Mutation
             yield break;
         }
 
-        public static bool Blink(GameObject Blinker, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, int BlinkRange, Cell Destination, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, bool Silent = false)
         {
             int indent = Debug.LastIndent;
             Debug.Entry(1,
@@ -737,8 +731,8 @@ namespace XRL.World.Parts.Mutation
                 $"{nameof(Blink)}()",
                 Indent: indent, Toggle: getDoDebug());
 
+            BlinkPaths = null;
             Debug.Entry(2, $"Checking for {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
-
             if (Blinker == null)
             {
                 Debug.CheckNah(3, $"{nameof(Blinker)} is null", Indent: indent + 1, Toggle: getDoDebug());
@@ -833,13 +827,10 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            Debug.Entry(2, $"Initializing Path...", Indent: indent + 1, Toggle: getDoDebug());
-            BlinkPath Path = null;
-
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
             if (Destination == null || (IsNothinPersonnelKid && KidDestination != null))
             {
-                if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out Path, IsNothinPersonnelKid))
+                if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out BlinkPaths, IsNothinPersonnelKid))
                 {
                     if (Blinker.IsPlayerControlled() && !Silent)
                     {
@@ -868,7 +859,7 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Checking {nameof(BeforeBlinkEvent)}...", Indent: indent + 1, Toggle: getDoDebug());
-            if (!BeforeBlinkEvent.Check(Blinker, blink, out string eventBlockReason, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path))
+            if (!BeforeBlinkEvent.Check(Blinker, blink, out string eventBlockReason, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, BlinkPaths.Path))
             {
                 Debug.CheckNah(3, $"{nameof(BeforeBlinkEvent)} blocked Blink: {nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}", 
                     Indent: indent + 2, Toggle: getDoDebug());
@@ -915,10 +906,28 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
-            PlayAnimation(Blinker, Destination, Path);
+            PlayAnimation(Blinker, Destination, BlinkPaths.Path);
 
             Debug.Entry(2, $"Direct Moving To [{Destination?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
             bool didBlink = Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
+
+            Debug.Entry(2, $"Slammin doors...", Indent: indent + 4, Toggle: getDoDebug());
+            if (didBlink && !BlinkPaths.IsNullOrEmpty())
+            {
+                foreach (Cell step in BlinkPaths.Path.Steps)
+                {
+                    if (step.HasObjectWithPart(nameof(Door)))
+                    {
+                        foreach (GameObject doorObject in step.GetObjects(GO => GO.HasPart<Door>()))
+                        {
+                            if (doorObject.TryGetPart(out Door doorPart))
+                            {
+                                doorPart.AttemptOpen(Blinker, IgnoreMobility: true, FromMove: true, Silent: true);
+                            }
+                        }
+                    }
+                }
+            }
 
             Debug.Entry(2, $"Gravitating...", Indent: indent + 1, Toggle: getDoDebug());
             Blinker.Gravitate();
@@ -1125,7 +1134,7 @@ namespace XRL.World.Parts.Mutation
                 Blinker.EmitMessage($"{Blinker.Poss("speed")} reduced the flames {lashingAt.GetRandomElementCosmetic()} the {objects} {Blinker.itis} holding!", Blinker);
             }
 
-            AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
+            AfterBlinkEvent.Send(Blinker, blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, BlinkPaths.Path);
             if (!Blinker.IsPlayer())
             {
                 blink.PathCache.Reset();
@@ -1133,24 +1142,24 @@ namespace XRL.World.Parts.Mutation
             Debug.LastIndent = indent;
             return didBlink;
         }
-        public static bool Blink(GameObject Blinker, string Direction, bool IsNothinPersonnelKid = false, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false, bool Silent = false)
         {
-            return Blink(Blinker, Direction, 0, null, IsNothinPersonnelKid, null, Silent);
+            return Blink(Blinker, Direction, 0, null, out BlinkPaths, IsNothinPersonnelKid, null, Silent);
         }
-        public static bool Blink(GameObject Blinker, string Direction, int Range, bool IsNothinPersonnelKid = false, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, int Range, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false, bool Silent = false)
         {
-            return Blink(Blinker, Direction, Range, null, IsNothinPersonnelKid, null, Silent);
+            return Blink(Blinker, Direction, Range, null, out BlinkPaths, IsNothinPersonnelKid, null, Silent);
         }
-        public static bool Blink(GameObject Blinker, string Direction, int Range, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, int Range, out BlinkPaths BlinkPaths, bool Silent = false)
         {
             bool IsNothinPersonnelKid = false;
             if (Blinker.TryGetPart(out UD_Blink blink))
             {
                 IsNothinPersonnelKid = blink.IsNothinPersonnelKid;
             }
-            return Blink(Blinker, Direction, Range, null, IsNothinPersonnelKid, null, Silent);
+            return Blink(Blinker, Direction, Range, null, out BlinkPaths, IsNothinPersonnelKid, null, Silent);
         }
-        public static bool Blink(GameObject Blinker, string Direction, bool Silent = false)
+        public static bool Blink(GameObject Blinker, string Direction, out BlinkPaths BlinkPaths, bool Silent = false)
         {
             bool IsNothinPersonnelKid = false;
             int Range = 0;
@@ -1159,7 +1168,7 @@ namespace XRL.World.Parts.Mutation
                 IsNothinPersonnelKid = blink.IsNothinPersonnelKid;
                 Range = blink.GetBlinkRange();
             }
-            return Blink(Blinker, Direction, Range, null, IsNothinPersonnelKid, null, Silent);
+            return Blink(Blinker, Direction, Range, null, out BlinkPaths, IsNothinPersonnelKid, null, Silent);
         }
 
         public static bool PerformNothinPersonnel(GameObject Blinker, GameObject Kid)
@@ -1232,7 +1241,7 @@ namespace XRL.World.Parts.Mutation
                     ToYOffset: 0f
                     );
 
-            int maxMiliseconds = Blinker.IsPlayer() ? MaxMiliseconds : (MaxMiliseconds / 3);
+            int maxMiliseconds = Math.Max(1, Blinker.IsPlayer() ? MaxMiliseconds : (MaxMiliseconds / 3));
             CombatJuice.BlockUntilFinished(
                 Entry: blinkPunch,
                 Hide: null, // new List<GameObject>() { Blinker },
@@ -1245,81 +1254,80 @@ namespace XRL.World.Parts.Mutation
             {
                 pathStepsCount = Path.Steps.Count;
             }
-            if (pathStepsCount > 0)
+            if (pathStepsCount > 0 
+                && Blinker.InActiveZone() 
+                && !The.Player.IsInStasis())
             {
-                if (Blinker.InActiveZone())
+                Dictionary<string, int> particles = new()
                 {
-                    Dictionary<string, int> particles = new()
+                    //{ "\u25CB", 2 },  // ○
+                    //{ "\u2219", 2 },  // ∙
+                    //{ "\u00BA", 2 },  // º
+                    //{ "\u263C", 2 },  // ☼
+                    //{ "\u2248", 2 },  // ≈
+                    //{ "\u221E", 2 },  // ∞
+                    { "~", 5 },
+                    { "'", 2 },
+                    { "+", 3 },
+                    { "*", 5 },
+                    { ".", 2 },
+                    { "`", 2 },
+                    { "!", 4 },
+                    { "-", 1 },
+                    { "|", 1 },
+                };
+                string tileColor = null;
+                if (blink?.TileColor != null)
+                {
+                    tileColor = blink.TileColor;
+                    if (!tileColor.StartsWith("&"))
                     {
-                        //{ "\u25CB", 2 },  // ○
-                        //{ "\u2219", 2 },  // ∙
-                        //{ "\u00BA", 2 },  // º
-                        //{ "\u263C", 2 },  // ☼
-                        //{ "\u2248", 2 },  // ≈
-                        //{ "\u221E", 2 },  // ∞
-                        { "~", 5 },
-                        { "'", 2 },
-                        { "+", 3 },
-                        { "*", 5 },
-                        { ".", 2 },
-                        { "`", 2 },
-                        { "!", 4 },
-                        { "-", 1 },
-                        { "|", 1 },
-                    };
-                    string tileColor = null;
-                    if (blink?.TileColor != null)
-                    {
-                        tileColor = blink.TileColor;
-                        if (!tileColor.StartsWith("&"))
-                        {
-                            tileColor = $"&{tileColor[0]}";
-                        }
+                        tileColor = $"&{tileColor[0]}";
                     }
-                    Dictionary<string, int> colors = new()
-                    {
-                        { "&K", 2 },
-                        { tileColor ?? "&m", 4 },
-                        { "&y", 3 },
-                        { "&c", 2 },
-                        { "&C", 1 },
-                    };
-                    ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
+                }
+                Dictionary<string, int> colors = new()
+                {
+                    { "&K", 2 },
+                    { tileColor ?? "&m", 4 },
+                    { "&y", 3 },
+                    { "&c", 2 },
+                    { "&C", 1 },
+                };
+                ScreenBuffer scrapBuffer = ScreenBuffer.GetScrapBuffer1();
 
-                    int range = Blinker.CurrentCell.CosmeticDistanceTo(Destination);
-                    for (int i = 0; i < range; i++)
+                int range = Blinker.CurrentCell.CosmeticDistanceTo(Destination);
+                for (int i = 0; i < range; i++)
+                {
+                    scrapBuffer.RenderBase();
+                    foreach (Cell step in Path.Steps)
                     {
-                        scrapBuffer.RenderBase();
-                        foreach (Cell step in Path.Steps)
+                        if (step != Path.KidCell && (Blinker.IsVisible() || step.IsVisible()))
                         {
-                            if (step != Path.KidCell && (Blinker.IsVisible() || step.IsVisible()))
-                            {
-                                string color = colors.Sample();
-                                string particle = particles.Sample();
+                            string color = colors.Sample();
+                            string particle = particles.Sample();
 
-                                Dictionary<string, int> echoes = new()
-                                {
-                                    { "n", 8 }, // none
-                                    { "t", 4 }, // tile
-                                    { "s", 4 }, // string
-                                };
-                                switch (echoes.Sample())
-                                {
-                                    case "n":
-                                        break;
-                                    case "t":
-                                        BufferEcho(Blinker, step, scrapBuffer, i);
-                                        break;
-                                    case "s":
-                                        scrapBuffer.Goto(step.X, step.Y);
-                                        scrapBuffer.Write($"{color}{particle}");
-                                        break;
-                                }
+                            Dictionary<string, int> echoes = new()
+                            {
+                                { "n", 10 }, // none
+                                { "t", 4 },  // tile
+                                { "s", 4 },  // string
+                            };
+                            switch (echoes.Sample())
+                            {
+                                case "n":
+                                    break;
+                                case "t":
+                                    BufferEcho(Blinker, step, scrapBuffer, i);
+                                    break;
+                                case "s":
+                                    scrapBuffer.Goto(step.X, step.Y);
+                                    scrapBuffer.Write($"{color}{particle}");
+                                    break;
                             }
                         }
-                        scrapBuffer.Draw();
-                        Thread.Sleep(10);
                     }
+                    scrapBuffer.Draw();
+                    Thread.Sleep(10);
                 }
             }
 
@@ -1640,6 +1648,7 @@ namespace XRL.World.Parts.Mutation
                             Direction: Direction,
                             BlinkRange: blinkRange,
                             Destination: E.TargetCell,
+                            BlinkPaths: out PathCache,
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
                             Kid: E.Target,
                             IsRetreat: isRetreat,
@@ -2075,23 +2084,15 @@ namespace XRL.World.Parts.Mutation
                 ("Psychodyne Helmet", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModCoProcessor), }),
                 ("Spring Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModCleated), }),
                 ("Anti-Gravity Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModHardened), }),
-                ("Antimatter Cell", 8, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
+                ("Antimatter Cell", 14, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
                 ("Wristcalc", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
                 ("VISAGE", 1, new(){ nameof(ModNav), nameof(ModPolarized), nameof(ModJacked), }),
                 ("BattleAxe8", 1, new(){ nameof(ModSerrated), nameof(ModCounterweighted), nameof(ModSharp), }),
                 ("Flawless Crysteel Shield", 1, new(){ nameof(ModSpiked), nameof(ModHardened), nameof(ModRefractive), }),
                 ("Floating Glowsphere", 1, null),
-                ("Sniper", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
+                ("Sniper Rifle", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
                 ("Lead Slug", 5500, null),
                 ("NectarTonic", 8, null),
-                ("CyberneticsCreditWedge3", 25, null),
-                ("PalladiumElectrodeposits", 10, null),
-                ("PenetratingRadar", 1, null),
-                ("StasisEntangler", 1, null),
-                ("Pentaceps", 1, null),
-                ("HighFidelityMatterRecompositer", 1, null),
-                ("RealHomosapien_ZetachromeHandBones", 1, null),
-                ("GiantHands", 1, null),
             };
 
             GameObject speedyItem = null;
@@ -2228,6 +2229,7 @@ namespace XRL.World.Parts.Mutation
                 mutations.LevelMutation(heightenedSpeed, 10);
             }
         }
+
         [WishCommand(Command = "blink borked")]
         public static void BlinkBorked_WishHandler()
         {
@@ -2235,6 +2237,25 @@ namespace XRL.World.Parts.Mutation
             {
                 blink.MidBlink = false;
                 TidyUpAnimation_WishHandler();
+
+                ActivatedAbilityEntry blinkEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_BLINK_ABILITY);
+                if (blinkEntry != null)
+                {
+                    blink.BlinkActivatedAbilityID = blinkEntry.ID;
+                }
+                else
+                {
+                    blink.AddActivatedAbilityBlink();
+                }
+                ActivatedAbilityEntry coldSteelEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_COLDSTEEL_ABILITY);
+                if (coldSteelEntry != null)
+                {
+                    blink.ColdSteelActivatedAbilityID = coldSteelEntry.ID;
+                }
+                else
+                {
+                    blink.AddActivatedAbilityColdSteel();
+                }
             }
         }
     }

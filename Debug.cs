@@ -1,21 +1,18 @@
-﻿using System;
+﻿using Qud.API;
+using System;
 using System.Collections.Generic;
-
-using Qud.API;
-
-using XRL;
-using XRL.UI;
-using XRL.Core;
-using XRL.World;
-using XRL.World.Parts;
-using XRL.World.Parts.Skill;
-using XRL.World.Parts.Mutation;
-using XRL.World.ObjectBuilders;
-using XRL.Wish;
-
 using UD_Blink_Mutation;
+using XRL;
+using XRL.Core;
+using XRL.UI;
+using XRL.Wish;
+using XRL.World;
+using XRL.World.Anatomy;
+using XRL.World.ObjectBuilders;
+using XRL.World.Parts;
+using XRL.World.Parts.Mutation;
+using XRL.World.Parts.Skill;
 using static UD_Blink_Mutation.Const;
-
 using Debug = UD_Blink_Mutation.Debug;
 using Options = UD_Blink_Mutation.Options;
 
@@ -440,12 +437,40 @@ namespace UD_Blink_Mutation
         public static void DebugBlinkPathWish(string Path)
         {
             RemoveCellHighlighting();
-            if (The.Player.GetPart<UD_Blink>() is not UD_Blink playerBlinkSkill)
+            UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = null;
+            foreach (BodyPart bodyPart in The.Player.Body.LoopParts())
+            {
+                if (bodyPart.Cybernetics is GameObject cybernetic
+                    && cybernetic.TryGetPart(out OC_CNS))
+                {
+                    break;
+                }
+            }
+            UD_Blink playerBlinkSkill = The.Player.GetPart<UD_Blink>();
+            if (playerBlinkSkill is null && OC_CNS is null)
             {
                 return;
             }
-            BlinkPaths blinkPaths = playerBlinkSkill.PathCache;
-            if ((int.TryParse(Path, out int index) && (index < 0 || index > blinkPaths.Count - 1)) 
+            BlinkPaths blinkPaths;
+            int blinkRange; 
+            if (playerBlinkSkill != null && !playerBlinkSkill.PathCache.IsNullOrEmpty())
+            {
+                blinkPaths = playerBlinkSkill.PathCache;
+                blinkRange = playerBlinkSkill.GetBlinkRange();
+            }
+            else
+            if (OC_CNS != null && !OC_CNS.PathCache.IsNullOrEmpty())
+            {
+                blinkPaths = OC_CNS.PathCache;
+                blinkRange = OC_CNS.BlinkRange;
+            }
+            else
+            {
+                Popup.Show("No PathCache to Debug. Were you expecting one?");
+                return;
+            }
+
+            if ((int.TryParse(Path, out int index) && (index < 0 || index > blinkPaths.Count - 1))
                 || Path == null || Path == "clear") // debug blink path
             {
                 return;
@@ -454,7 +479,6 @@ namespace UD_Blink_Mutation
             if (Path.ToLower() == "last") // debug blink path last
             {
                 blinkPath = blinkPaths[^1];
-                
             }
             else if (Path.ToLower() == "first") // debug blink path first
             {
@@ -479,7 +503,7 @@ namespace UD_Blink_Mutation
                     step.HighlightPurple(3, true);
                     continue;
                 }
-                int rangeStep = Math.Min(playerBlinkSkill.GetBlinkRange() - 1, blinkPath.Count - 1);
+                int rangeStep = Math.Min(blinkRange - 1, blinkPath.Count - 1);
                 if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep])
                 {
                     step.HighlightGreen(4, true);

@@ -508,6 +508,7 @@ namespace XRL.World.Parts
                             Direction: Direction,
                             BlinkRange: Range,
                             Destination: E.TargetCell,
+                            BlinkPaths: out _,
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
                             Kid: E.Target,
                             IsRetreat: isRetreat,

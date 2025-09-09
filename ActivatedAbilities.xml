@@ -92,7 +92,7 @@
     <description>
       <p>While {{C|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available and expends a charge.</p>
       <br />
-      <p>Damaging an enemy with your {{C|Cold}} {{Y|Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
+      <p>Damaging an enemy with your {{C|Cold}} {{Y|Steel}} keeps your {{rules|Blink}} off its cooldown.</p>
       <br />
       <statline Name="FlickerCharges" DisplayName="Flicker charges" />
     </description>

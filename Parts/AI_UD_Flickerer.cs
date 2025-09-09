@@ -426,7 +426,7 @@ namespace XRL.World.Parts
                         BlinkRange: BlinkRange,
                         FlickerCharges: ref FlickerCharges,
                         EnergyPerFlickerCharge: EnergyPerFlickerCharge,
-                        OCCNS: null,
+                        OC_CNS: null,
                         FlickerTargetOverride: null,
                         Silent: E.Silent);
                 }
@@ -549,7 +549,8 @@ namespace XRL.World.Parts
                                 DestinationCell: destinationCell,
                                 HaveFlickered: didFlicker,
                                 Path: path,
-                                DidFlicker: out didFlicker)
+                                DidFlicker: out didFlicker,
+                                Charges: MaxFlickerCharges)
                                 || !didFlicker)
                             {
                                 cellsInFlickerRadius.Remove(destinationCell);
@@ -606,7 +607,8 @@ namespace XRL.World.Parts
                                     DestinationCell: originCell,
                                     HaveFlickered: didFlicker,
                                     Path: path,
-                                    DidFlicker: out _)
+                                    DidFlicker: out _,
+                                    Charges: MaxFlickerCharges)
                                 && E.Actor.UseEnergy(1000, "Innate Idle Flicker"))
                             {
                                 message = "*sigh*";

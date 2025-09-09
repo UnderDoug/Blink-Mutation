@@ -86,6 +86,8 @@ namespace XRL.World.Parts
         public Guid ColdSteelActivatedAbilityID = Guid.Empty;
         public Guid FlickerActivatedAbilityID = Guid.Empty;
 
+        public BlinkPaths PathCache = new();
+
         public GameObject Implantee => ParentObject?.Implantee;
 
         public int ComputePower => GetAvailableComputePowerEvent.GetFor(Implantee);
@@ -351,7 +353,7 @@ namespace XRL.World.Parts
             stats.Set("PowerUse", $"less than 1%");
         }
 
-        public static IEnumerable<GameObject> GetFlickerTargets(GameObject Flickerer, List<Cell> CellsInFlickerRadius)
+        public static IEnumerable<GameObject> GetFlickerTargets(GameObject Flickerer, List<Cell> CellsInFlickerRadius, GameObject ExcludeTarget = null)
         {
             if (Flickerer != null && !CellsInFlickerRadius.IsNullOrEmpty())
             {
@@ -360,15 +362,14 @@ namespace XRL.World.Parts
                     List<GameObject> cellObjects = 
                         Event.NewGameObjectList(flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)));
 
-                    if (Flickerer.Target != null && CellsInFlickerRadius.Contains(Flickerer.Target.CurrentCell))
-                    {
-                        cellObjects.Insert(0, Flickerer.Target);
-                    }
                     if (!cellObjects.IsNullOrEmpty())
                     {
                         foreach (GameObject gameObject in cellObjects)
                         {
-                            yield return gameObject;
+                            if (gameObject != ExcludeTarget)
+                            {
+                                yield return gameObject;
+                            }
                         }
                     }
                 }
@@ -437,7 +438,7 @@ namespace XRL.World.Parts
             return true;
         }
 
-        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, BlinkPath Path, out bool DidFlicker)
+        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, BlinkPath Path, out bool DidFlicker, int? Charges = null)
         {
             int indent = Debug.LastIndent;
             DidFlicker = HaveFlickered;
@@ -447,8 +448,13 @@ namespace XRL.World.Parts
                 Flickerer.PlayWorldSound(UD_Blink.BLINK_SOUND);
                 if (OriginCell.IsVisible() && DestinationCell.IsVisible())
                 {
+                    int maxMiliseconds = 125;
+                    if (Charges != null)
+                    {
+                        maxMiliseconds = 500 / Math.Max(1, (int)Charges);
+                    }
                     Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
-                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, Path, 125);
+                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, Path, Math.Min(125, maxMiliseconds));
                 }
 
                 Debug.Entry(2, $"Direct Moving To [{DestinationCell?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
@@ -457,18 +463,18 @@ namespace XRL.World.Parts
                 Debug.Entry(2, $"Gravitating...", Indent: indent + 1, Toggle: getDoDebug());
                 Flickerer.Gravitate();
 
-                DidFlicker = true;
+                // DidFlicker = true;
 
                 Debug.Entry(2, $"Arriving...", Indent: indent + 1, Toggle: getDoDebug());
                 UD_Blink.Arrive(OriginCell, DestinationCell);
                 Debug.LastIndent = indent;
-                return true;
+                return DidFlicker;
             }
             Debug.LastIndent = indent;
             return false;
         }
 
-        public static bool Flicker(GameObject Flickerer, int FlickerRadius, int BlinkRange, ref int FlickerCharges, int EnergyPerFlickerCharge, UD_CyberneticsOverclockedCentralNervousSystem OCCNS = null, GameObject FlickerTargetOverride = null, bool Silent = false)
+        public static bool Flicker(GameObject Flickerer, int FlickerRadius, int BlinkRange, ref int FlickerCharges, int EnergyPerFlickerCharge, UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = null, GameObject FlickerTargetOverride = null, bool Silent = false)
         {
             string verb = "flicker";
             int indent = Debug.LastIndent;
@@ -488,8 +494,10 @@ namespace XRL.World.Parts
                 return false;
             }
 
-            if (OCCNS != null)
+            bool singleTarget = false;
+            if (OC_CNS != null)
             {
+                singleTarget = true;
                 FlickerTargetOverride ??= Flickerer.Target;
                 Flickerer.Target = FlickerTargetOverride;
             }
@@ -506,29 +514,6 @@ namespace XRL.World.Parts
                 Debug.CheckNah(3, $"On World Map", Indent: indent + 3, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
-            }
-            Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 2, Toggle: getDoDebug());
-            if (Flickerer.IsFlying)
-            {
-                Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 3, Toggle: getDoDebug());
-                Flight.Land(Flickerer, Silent);
-                if (Flickerer.IsFlying)
-                {
-                    Debug.Warn(1,
-                        $"{nameof(UD_CyberneticsOverclockedCentralNervousSystem)}",
-                        $"{nameof(HandleEvent)}({nameof(CommandEvent)})",
-                        $"Still flying despite calling " +
-                        $"{nameof(Flight)}.{nameof(Flight.Land)} on " +
-                        $"{nameof(Flickerer)} {Flickerer?.DebugName ?? NULL}");
-
-                    if (!Silent)
-                    {
-                        Flickerer.Fail($"You cannot {verb} while flying");
-                    }
-                    Debug.CheckNah(3, $"Stuck Flying", Indent: indent + 3, Toggle: getDoDebug());
-                    Debug.LastIndent = indent;
-                    return false;
-                }
             }
             Debug.Entry(2, $"Checking is overburdened...", Indent: indent + 1, Toggle: getDoDebug());
             if (Flickerer.IsOverburdened())
@@ -573,6 +558,30 @@ namespace XRL.World.Parts
                 return false;
             }
 
+            Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 2, Toggle: getDoDebug());
+            if (Flickerer.IsFlying)
+            {
+                Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 3, Toggle: getDoDebug());
+                Flight.Land(Flickerer, Silent);
+                if (Flickerer.IsFlying)
+                {
+                    Debug.Warn(1,
+                        $"{nameof(UD_CyberneticsOverclockedCentralNervousSystem)}",
+                        $"{nameof(HandleEvent)}({nameof(CommandEvent)})",
+                        $"Still flying despite calling " +
+                        $"{nameof(Flight)}.{nameof(Flight.Land)} on " +
+                        $"{nameof(Flickerer)} {Flickerer?.DebugName ?? NULL}");
+
+                    if (!Silent)
+                    {
+                        Flickerer.Fail($"You cannot {verb} while flying");
+                    }
+                    Debug.CheckNah(3, $"Stuck Flying", Indent: indent + 3, Toggle: getDoDebug());
+                    Debug.LastIndent = indent;
+                    return false;
+                }
+            }
+
             Cell originCell = Flickerer.CurrentCell;
 
             List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
@@ -615,9 +624,16 @@ namespace XRL.World.Parts
                     Debug.CheckNah(2, $"{nameof(FlickerTargetOverride)} is {NULL}", Indent: indent + 3, Toggle: getDoDebug());
                 }
 
-                List<GameObject> flickerTargets = Event.NewGameObjectList(GetFlickerTargets(Flickerer, cellsInFlickerRadius));
+                List<GameObject> flickerTargets = Event.NewGameObjectList();
 
-
+                if (FlickerTargetOverride != null)
+                {
+                    flickerTargets.Add(FlickerTargetOverride);
+                }
+                if (!singleTarget)
+                {
+                    flickerTargets.AddRange(GetFlickerTargets(Flickerer, cellsInFlickerRadius, FlickerTargetOverride));
+                }
 
                 if (flickerTargets.IsNullOrEmpty())
                 {
@@ -657,7 +673,7 @@ namespace XRL.World.Parts
 
                         flickerTargets.RemoveAll(GO => GO == null);
 
-                        if (OCCNS != null)
+                        if (OC_CNS != null)
                         {
                             FlickerTargetOverride ??= Flickerer.Target;
                             Flickerer.Target = FlickerTargetOverride;
@@ -671,7 +687,9 @@ namespace XRL.World.Parts
                         else
                         {
                             Debug.CheckNah(3, $"{nameof(FlickerTargetOverride)} is not valid or doesn't exist in the world", Indent: indent + 5, Toggle: getDoDebug());
+                            flickerTargets.Remove(FlickerTargetOverride);
                             FlickerTargetOverride = null;
+                            Flickerer.Target = null;
 
                             flickerTarget ??= flickerTargets.GetRandomElementCosmetic();
 
@@ -757,6 +775,16 @@ namespace XRL.World.Parts
                             continue;
                         }
 
+                        int maxFlickerCharges = 2;
+                        if (OC_CNS != null)
+                        {
+                            maxFlickerCharges = OC_CNS.MaxFlickerCharges;
+                        }
+                        else
+                        if (aI_Flickerer != null)
+                        {
+                            maxFlickerCharges = aI_Flickerer.MaxFlickerCharges;
+                        }
                         Debug.Entry(2, $"Processing {nameof(PerformFlickerMove)}...", Indent: indent + 4, Toggle: getDoDebug());
                         if (!PerformFlickerMove(
                             Flickerer: Flickerer,
@@ -764,7 +792,8 @@ namespace XRL.World.Parts
                             DestinationCell: destinationCell,
                             HaveFlickered: didFlicker,
                             Path: path,
-                            DidFlicker: out didFlicker)
+                            DidFlicker: out didFlicker,
+                            Charges: maxFlickerCharges)
                             || !didFlicker)
                         {
                             Debug.Warn(2,
@@ -785,7 +814,22 @@ namespace XRL.World.Parts
                         Debug.LoopItem(4, $"{nameof(flickers)}", $"{flickers}", Indent: indent + 5, Toggle: getDoDebug());
                         Debug.LoopItem(4, $"{nameof(flickerEnergyCost)}", $"{flickerEnergyCost}", Indent: indent + 5, Toggle: getDoDebug());
 
-                        OCCNS?.SyncFlickerAbilityName();
+                        Debug.Entry(2, $"Slammin doors...", Indent: indent + 4, Toggle: getDoDebug());
+                        foreach (Cell step in path.Steps)
+                        {
+                            if (step.HasObjectWithPart(nameof(Door)))
+                            {
+                                foreach (GameObject doorObject in step.GetObjects(GO => GO.HasPart<Door>()))
+                                {
+                                    if (doorObject.TryGetPart(out Door doorPart))
+                                    {
+                                        doorPart.AttemptOpen(Flickerer, IgnoreMobility: true, FromMove: true, Silent: true);
+                                    }
+                                }
+                            }
+                        }
+
+                        OC_CNS?.SyncFlickerAbilityName();
                         aI_Flickerer?.SyncFlickerAbilityName();
 
                         Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
@@ -839,7 +883,7 @@ namespace XRL.World.Parts
                             IsRetreat: false,
                             Path: path);
 
-                        if (OCCNS != null && !CyberFlickerFallsBackToRandom && didKill)
+                        if (OC_CNS != null && !CyberFlickerFallsBackToRandom && didKill)
                         {
                             Debug.Entry(2, $"{nameof(CyberFlickerFallsBackToRandom)} disabled and target died, aborting flicker loop...", 
                                 Indent: indent + 4, Toggle: getDoDebug());
@@ -881,13 +925,24 @@ namespace XRL.World.Parts
                         DestinationCell: originCell,
                         Path: out BlinkPath finalPath))
                     {
+                        int maxFlickerCharges = 2;
+                        if (OC_CNS != null)
+                        {
+                            maxFlickerCharges = OC_CNS.MaxFlickerCharges;
+                        }
+                        else
+                        if (aI_Flickerer != null)
+                        {
+                            maxFlickerCharges = aI_Flickerer.MaxFlickerCharges;
+                        }
                         PerformFlickerMove(
                             Flickerer: Flickerer,
                             OriginCell: currentOriginCell,
                             DestinationCell: originCell,
                             HaveFlickered: didFlicker,
                             Path: finalPath,
-                            DidFlicker: out _);
+                            DidFlicker: out _,
+                            Charges: maxFlickerCharges);
                     }
                 }
                 if (didFlicker)
@@ -905,7 +960,7 @@ namespace XRL.World.Parts
                         Popup.Show($"There are no nearby hostiles to {verb} strike!");
                     }
                 }
-                OCCNS?.SyncFlickerAbilityName();
+                OC_CNS?.SyncFlickerAbilityName();
                 aI_Flickerer?.SyncFlickerAbilityName();
             }
             else
@@ -926,7 +981,7 @@ namespace XRL.World.Parts
                 BlinkRange: BlinkRange,
                 FlickerCharges: ref FlickerCharges,
                 EnergyPerFlickerCharge: EnergyPerFlickerCharge,
-                OCCNS: this,
+                OC_CNS: this,
                 FlickerTargetOverride: FlickerTargetOverride,
                 Silent: Silent);
         }
@@ -1160,17 +1215,20 @@ namespace XRL.World.Parts
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY 
-                && E.Actor == Implantee 
+            else
+            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY
+                && E.Actor == Implantee
                 && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
             {
                 CommandEvent.Send(
                     Actor: E.Actor,
                     Command: COMMAND_UD_BLINK_CYBER,
                     Handler: ParentObject);
+                SyncFlickerAbilityName();
             }
-            if (E.Command == COMMAND_UD_FLICKER_ABILITY 
-                && E.Actor == Implantee 
+            else
+            if (E.Command == COMMAND_UD_FLICKER_ABILITY
+                && E.Actor == Implantee
                 && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 bool doFlicker = true;
@@ -1239,6 +1297,7 @@ namespace XRL.World.Parts
                         Handler: ParentObject);
                 }
             }
+            else
             if (E.Command == COMMAND_UD_BLINK_CYBER && E.Actor == Implantee)
             {
                 if (GameObject.Validate(E.Actor) && !MidAction)
@@ -1276,6 +1335,7 @@ namespace XRL.World.Parts
                             Direction: Direction,
                             BlinkRange: BlinkRange,
                             Destination: E.TargetCell,
+                            BlinkPaths: out PathCache,
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
                             Kid: E.Target,
                             IsRetreat: isRetreat,
@@ -1337,8 +1397,9 @@ namespace XRL.World.Parts
                     }
                 }
             }
-            if (E.Command == COMMAND_UD_FLICKER 
-                && E.Actor == Implantee 
+            else
+            if (E.Command == COMMAND_UD_FLICKER
+                && E.Actor == Implantee
                 && !MidAction)
             {
                 MidFlicker = true;
@@ -1580,7 +1641,7 @@ namespace XRL.World.Parts
 
         public override void FinalizeCopyEarly(GameObject Source, bool CopyEffects, bool CopyID, Func<GameObject, GameObject> MapInv)
         {
-            if (Implantee != null)
+            if (Implantee != null && Implantee != Source)
             {
                 Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
                 Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
@@ -1631,19 +1692,19 @@ namespace XRL.World.Parts
                 ("Psychodyne Helmet", 1, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModCoProcessor), }),
                 ("Spring Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModCleated), }),
                 ("Anti-Gravity Boots", 1, new(){ nameof(ModSpringLoaded), nameof(ModSturdy), nameof(ModHardened), }),
-                ("Antimatter Cell", 8, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
+                ("Antimatter Cell", 12, new(){ nameof(ModRadioPowered), nameof(ModHighCapacity), }),
                 ("Wristcalc", 3, new(){ nameof(ModOverloaded), nameof(ModSturdy), nameof(ModJacked), }),
                 ("VISAGE", 1, new(){ nameof(ModNav), nameof(ModPolarized), nameof(ModJacked), }),
-                ("BattleAxe8", 3, new(){ nameof(ModSerrated), nameof(ModCounterweighted), nameof(ModSharp), }),
+                ("Battle Axe8", 3, new(){ nameof(ModSerrated), nameof(ModCounterweighted), nameof(ModSharp), }),
                 ("Flawless Crysteel Shield", 1, new(){ nameof(ModSpiked), nameof(ModHardened), nameof(ModRefractive), }),
-                ("Sniper", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
+                ("Sniper Rifle", 1, new(){ nameof(ModSturdy), nameof(ModHardened), nameof(ModLacquered), }),
                 ("Lead Slug", 5500, null),
                 ("NectarTonic", 8, null),
                 ("CyberneticsCreditWedge3", 25, null),
                 ("PalladiumElectrodeposits", 10, null),
                 ("PenetratingRadar", 1, null),
-                ("StasisEntangler", 1, null),
-                ("Pentaceps", 1, null),
+                ("StasisProjector", 1, null),
+                ("Pentaceps", 2, null),
                 ("HighFidelityMatterRecompositer", 1, null),
                 ("RealHomosapien_ZetachromeHandBones", 1, null),
                 ("GiantHands", 1, null),
@@ -1746,6 +1807,48 @@ namespace XRL.World.Parts
 
             The.Player.ModIntProperty("CyberneticsLicenses", 27);
             The.Player.ModIntProperty("FreeCyberneticsLicenses", 27);
+        }
+
+        [WishCommand(Command = "OC_CNS borked")]
+        public static void BlinkBorked_WishHandler()
+        {
+            foreach (BodyPart bodyPart in The.Player.Body.LoopParts())
+            {
+                if (bodyPart.Cybernetics is GameObject cybernetic
+                    && cybernetic.TryGetPart(out UD_CyberneticsOverclockedCentralNervousSystem OC_CNS))
+                {
+                    OC_CNS.MidBlink = false;
+                    OC_CNS.MidFlicker = false;
+                    ActivatedAbilityEntry cyberBlinkEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_BLINK_CYBER_ABILITY);
+                    if (cyberBlinkEntry != null)
+                    {
+                        OC_CNS.BlinkActivatedAbilityID = cyberBlinkEntry.ID;
+                    }
+                    else
+                    {
+                        OC_CNS.AddActivatedAbilityBlink();
+                    }
+                    ActivatedAbilityEntry cyberColdSteelEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_COLDSTEEL_CYBER_ABILITY);
+                    if (cyberColdSteelEntry != null)
+                    {
+                        OC_CNS.ColdSteelActivatedAbilityID = cyberColdSteelEntry.ID;
+                    }
+                    else
+                    {
+                        OC_CNS.AddActivatedAbilityColdSteel();
+                    }
+                    ActivatedAbilityEntry flickerEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_FLICKER_ABILITY);
+                    if (flickerEntry != null)
+                    {
+                        OC_CNS.ColdSteelActivatedAbilityID = flickerEntry.ID;
+                    }
+                    else
+                    {
+                        OC_CNS.AddActivatedAbilityFlicker();
+                    }
+                    break;
+                }
+            }
         }
     }
 }
