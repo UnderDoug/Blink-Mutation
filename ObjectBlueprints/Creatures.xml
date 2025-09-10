@@ -108,7 +108,7 @@
     <intproperty Name="RapidLevel_Blink" Value="6" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="6" />
     <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
-    <part Name="Brain" Wanders="true" Hostile="true" Factions="Dark Prickle Pigs-100,Prickle Pigs-50" />
+    <part Name="Brain" Wanders="true" Hostile="true" Factions="Dark Prickle Pigs-100" />
     <stat Name="Level" Value="30" />
     <stat Name="Hitpoints" Value="165" />
     <tag Name="Subtype" Value="Imposter" />

@@ -58,6 +58,9 @@ namespace UD_Blink_Mutation
             if (MethodName == nameof(DrawSeededToken))
                 return false;
 
+            if (MethodName == nameof(Think))
+                return true;
+
             return doDebug;
         }
 
@@ -2117,13 +2120,23 @@ namespace UD_Blink_Mutation
             return pregen;
         }
 
-        public static GameObject Think(this GameObject Thinker, string Hrm)
+        public static GameObject Think(this GameObject Thinker, string Hrm, bool Log = true)
         {
-            if (GameObject.Validate(Thinker) && Thinker.Brain != null && !Thinker.IsPlayerControlled())
+            if (GameObject.Validate(Thinker) && Thinker.Brain != null && !Thinker.IsPlayer())
             {
+                int indent = Debug.LastIndent;
                 Thinker.Brain.Think(Hrm);
+                if (Log && Thinker.ThinksOutLoud())
+                {
+                    Debug.Entry(4, $"{Thinker.DebugName} thinks: {Hrm.Quote()}", Indent: indent + 1, getDoDebug(nameof(Think)));
+                }
+                Debug.LastIndent = indent;
             }
             return Thinker;
+        }
+        public static bool ThinksOutLoud(this GameObject Thinker)
+        {
+            return Thinker != null && Thinker.TryGetIntProperty("ThinkOutLoud", out int thinksOutLoud) && thinksOutLoud > 0;
         }
 
         public static bool TryGetStat(this GameObject Actor, string Stat, out Statistic Statistic)

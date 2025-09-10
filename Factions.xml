@@ -7,7 +7,7 @@
   >
     <partreputation About="UD_Blink" Value="200" />
     <partreputation About="Quills" Value="100" />
-    <partreputation About="UD_ManagedQuills" Value="100" />
+    <partreputation About="UD_QuillsPlus" Value="100" />
     <feeling About="*" Value="0" />
     <feeling About="Player" Value="100" />
     <feeling About="DarkPricklePigs" Value="-250" />
@@ -24,7 +24,7 @@
   >
     <partreputation About="UD_Blink" Value="-200" />
     <partreputation About="Quills" Value="50" />
-    <partreputation About="UD_ManagedQuills" Value="50" />
+    <partreputation About="UD_QuillsPlus" Value="50" />
     <feeling About="*" Value="-450" />
     <feeling About="Player" Value="-800" />
     <feeling About="PricklePigs" Value="-1200" />
