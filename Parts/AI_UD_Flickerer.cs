@@ -561,7 +561,7 @@ namespace XRL.World.Parts
                             flickerCharges--;
                             flickers++;
 
-                            if (6.in10())
+                            if (6.in10() && !ParentObject.IsInActiveZone() && !destinationCell.InActiveZone)
                             {
                                 message = effortSounds.DrawRandomToken();
                                 E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);

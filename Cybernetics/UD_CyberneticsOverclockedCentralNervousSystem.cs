@@ -1677,7 +1677,7 @@ namespace XRL.World.Parts
         {
             bool isLeveledUp = !Parameters.IsNullOrEmpty() && Parameters.ToLower().Contains("level");
 
-            GameObject implant = GameObjectFactory.Factory.CreateObject("UD_OverclockedCentralNervousSystem");
+            GameObject implant = GameObject.Create("UD_OverclockedCentralNervousSystem");
             // The.Player.ReceiveObject(implant);
             implant.MakeUnderstood();
             The.Player.Body.GetFirstPart("Back").Implant(implant);

@@ -33,6 +33,8 @@ namespace UD_Blink_Mutation
 
         public static int LastIndent = 0;
 
+        public static int MaxIndent = 12;
+
         private static void Message(string Text)
         {
             XRL.Messages.MessageQueue.AddPlayerMessage("{{Y|" + Text + "}}");
@@ -62,12 +64,17 @@ namespace UD_Blink_Mutation
 
         public static void Indent(int Verbosity, string Text, int Spaces = 0, bool Toggle = true)
         {
-            if (Verbosity > VerbosityOption || !Toggle) return;
+            if (Verbosity > VerbosityOption || !Toggle)
+            {
+                return;
+            }
+            Spaces = Math.Min(Spaces, MaxIndent);
             int factor = 4;
             // NBSP  \u00A0
             // Space \u0020
             string space = "\u0020";
             string indent = "";
+
             for (int i = 0; i < Spaces * factor; i++)
             {
                 indent += space;
@@ -76,7 +83,9 @@ namespace UD_Blink_Mutation
             string output = indent + Text;
             Log(output);
             if (IncludeInMessage)
+            {
                 Message(output);
+            }
         }
 
         public static void Divider(int Verbosity = 0, string String = null, int Count = 60, int Indent = 0, bool Toggle = true)
