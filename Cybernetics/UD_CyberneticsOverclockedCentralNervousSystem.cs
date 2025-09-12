@@ -377,7 +377,7 @@ namespace XRL.World.Parts
             yield break;
         }
 
-        public static bool TryGetFlickerPath(GameObject Flickerer, int BlinkRange, Cell OriginCell, Cell DestinationCell, out BlinkPath Path)
+        public static bool TryGetFlickerPath(GameObject Flickerer, int FlickerRadius, Cell OriginCell, Cell DestinationCell, out BlinkPath Path)
         {
             Path = null;
 
@@ -385,23 +385,23 @@ namespace XRL.World.Parts
             {
                 new(Flickerer, OriginCell, DestinationCell)
             };
-            possiblePaths.InitializePaths(Flickerer, BlinkRange);
+            possiblePaths.InitializePaths(Flickerer, FlickerRadius);
             BlinkPath possiblePath = possiblePaths;
 
-            if (UD_Blink.IsValidDestinationCell(Flickerer, DestinationCell, BlinkRange, possiblePath.Steps.Count))
+            if (UD_Blink.IsValidDestinationCell(Flickerer, DestinationCell, FlickerRadius, possiblePath.Steps.Count))
             {
                 Path = possiblePath;
             }
             return Path != null;
         }
-        public static bool GetFlickerPaths(GameObject Flickerer, int BlinkRange, Cell OriginCell, List<Cell> FlickerTargetAdjacentCells, out Dictionary<Cell, BlinkPath> DestinationPaths)
+        public static bool GetFlickerPaths(GameObject Flickerer, int FlickerRadius, Cell OriginCell, List<Cell> FlickerTargetAdjacentCells, out Dictionary<Cell, BlinkPath> DestinationPaths)
         {
             DestinationPaths = new();
-            if (Flickerer != null && BlinkRange > 0 && OriginCell != null && !FlickerTargetAdjacentCells.IsNullOrEmpty())
+            if (Flickerer != null && FlickerRadius > 0 && OriginCell != null && !FlickerTargetAdjacentCells.IsNullOrEmpty())
             {
                 foreach (Cell possibleDestination in FlickerTargetAdjacentCells)
                 {
-                    if (TryGetFlickerPath(Flickerer, BlinkRange, OriginCell, possibleDestination, out BlinkPath posiblePath))
+                    if (TryGetFlickerPath(Flickerer, FlickerRadius, OriginCell, possibleDestination, out BlinkPath posiblePath))
                     {
                         DestinationPaths.TryAdd(possibleDestination, posiblePath);
                     }
@@ -605,7 +605,7 @@ namespace XRL.World.Parts
                     if (flickerTargetOverrideAdjacentCells.IsNullOrEmpty()
                         || !GetFlickerPaths(
                             Flickerer: Flickerer,
-                            BlinkRange: BlinkRange,
+                            FlickerRadius: FlickerRadius,
                             OriginCell: originCell,
                             FlickerTargetAdjacentCells: flickerTargetOverrideAdjacentCells,
                             DestinationPaths: out _))
@@ -728,7 +728,7 @@ namespace XRL.World.Parts
                         if (flickerTargetAdjacentCells.IsNullOrEmpty()
                             || !GetFlickerPaths(
                                 Flickerer: Flickerer,
-                                BlinkRange: BlinkRange,
+                                FlickerRadius: FlickerRadius,
                                 OriginCell: currentOriginCell,
                                 FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
                                 DestinationPaths: out Dictionary<Cell, BlinkPath> destinationPaths))
@@ -765,12 +765,12 @@ namespace XRL.World.Parts
 
                         Debug.Entry(2, $"Processing {nameof(CheckBeforeBlinkEvent)}...", Indent: indent + 4, Toggle: getDoDebug());
                         if (!CheckBeforeBlinkEvent(
-                                Flickerer: Flickerer,
-                                BlinkRange: BlinkRange,
-                                DestinationCell: destinationCell,
-                                FlickerTarget: flickerTarget,
-                                Path: path,
-                                Silent: Silent))
+                            Flickerer: Flickerer,
+                            BlinkRange: BlinkRange,
+                            DestinationCell: destinationCell,
+                            FlickerTarget: flickerTarget,
+                            Path: path,
+                            Silent: Silent))
                         {
                             continue;
                         }
@@ -810,6 +810,9 @@ namespace XRL.World.Parts
                         flickers++;
                         flickerEnergyCost += EnergyPerFlickerCharge;
 
+                        OC_CNS?.SyncFlickerAbilityName();
+                        aI_Flickerer?.SyncFlickerAbilityName();
+
                         Debug.LoopItem(4, $"{nameof(FlickerCharges)}", $"{FlickerCharges}", Indent: indent + 5, Toggle: getDoDebug());
                         Debug.LoopItem(4, $"{nameof(flickers)}", $"{flickers}", Indent: indent + 5, Toggle: getDoDebug());
                         Debug.LoopItem(4, $"{nameof(flickerEnergyCost)}", $"{flickerEnergyCost}", Indent: indent + 5, Toggle: getDoDebug());
@@ -828,9 +831,6 @@ namespace XRL.World.Parts
                                 }
                             }
                         }
-
-                        OC_CNS?.SyncFlickerAbilityName();
-                        aI_Flickerer?.SyncFlickerAbilityName();
 
                         Flickerer.Physics.DidXToY(Verb: verb, Preposition: "to", Object: flickerTarget, EndMark: "!");
 
@@ -920,7 +920,7 @@ namespace XRL.World.Parts
                     SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
                     if (TryGetFlickerPath(
                         Flickerer: Flickerer,
-                        BlinkRange: BlinkRange,
+                        FlickerRadius: FlickerRadius,
                         OriginCell: currentOriginCell,
                         DestinationCell: originCell,
                         Path: out BlinkPath finalPath))
@@ -986,7 +986,7 @@ namespace XRL.World.Parts
                 Silent: Silent);
         }
 
-        public static bool IsValidFlickerTarget(GameObject GO, GameObject Flickerer, int BlinkRange)
+        public static bool IsValidFlickerTarget(GameObject GO, GameObject Flickerer, int FlickerRadius)
         {
             if (GO == null || Flickerer == null || !GO.IsCombatObject() || !GO.IsVisible()) // && !GO.IsHostileTowards(Flickerer))
             {
@@ -995,7 +995,7 @@ namespace XRL.World.Parts
 
             foreach (Cell targetAdjacentCell in GO.CurrentCell.GetAdjacentCells())
             {
-                if (TryGetFlickerPath(Flickerer, BlinkRange, Flickerer.CurrentCell, targetAdjacentCell, out _))
+                if (TryGetFlickerPath(Flickerer, FlickerRadius, Flickerer.CurrentCell, targetAdjacentCell, out _))
                 {
                     return true;
                 }
@@ -1004,9 +1004,9 @@ namespace XRL.World.Parts
             return false;
         }
 
-        public static GameObject PickFlickerTarget(GameObject Flickerer, int FlickerRadius, int BlinkRange, bool Silent = false)
+        public static GameObject PickFlickerTarget(GameObject Flickerer, int FlickerRadius, bool Silent = false)
         {
-            if (Flickerer == null || FlickerRadius < 1 || BlinkRange < 1)
+            if (Flickerer == null || FlickerRadius < 1)
             {
                 return null;
             }
@@ -1019,7 +1019,7 @@ namespace XRL.World.Parts
                 Range: FlickerRadius,
                 StartX: originCell.X,
                 StartY: originCell.Y,
-                ObjectTest: GO => IsValidFlickerTarget(GO, Flickerer, BlinkRange),
+                ObjectTest: GO => IsValidFlickerTarget(GO, Flickerer, FlickerRadius),
                 EnforceRange: true,
                 Label: "Pick flicker target");
 
@@ -1266,7 +1266,7 @@ namespace XRL.World.Parts
                     }
                     */ //Gonna force picking a target if one is not already picked.
 
-                    E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
+                    E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius);
                     doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
                 }
 

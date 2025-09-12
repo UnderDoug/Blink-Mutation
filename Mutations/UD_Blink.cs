@@ -1185,86 +1185,77 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            Predicate<GameObject> isSecondaryShortBlade = delegate (GameObject GO)
+            static bool isSecondaryShortBlade(GameObject GO)
             {
                 return GO.TryGetPart(out MeleeWeapon mw)
                     && mw.Skill == "ShortBlades"
                     && GO.EquippedOn() is BodyPart equippedLimb
                     && !equippedLimb.Primary;
-            };
-            GameObject weaponObject = null;
-            BodyPart equippedLimb = null;
+            }
+            int penBonus = 0;
             if (Blinker.HasSkill(nameof(ShortBlades_Expertise))
                 && Blinker.FindEquippedItem(isSecondaryShortBlade) is GameObject secondaryShortBlade
                 && secondaryShortBlade.EquippedOn() is BodyPart nonPrimaryLimb)
             {
-                weaponObject = secondaryShortBlade;
-                equippedLimb = nonPrimaryLimb;
+                penBonus = 1;
             }
-            else
             if (Blinker.GetPrimaryWeapon() is GameObject primaryWeapon
                 && primaryWeapon.EquippedOn() is BodyPart primaryLimb)
             {
-                weaponObject = primaryWeapon;
-                equippedLimb = primaryLimb;
-            }
-            if (false && weaponObject != null && equippedLimb != null)
-            {
-                Blinker.Target = Kid;
-                // Blinker.RegisterPartEvent(blink, "DealDamage");
-                // Blinker.RegisterPartEvent(blink, "WieldedWeaponHit");
-                bool weaponAlreadyVibro = true;
-                if (!weaponObject.TryGetPart(out VibroWeapon vibroWeapon))
+                bool weaponAlreadyColdSteel = false;
+                string existingBaseDamage = "";
+                if (primaryWeapon.TryGetPart(out UD_ColdSteel coldSteel))
                 {
-                    vibroWeapon = weaponObject.RequirePart<VibroWeapon>();
-                    weaponAlreadyVibro = false;
+                    weaponAlreadyColdSteel = true;
+                    existingBaseDamage = coldSteel.BaseDamage;
                 }
-                string meleeWeaponDamage = "";
-                string meleeWeaponAttributes = null;
-                if (weaponObject.TryGetPart(out MeleeWeapon meleeWeapon))
+                else
                 {
-                    meleeWeaponDamage = meleeWeapon.BaseDamage;
-                    meleeWeapon.BaseDamage = blink.GetColdSteelDamage();
-                    meleeWeaponAttributes = meleeWeapon.Attributes;
-                    string additionalAttributes = "Umbral ColdSteel NothinPersonnel Vorpal";
-                    if (!meleeWeapon.Attributes.IsNullOrEmpty())
+                    coldSteel = primaryWeapon.RequirePart<UD_ColdSteel>();
+                    coldSteel.PenetrationBonus = penBonus;
+
+                    string tileColor = null;
+                    if (blink?.TileColor != null)
                     {
-                        meleeWeapon.Attributes += " ";
+                        tileColor = blink.TileColor;
+                        if (!tileColor.StartsWith("&"))
+                        {
+                            tileColor = $"&{tileColor[0]}";
+                        }
                     }
-                    else
+                    if (!tileColor.IsNullOrEmpty())
                     {
-                        meleeWeapon.Attributes = "";
+                        coldSteel.EffectColor = tileColor;
                     }
-                    meleeWeapon.Attributes += additionalAttributes;
                 }
+                coldSteel.BaseDamage = blink.GetColdSteelDamage();
+
+                Kid.TryGetStringProperty("CustomDeathMessage", out string existingCustomDeathMessage);
+                Kid.SetStringProperty("CustomDeathMessage", $"psssh...=subject.t= =verb:take= =object.t's= {UD_ColdSteel.DamageType} personnely...");
+                blink.IsSteelCold = true;
                 if ((bool)Combat.MeleeAttackWithWeapon(
                     Attacker: Blinker,
                     Defender: Kid,
-                    Weapon: weaponObject,
-                    BodyPart: equippedLimb,
+                    Weapon: primaryWeapon,
+                    BodyPart: primaryLimb,
                     Properties: "ColdSteel,Blink,Autohit",
-                    Primary: equippedLimb.Primary))
+                    Primary: true))
                 {
+                    Kid.SetStringProperty("CustomDeathMessage", existingCustomDeathMessage, true);
                     Blinker.Target = Kid;
                 }
-                // Blinker.UnregisterPartEvent(blink, "DealDamage");
-                // Blinker.UnregisterPartEvent(blink, "WieldedWeaponHit");
-                if (!weaponAlreadyVibro && vibroWeapon != null)
+                if (!weaponAlreadyColdSteel && coldSteel.Temporary)
                 {
-                    weaponObject.RemovePart(vibroWeapon);
+                    primaryWeapon.RemovePart(coldSteel);
                 }
-                if (meleeWeapon != null)
+                else
                 {
-                    if (!meleeWeaponDamage.IsNullOrEmpty())
-                    {
-                        meleeWeapon.BaseDamage = meleeWeaponDamage;
-                    }
-                    if (meleeWeaponAttributes != null)
-                    {
-                        meleeWeapon.Attributes = meleeWeaponAttributes;
-                    }
+                    coldSteel.BaseDamage = existingBaseDamage;
                 }
+                return true;
             }
+            return false;
+            /*
             CombatJuice.punch(Blinker, Kid);
             int amount = Stat.Roll(blink.GetColdSteelDamage());
             string damageMessage = "from %t {{coldsteel|Cold Steel}}!";
@@ -1279,7 +1270,6 @@ namespace XRL.World.Parts.Mutation
                 DescribeAsFrom: weaponObject,
                 Message: damageMessage); //,
                 //ShowDamageType: " damage");
-                
             if (!blink.IsSteelCold)
             {
                 Blinker.Target = Kid;
@@ -1287,6 +1277,7 @@ namespace XRL.World.Parts.Mutation
                 Kid.Icesplatter();
             }
             return !blink.IsSteelCold;
+            */
         }
 
         public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path, int MaxMiliseconds = 500)
@@ -1548,6 +1539,22 @@ namespace XRL.World.Parts.Mutation
             return WeGoingAgain(ParentObject, SetTo, Silent);
         }
 
+        public static void OverrideDeathReason(GameObject Blinker, GameObject Kid, ref bool IsSteelCold, IDeathEvent E)
+        {
+            int indent = Debug.LastIndent;
+            Debug.Entry(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+            Debug.Entry(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+            Debug.Entry(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
+
+            string deathReason = $"{Blinker.t()}'s {UD_ColdSteel.DamageType} personnely...";
+
+            E.Reason = $"psssh...you took {deathReason}";
+            E.ThirdPersonReason = $"psssh...{Kid.it}{Kid.GetVerb("take")} {deathReason}";
+
+            IsSteelCold = false;
+            Debug.LastIndent = indent;
+        }
+
         public override void TurnTick(long TimeTick, int Amount)
         {
             if (ParentObject.CurrentZone == The.ActiveZone)
@@ -1590,6 +1597,7 @@ namespace XRL.World.Parts.Mutation
                 || ID == AIGetMovementAbilityListEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
                 || ID == KilledEvent.ID
+                || ID == KilledPlayerEvent.ID
                 || ID == EffectAppliedEvent.ID
                 || ID == EffectRemovedEvent.ID;
         }
@@ -1905,16 +1913,17 @@ namespace XRL.World.Parts.Mutation
                 && E.Killer is GameObject blinker
                 && E.Dying is GameObject kid)
             {
-                int indent = Debug.LastIndent;
-                Debug.Entry(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-                Debug.Entry(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-                Debug.Entry(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-
-                E.Reason = $"psssh...you took {blinker.t()}'s cold steel personnely...";
-                E.ThirdPersonReason = $"psssh...{kid.it}{kid.GetVerb("take")} {blinker.t()}'s cold steel personnely...";
-
-                IsSteelCold = false;
-                Debug.LastIndent = indent;
+                OverrideDeathReason(blinker, kid, ref IsSteelCold, E);
+            }
+            return base.HandleEvent(E);
+        }
+        public override bool HandleEvent(KilledPlayerEvent E)
+        {
+            if (E.Killer == ParentObject && IsSteelCold
+                && E.Killer is GameObject blinker
+                && E.Dying is GameObject kid)
+            {
+                OverrideDeathReason(blinker, kid, ref IsSteelCold, E);
             }
             return base.HandleEvent(E);
         }

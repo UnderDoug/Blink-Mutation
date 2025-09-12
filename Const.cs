@@ -24,6 +24,8 @@ namespace UD_Blink_Mutation
         public const string SMLE = "\u263A";  // ☺︎
         public const string SMLE2 = "\u263B"; // ☻
 
+        public const string DBLEX = "\u203C"; // ‼
+
         public const string VANDR = "\u251C"; // ├
         public const string VONLY = "\u2502"; // │
         public const string TANDR = "\u2514"; // └

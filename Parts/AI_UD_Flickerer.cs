@@ -534,7 +534,7 @@ namespace XRL.World.Parts
 
                             if (!UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
                                 Flickerer: E.Actor,
-                                BlinkRange: BlinkRange,
+                                FlickerRadius: FlickerRadius,
                                 OriginCell: currentOriginCell,
                                 DestinationCell: destinationCell,
                                 Path: out BlinkPath path))
@@ -597,7 +597,7 @@ namespace XRL.World.Parts
 
                             if (UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
                                 Flickerer: E.Actor,
-                                BlinkRange: BlinkRange,
+                                FlickerRadius: FlickerRadius,
                                 OriginCell: currentOriginCell,
                                 DestinationCell: originCell,
                                 Path: out BlinkPath path)
