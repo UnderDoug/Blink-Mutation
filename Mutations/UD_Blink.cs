@@ -62,23 +62,25 @@ namespace XRL.World.Parts.Mutation
         private static bool DoDebugDescriptions => DebugBlinkDebugDescriptions;
 
         // "Constants"
-        public static readonly string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
-        public static readonly string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
+        public const string DieSize = "d2";
 
-        public static readonly string COMMAND_UD_BLINK_ABILITY = "Command_UD_Blink_Ability";
-        public static readonly string COMMAND_UD_BLINK = "Command_UD_Blink";
-        public static readonly string COMMAND_UD_COLDSTEEL_ABILITY = "Command_UD_ColdSteel_Ability";
+        public const string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
+        public const string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
 
-        public static readonly int BASE_TILE_COLOR_PRIORITY = 82;
-        public static readonly string BASE_TILE_COLOR = "&m";
+        public const string COMMAND_UD_BLINK_ABILITY = "Command_UD_Blink_Ability";
+        public const string COMMAND_UD_BLINK = "Command_UD_Blink";
+        public const string COMMAND_UD_COLDSTEEL_ABILITY = "Command_UD_ColdSteel_Ability";
 
-        public static readonly string BASE_SHOUT = "psssh...nothin personnel...kid...";
-        public static readonly string BASE_SHOUT_COLOR = "m";
+        public const int BASE_TILE_COLOR_PRIORITY = 82;
+        public const string BASE_TILE_COLOR = "&m";
 
-        public static readonly string BASE_NANI = "Nani!?";
-        public static readonly string BASE_NANI_COLOR = "r";
+        public const string BASE_SHOUT = "psssh...nothin personnel...kid...";
+        public const string BASE_SHOUT_COLOR = "m";
 
-        public static readonly string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
+        public const string BASE_NANI = "Nani!?";
+        public const string BASE_NANI_COLOR = "r";
+
+        public const string PRICKLE_PIG_BALL_TILE = "Creatures/Prickle_Pig_Ball_%n.png";
 
         // Flags
         private bool MidBlink = false;
@@ -223,7 +225,7 @@ namespace XRL.World.Parts.Mutation
         {
             int DieCount = (int)Math.Max(1, Math.Floor((Level + 1) / 2.0));
             int DamageBonus = (int)Math.Floor(Level / 2.0);
-            return DieCount + "d6" + (DamageBonus != 0 ? DamageBonus.Signed() : "");
+            return DieCount + DieSize + (DamageBonus != 0 ? DamageBonus.Signed() : "");
         }
         public static string GetColdSteelDamage(GameObject Blinker)
         {
@@ -410,7 +412,7 @@ namespace XRL.World.Parts.Mutation
         public override bool Render(RenderEvent E)
         {
             bool flag = ColorChange && !ParentObject.HasTagOrProperty(UDBM_NO_TILE_COLOR);
-            if (flag && ParentObject.IsPlayerControlled())
+            if (flag && ParentObject.IsPlayer())
             {
                 if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L && !OptionMutationColor)
                 {
@@ -448,7 +450,7 @@ namespace XRL.World.Parts.Mutation
 
             if (GameObject.Validate(Blinker))
             {
-                if (Blinker.IsPlayerControlled())
+                if (Blinker.IsPlayer())
                 {
                     Direction = Blinker.PickDirectionS("Blink in which direction?", true);
                 }
@@ -834,7 +836,7 @@ namespace XRL.World.Parts.Mutation
             {
                 if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out BlinkPaths, IsNothinPersonnelKid))
                 {
-                    if (Blinker.IsPlayerControlled() && !Silent)
+                    if (Blinker.IsPlayer() && !Silent)
                     {
                         Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
                     }
@@ -951,13 +953,14 @@ namespace XRL.World.Parts.Mutation
                 float floatLength = 8.0f;
 
                 Debug.Entry(2, $"Checking if not Nani...", Indent: indent + 2, Toggle: getDoDebug());
+                bool attacked = false;
                 if (!isNani)
                 {
                     Debug.CheckYeh(3, $"Not {nameof(isNani)}", $"{!isNani}", Indent: indent + 3, Toggle: getDoDebug());
 
                     didExtra = $"{didExtra} {Kid.t()}";
 
-                    Debug.Entry(3, $"DidXToY {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName.Quote()}...",
+                    Debug.Entry(3, $"{nameof(DidX)} {nameof(didVerb)}: {didVerb.Quote()} to {nameof(Kid)} {Kid?.DebugName ?? NULL}...",
                         Indent: indent + 2, Toggle: getDoDebug());
                     Blinker.Physics?.DidX(
                         Verb: didVerb,
@@ -969,7 +972,7 @@ namespace XRL.World.Parts.Mutation
                         );
 
                     Debug.Entry(2, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: indent + 2, Toggle: getDoDebug());
-                    bool attacked = 
+                    attacked = 
                         hasBlink
                         ? PerformNothinPersonnel(Blinker, Kid)
                         : Combat.PerformMeleeAttack(
@@ -979,22 +982,14 @@ namespace XRL.World.Parts.Mutation
                         ;
 
                     Debug.Entry(3, $"Checking {nameof(attacked)}...", Indent: indent + 2, Toggle: getDoDebug());
-                    if (!attacked)
+                    if (attacked && blink != null)
                     {
-                        message = doNani ? nani : "!?";
-                        messageColor = naniColor;
-                    }
-                    else
-                    {
-                        if (blink != null)
-                        {
-                            blink.WeGoAgain = AllowWeGoAgain;
-                        }
+                        blink.WeGoAgain = AllowWeGoAgain;
                     }
                     Debug.LoopItem(3, $"{nameof(attacked)}", $"{attacked}", 
                         Good: attacked, Indent: indent + 3, Toggle: getDoDebug());
                 }
-                else
+                if (isNani || !attacked)
                 {
                     Debug.CheckNah(3, $"Not {nameof(isNani)}", $"{!isNani}", Indent: indent + 3, Toggle: getDoDebug());
                     message = doNani ? nani : "!?";
@@ -1014,40 +1009,38 @@ namespace XRL.World.Parts.Mutation
                         EndMark: didEndMark,
                         Color: didColor,
                         ColorAsGoodFor: isNani ? Kid : Blinker,
-                        ColorAsBadFor: isNani ? Blinker : Kid
-                        );
+                        ColorAsBadFor: isNani ? Blinker : Kid);
                 }
 
-                if (shouts || isNani)
+                if (isNani)
                 {
                     Debug.CheckYeh(3, $"{nameof(shouts)}: {shouts} or {nameof(isNani)}: {isNani}",
                         Indent: indent + 2, Toggle: getDoDebug());
                     Debug.Entry(2, $"Emitting {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
                         Indent: indent + 3, Toggle: getDoDebug());
                     Blinker.EmitMessage(message, null, messageColor);
+
+                    if (ObnoxiousYelling && shouts)
+                    {
+                        Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                            Indent: indent + 2, Toggle: getDoDebug());
+                        Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
+                            Indent: indent + 2, Toggle: getDoDebug());
+                        Blinker.ParticleText(
+                            Text: message,
+                            Color: messageColor[0],
+                            juiceDuration: 1.5f,
+                            floatLength: floatLength);
+                    }
+                    else
+                    {
+                        Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
+                            Indent: indent + 2, Toggle: getDoDebug());
+                    }
                 }
                 else
                 {
                     Debug.CheckNah(3, $"{nameof(shouts)}: {shouts}, {nameof(isNani)}: {isNani}",
-                        Indent: indent + 2, Toggle: getDoDebug());
-                }
-
-                if (ObnoxiousYelling && shouts)
-                {
-                    Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
-                        Indent: indent + 2, Toggle: getDoDebug());
-                    Debug.Entry(4, $"Particle Text {nameof(message)}: {message.Quote()} in color {messageColor[0].ToString().Quote()}...",
-                        Indent: indent + 2, Toggle: getDoDebug());
-                    Blinker.ParticleText(
-                        Text: message,
-                        Color: messageColor[0],
-                        juiceDuration: 1.5f,
-                        floatLength: floatLength
-                        );
-                }
-                else
-                {
-                    Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} and {nameof(shouts)}: {shouts}",
                         Indent: indent + 2, Toggle: getDoDebug());
                 }
             }
@@ -1058,7 +1051,7 @@ namespace XRL.World.Parts.Mutation
                 if (blink != null)
                 {
                     blink.DidX(
-                        Verb: Blinker.IsPlayerControlled() ? "blunk" : "blink",
+                        Verb: Blinker.IsPlayer() ? "blunk" : "blink",
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
@@ -1068,7 +1061,7 @@ namespace XRL.World.Parts.Mutation
                 else if (Blinker.TryGetPart(out AI_UD_Blinker aIBlink))
                 {
                     aIBlink.DidX(
-                        Verb: Blinker.IsPlayerControlled() ? "blunk" : "blink",
+                        Verb: Blinker.IsPlayer() ? "blunk" : "blink",
                         Extra: "to a new location faster than perceptable",
                         EndMark: "!",
                         SubjectOverride: null,
@@ -1197,7 +1190,7 @@ namespace XRL.World.Parts.Mutation
                 && Blinker.FindEquippedItem(isSecondaryShortBlade) is GameObject secondaryShortBlade
                 && secondaryShortBlade.EquippedOn() is BodyPart nonPrimaryLimb)
             {
-                penBonus = 1;
+                penBonus = 2;
             }
             if (Blinker.GetPrimaryWeapon() is GameObject primaryWeapon
                 && primaryWeapon.EquippedOn() is BodyPart primaryLimb)
@@ -1227,11 +1220,17 @@ namespace XRL.World.Parts.Mutation
                     {
                         coldSteel.EffectColor = tileColor;
                     }
+                    if (blink.Shouts)
+                    {
+                        coldSteel.ShoutMessage = blink.Shout;
+                        coldSteel.ShoutColor = blink.ShoutColor;
+                    }
                 }
                 coldSteel.BaseDamage = blink.GetColdSteelDamage();
 
+                string psssh = Kid.IsPlayer() ? "psssh..." : null;
                 Kid.TryGetStringProperty("CustomDeathMessage", out string existingCustomDeathMessage);
-                Kid.SetStringProperty("CustomDeathMessage", $"psssh...=subject.t= =verb:take= =object.t's= {UD_ColdSteel.DamageType} personnely...");
+                Kid.SetStringProperty("CustomDeathMessage", $"{psssh}=subject.t= took =object.t's= {UD_ColdSteel.DamageType} personnely...");
                 blink.IsSteelCold = true;
                 if ((bool)Combat.MeleeAttackWithWeapon(
                     Attacker: Blinker,
@@ -1674,7 +1673,7 @@ namespace XRL.World.Parts.Mutation
         {
             if (ParentObject != null)
             {
-                if (PhysicalFeatures || (BornThisWay && ParentObject.IsPlayerControlled()))
+                if (PhysicalFeatures || (BornThisWay && ParentObject.IsPlayer()))
                 {
                     if (ParentObject.Body.HasPart("Face", EvenIfDismembered: false))
                     {
@@ -1717,12 +1716,12 @@ namespace XRL.World.Parts.Mutation
                     try
                     {
                         int blinkRange = GetBlinkRange();
-                        bool isRetreat = !E.Actor.IsPlayerControlled() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
                         bool isMovement = !isRetreat && E.TargetCell != null;
 
                         string Direction = null;
                         string blinkThink = "hurr durr, i blinking";
-                        if (!E.Actor.IsPlayerControlled())
+                        if (!E.Actor.IsPlayer())
                         {
                             Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
 
@@ -1788,7 +1787,7 @@ namespace XRL.World.Parts.Mutation
                         {
                             blinkThink = "I blunked out :(";
                         }
-                        if (!E.Actor.IsPlayerControlled())
+                        if (!E.Actor.IsPlayer())
                         {
                             E.Actor.Think(blinkThink);
                         }

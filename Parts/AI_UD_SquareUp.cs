@@ -131,8 +131,8 @@ namespace XRL.World.Parts
                 return null;
             }
 
-            int? firstDifficultyEvaluation = DifficultyEvaluation.GetDifficultyRating(Squarer, FirstOpponent, IgnoreFirstHideCon);
-            int? secondDifficultyEvaluation = DifficultyEvaluation.GetDifficultyRating(Squarer, SecondOpponent, IgnoreSecondHideCon);
+            int? firstDifficultyEvaluation = DifficultyEvaluation.GetDifficultyRating(FirstOpponent, Squarer, IgnoreFirstHideCon);
+            int? secondDifficultyEvaluation = DifficultyEvaluation.GetDifficultyRating(SecondOpponent, Squarer, IgnoreSecondHideCon);
 
             SquareUpCache ??= new();
             IsPlayer ??= new();

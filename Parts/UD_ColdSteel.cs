@@ -20,6 +20,10 @@ namespace XRL.World.Parts
 
         public bool Temporary;
 
+        public string ShoutMessage;
+
+        public string ShoutColor;
+
         public static string Attributes => "Umbral ColdSteel NothinPersonnel Vorpal";
         public static string DamageType => "Cold Steel".Color("coldsteel");
 
@@ -29,6 +33,9 @@ namespace XRL.World.Parts
             BaseDamage = "1d6";
             EffectColor = "&m";
             Temporary = true;
+
+            ShoutMessage = null;
+            ShoutColor = null;
 
             ChargeUse = 0;
             IsPowerLoadSensitive = true;
@@ -53,6 +60,7 @@ namespace XRL.World.Parts
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register("WeaponHit");
+            Registrar.Register("WeaponAfterAttack");
             base.Register(Object, Registrar);
         }
         public override bool WantEvent(int ID, int cascade)
@@ -104,26 +112,71 @@ namespace XRL.World.Parts
         {
             if (E.Weapon == ParentObject 
                 && IsReady(IgnoreEMP: true, IgnoreRealityStabilization: true)
+                && E.Actor is GameObject blinker
                 && E.Target is GameObject kid)
             {
-                PlayWorldSound("Sounds/Interact/sfx_interact_timeCube_activate", Combat: true, SourceCell: kid.CurrentCell);
+                int indent = Debug.LastIndent;
+
+                string shoutColor = ShoutColor.Replace("&", "") ?? "m";
+                float floatLength = 8.0f;
+
+                if (!ShoutMessage.IsNullOrEmpty())
+                {
+                    Debug.CheckYeh(3, $"Emitting {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor.Quote()}...",
+                        Indent: indent + 1, Toggle: getDoDebug());
+                    blinker.EmitMessage(ShoutMessage, null, shoutColor);
+                }
+                else
+                {
+                    Debug.CheckNah(3, $"No {nameof(ShoutMessage)}",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                }
+                if (ObnoxiousYelling && !ShoutMessage.IsNullOrEmpty())
+                {
+                    Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling}",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.CheckYeh(3, $"Particle Text {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor[0].ToString().Quote()}...",
+                        Indent: indent + 1, Toggle: getDoDebug());
+                    blinker.ParticleText(
+                        Text: ShoutMessage,
+                        Color: shoutColor[0],
+                        juiceDuration: 1.5f,
+                        floatLength: floatLength);
+                }
+                else
+                {
+                    Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} or no {nameof(ShoutMessage)}",
+                        Indent: indent + 2, Toggle: getDoDebug());
+                }
+                // "Sounds/Interact/sfx_interact_timeCube_activate"
+                // "Sounds/Abilities/sfx_ability_sunderMind_final"
+                kid.PlayWorldSound("Sounds/Abilities/sfx_ability_sunderMind_final", Combat: true);
+
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
         public override bool FireEvent(Event E)
         {
-            if (E.ID == "WeaponHit"
+            if (E.ID == "WeaponAfterAttack" // "WeaponHit"
                 && E.GetGameObjectParameter("Attacker") is GameObject blinker
                 && E.GetGameObjectParameter("Defender") is GameObject kid
-                && E.GetGameObjectParameter("Weapon") is GameObject weapon)
+                && E.GetGameObjectParameter("Weapon") is GameObject weapon
+                && E.GetIntParameter("Penetrations") is int penetrations)
             {
                 int powerLoadLevel = MyPowerLoadLevel();
                 if (IsReady(UseCharge: true, IgnoreEMP: true, IgnoreRealityStabilization: true, PowerLoadLevel: powerLoadLevel))
                 {
-                    int amount = BaseDamage.RollCached() + PowerLoadBonus(powerLoadLevel);
-                    string damageType = (TerseMessages || weapon == null) ? DamageType + " damage" : null;
+                    string damageDie = $"{penetrations}x{BaseDamage}+{PowerLoadBonus(powerLoadLevel)}";
+                    int amount = damageDie.RollCached();
 
-                    string attackOrType = (TerseMessages || weapon == null) ? "attack" : DamageType;
+                    GameObject describeAsFrom = !TerseMessages ? weapon : null;
+
+                    describeAsFrom = null;
+
+                    string damageType = describeAsFrom == null ? DamageType + " damage" : null;
+
+                    string attackOrType = describeAsFrom == null ? "attack" : DamageType;
                     string damageMessage = $"from %t {attackOrType}!";
 
                     string deathReason = $"{blinker.t()}'s {DamageType} personnely...";
@@ -132,10 +185,10 @@ namespace XRL.World.Parts
                         Amount: ref amount,
                         Attributes: Attributes,
                         DeathReason: $"psssh...you took {deathReason}",
-                        ThirdPersonDeathReason: $"psssh...{kid.it}{kid.GetVerb("take")} {deathReason}",
+                        ThirdPersonDeathReason: $"psssh...{kid.it} took {deathReason}",
                         Owner: blinker,
                         Attacker: blinker,
-                        DescribeAsFrom: !TerseMessages ? weapon : null,
+                        DescribeAsFrom: describeAsFrom,
                         Message: damageMessage,
                         ShowDamageType: damageType))
                     {

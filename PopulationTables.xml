@@ -49,12 +49,12 @@
       <table Name="DynamicInheritsTable:MeleeWeapon:Tier{ownertier}" Number="1" />
       <table Name="Dynamic Head Equipment By Tier" Chance="35" Number="1" />
       <table Name="DynamicInheritsTable:BaseCloak:Tier{ownertier}" Chance="35" Number="1" />
-      <table Name="DynamicInheritsTable:Tool:Tier{ownertier}" Chance="35" Number="1" />
+      <table Name="DynamicObjectsTable:ToolsNotPhylacery:Tier{ownertier}" Chance="35" Number="1" />
       <table Name="Junk {ownertier}" Chance="5,5,5,5,5,5" />
     </group>
   </population>
   
-  <population Name="Dynamic HeadGear Tier">
+  <population Name="Dynamic Head Equipment By Tier">
     <group Name="Items" Style="pickone">
       <table Weight="1" Name="DynamicInheritsTable:BaseHelmet:Tier{ownertier}" Number="1" />
       <table Weight="3" Name="DynamicInheritsTable:BaseHat:Tier{ownertier}" Number="1" />

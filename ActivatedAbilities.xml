@@ -9,7 +9,7 @@
       <br />
 			<p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
       <br />
-      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" /> tiles}} in a direction of your choosing.</p>
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
@@ -28,7 +28,7 @@
     <description>
       <p>You were turned to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
       <br />
-			<p> While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
+			<p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
       <br />
       <p>Damaging an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>

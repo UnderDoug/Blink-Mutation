@@ -2,13 +2,22 @@
 <objects>
   <!-- 
       
-       1: Shoes
-       2: Gloves
-       3: Rings
-       4: Cybernetics
-       5: Gems
+       1: Adjustments
+       2: Shoes
+       3: Gloves
+       4: Rings
+       5: Cybernetics
+       6: Gems
       
   -->
+
+  <object Name="Tool" Load="Merge">
+    <tag Name="DynamicObjectsTable:ToolsNotPhylacery" />
+  </object>
+  <object Name="TemplarPhylactery" Load="Merge">
+    <removetag Name="DynamicObjectsTable:ToolsNotPhylacery" />
+  </object>
+  
   <!-- 
   
        1: Shoes
