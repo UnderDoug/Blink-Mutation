@@ -43,7 +43,7 @@ namespace UD_Blink_Mutation
         public List<Cell> Steps => Path?.Steps;
         public int Count => Steps.IsNullOrEmpty() ? 0 : Steps.Count;
 
-        public Cell EndCell => Steps.IsNullOrEmpty() ? null : Steps[^1];
+        public Cell LastStep => Steps.IsNullOrEmpty() ? null : Steps[^1];
 
         public Cell Destination;
         public GameObject Kid;
@@ -92,7 +92,7 @@ namespace UD_Blink_Mutation
             if (IsNothinPersonnelKid && AnyKid && (Kid == null || KidDestination == null) && !IsValidKidDestination)
             {
                 Debug.CheckNah(4,
-                    $"[{EndCell?.Location}] " +
+                    $"[{LastStep?.Location}] " +
                     $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
                     $"{nameof(AnyKid)}: {AnyKid} and " +
                     $"{nameof(Kid)}: {Kid?.DebugName ?? NULL} and (" +
@@ -104,7 +104,7 @@ namespace UD_Blink_Mutation
             }
             bool hasValid = Destination != null || (IsNothinPersonnelKid && IsValidKidDestination);
             Debug.LoopItem(4,
-                $"[{EndCell?.Location}] " +
+                $"[{LastStep?.Location}] " +
                 $"{nameof(Destination)}: [{Destination?.Location}], or (" +
                 $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
                 $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})", 
@@ -113,9 +113,9 @@ namespace UD_Blink_Mutation
             return hasValid;
         }
 
-        public bool IsValidDestinationCell(GameObject Blinker, int Range, bool suppressDebug = false)
+        public bool IsValidDestinationCell(GameObject Blinker, int BlinkRange, bool suppressDebug = false)
         {
-            return UD_Blink.IsValidDestinationCell(Blinker, EndCell, Range, Count, suppressDebug);
+            return UD_Blink.IsValidDestinationCell(Blinker, LastStep, BlinkRange, Count, suppressDebug);
         }
 
         public override string ToString()

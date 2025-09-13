@@ -2175,7 +2175,7 @@ namespace UD_Blink_Mutation
 
                 Debug.Entry(4, $"x {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint}) *//",
                     Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
-                return (EQN * EMS) / 10000.0;
+                return Math.Round(EQN * EMS / 10000.0, 2);
             }
             return default;
         }

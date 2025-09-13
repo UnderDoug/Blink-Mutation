@@ -102,8 +102,8 @@ namespace XRL.World.Parts
 
         public int BlinkRange => BaseBlinkRange + RangeFromComputePower;
         public int FlickerRadius => BlinkRange / 2;
-        public int CellsPerRange => Implantee == null ? 0 : (int)Implantee.GetMovementsPerTurn(true);
-        public int EffectiveRange => BlinkRange * CellsPerRange;
+        public double CellsPerRange => Implantee == null ? 0 : Implantee.GetMovementsPerTurn(true);
+        public int EffectiveRange => (int)(BlinkRange * CellsPerRange);
 
         public int BaseMaxFlickerCharges;
         public int MaxFlickerCharges => BaseMaxFlickerCharges + FlickerChargeFromComputePower;
@@ -351,7 +351,7 @@ namespace XRL.World.Parts
         public virtual void CollectBlinkStats(Templates.StatCollector stats)
         {
             stats.Set(nameof(BlinkRange), BlinkRange);
-            stats.Set(nameof(CellsPerRange), CellsPerRange);
+            stats.Set(nameof(CellsPerRange), CellsPerRange.ToString());
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, Implantee), GetCooldownTurns());
             stats.Set("PowerUse", $"less than 1%");
@@ -841,7 +841,7 @@ namespace XRL.World.Parts
                             {
                                 foreach (GameObject doorObject in step.GetObjects(GO => GO.HasPart<Door>()))
                                 {
-                                    if (doorObject.TryGetPart(out Door doorPart))
+                                    if (doorObject.TryGetPart(out Door doorPart) && !doorPart.Open)
                                     {
                                         doorPart.AttemptOpen(Flickerer, IgnoreMobility: true, FromMove: true, Silent: true);
                                     }
@@ -1041,7 +1041,7 @@ namespace XRL.World.Parts
                 EnforceRange: true,
                 Label: "Pick flicker target");
 
-            GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject()); // && GO.IsHostileTowards(Flickerer));
+            GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && !GO.IsHolographicDistractionOf(Flickerer));
 
             if (pickedCell !=null && pickedTarget == null && Flickerer.IsPlayer() && !Silent)
             {
@@ -1205,13 +1205,14 @@ namespace XRL.World.Parts
         public override bool HandleEvent(EndTurnEvent E)
         {
             CheckEMPed();
-            if (HaveFlickerCharges)
+            if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
             {
-                EnableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
+                FlickerCharges++;
+                FlickerChargeTurnCounter = 0;
             }
-            else
+            if (FlickerChargeTurnCounter > 0 && FlickerCharges == MaxFlickerCharges)
             {
-                DisableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
+                FlickerChargeTurnCounter = 0;
             }
             SyncFlickerAbility();
             if (MidAction)
@@ -1257,7 +1258,7 @@ namespace XRL.World.Parts
                 {
                     bool doFlicker = true;
                     GameObject originalTarget = E.Actor.Target;
-                    if (E.Actor.IsPlayer() && (E.Actor.Target == null)) // || !E.Actor.Target.IsHostileTowards(E.Actor)))
+                    if (E.Actor.IsPlayer() && (E.Actor.Target == null || E.Actor.Target.IsHolographicDistractionOf(E.Actor)))
                     {
                         /*
                         StringBuilder SB = Event.NewStringBuilder();

@@ -73,8 +73,8 @@ namespace XRL.World.Parts
 
         public bool WeGoAgain => HasBlink && BlinkMutation.WeGoAgain;
 
-        public int CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
-        public int EffectiveRange => Range * CellsPerRange;
+        public double CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
+        public int EffectiveRange => (int)(Range * CellsPerRange);
 
         [SerializeField]
         private bool RecentlyBlunk = false;
@@ -202,7 +202,7 @@ namespace XRL.World.Parts
         public virtual void CollectStats(Templates.StatCollector stats)
         {
             stats.Set("BlinkRange", Range);
-            stats.Set(nameof(CellsPerRange), CellsPerRange);
+            stats.Set(nameof(CellsPerRange), CellsPerRange.ToString());
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), BlunkTurnThreshold);
         }

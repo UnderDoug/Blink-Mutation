@@ -78,8 +78,8 @@ namespace XRL.World.Parts
 
         public int BlinkRange => GetBlinkRange();
         public int FlickerRadius => BlinkRange / 2;
-        public int CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
-        public int EffectiveRange => BlinkRange * CellsPerRange;
+        public double CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
+        public int EffectiveRange => (int)(BlinkRange * CellsPerRange);
 
         public int BaseMaxFlickerCharges;
         public int MaxFlickerCharges => BaseMaxFlickerCharges;

@@ -413,6 +413,10 @@ namespace UD_Blink_Mutation
         {
             return Cell.HighlightColor(TileColor: "r", DetailColor: "R", BackgroundColor: "k", Priority, Solid);
         }
+        public static Cell HighlightDarkRed(this Cell Cell, int Priority = 0, bool Solid = false)
+        {
+            return Cell.HighlightColor(TileColor: "K", DetailColor: "r", BackgroundColor: "k", Priority, Solid);
+        }
         public static Cell HighlightGreen(this Cell Cell, int Priority = 0, bool Solid = false)
         {
             return Cell.HighlightColor(TileColor: "g", DetailColor: "G", BackgroundColor: "k", Priority, Solid);
@@ -428,6 +432,10 @@ namespace UD_Blink_Mutation
         public static Cell HighlightBlue(this Cell Cell, int Priority = 0, bool Solid = false)
         {
             return Cell.HighlightColor(TileColor: "b", DetailColor: "B", BackgroundColor: "k", Priority, Solid);
+        }
+        public static Cell HighlightDarkBlue(this Cell Cell, int Priority = 0, bool Solid = false)
+        {
+            return Cell.HighlightColor(TileColor: "K", DetailColor: "b", BackgroundColor: "k", Priority, Solid);
         }
         public static Cell HighlightCyan(this Cell Cell, int Priority = 0, bool Solid = false)
         {
@@ -500,26 +508,35 @@ namespace UD_Blink_Mutation
             {
                 return;
             }
-            foreach (Cell step in blinkPath.Steps)
+            int rangeStep = Math.Min(blinkRange - 1, blinkPath.Count - 1);
+            int effectiveRangeStep = Math.Min(effectiveBlinkRange - 1, blinkPath.Count - 1);
+            for (int i = 0; i < blinkPath.Steps.Count; i++)
             {
+                Cell step = blinkPath.Steps[i];
                 if (step == blinkPath.KidCell)
                 {
                     step.HighlightPurple(3, true);
                     continue;
                 }
-                int rangeStep = Math.Min(blinkRange - 1, blinkPath.Count - 1);
-                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep] || step == blinkPath.Steps[effectiveBlinkRange])
+                if (step == blinkPath.Destination
+                    || step == blinkPath.Steps[rangeStep]
+                    || step == blinkPath.Steps[effectiveRangeStep])
                 {
                     step.HighlightGreen(4, true);
+                    continue;
+                }
+                if (i > effectiveBlinkRange)
+                {
+                    step.HighlightDarkRed(4, true);
                     continue;
                 }
                 step.HighlightBlue(2, true);
             }
             foreach (BlinkPath path in blinkPaths)
             {
-                path?.EndCell?.HighlightYellow(1, true);
+                path?.LastStep?.HighlightYellow(1, true);
             }
-            blinkPath?.EndCell?.HighlightCyan(5, true);
+            blinkPath?.LastStep?.HighlightCyan(5, true);
             blinkPath?.KidDestination?.HighlightRed(3, true);
         }
         [WishCommand(Command = "debug blink path")]

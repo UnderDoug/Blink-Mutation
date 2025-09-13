@@ -264,6 +264,12 @@ namespace UD_Blink_Mutation
             PathsContainNonHostileTarget = false;
             Debug.Entry(2, $"Initializing {nameof(BlinkPaths)} and acquiring destinations and target...", Indent: indent + 1, Toggle: getDoDebug());
 
+            Debug.Entry(2, 
+                $"{nameof(Blinker)}: {Blinker?.DebugName ?? NULL}, " +
+                $"{nameof(BlinkRange)}: {BlinkRange}," +
+                $" EffectiveRange: {BlinkRange * Blinker.GetMovementsPerTurn(true)}", 
+                Indent: indent + 2, Toggle: getDoDebug());
+
             for (int i = 0; i < Count; i++)
             {
                 // furthest first.
@@ -280,38 +286,38 @@ namespace UD_Blink_Mutation
                 bool isNextPathValid = !isLastPath && nextPath.IsValidDestinationCell(Blinker, BlinkRange, suppressDebug: true);
 
                 Debug.Divider(3, HONLY, 45, Indent: indent + 2, Toggle: getDoDebug());
-                Debug.Entry(3, $">{i,3}: Cell [{thisPath.EndCell?.Location}]",
+                Debug.Entry(3, $">{i,3}: Cell [{thisPath.LastStep?.Location}]",
                     Indent: indent + 2, Toggle: getDoDebug());
 
-                Debug.Entry(3, $"Finding path between {nameof(Blinker)} [{Blinker.CurrentCell?.Location}] and {nameof(thisPath.EndCell)} [{thisPath.EndCell?.Location}]...",
+                Debug.Entry(3, $"Finding path between {nameof(Blinker)} [{Blinker.CurrentCell?.Location}] and {nameof(thisPath.LastStep)} [{thisPath.LastStep?.Location}]...",
                     Indent: indent + 3, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(Path)} {nameof(Steps)} {nameof(Count)}", $"{thisPath.Count}",
                     Good: !(thisPath.Count > BlinkRange), Indent: indent + 4, Toggle: getDoDebug());
 
-                Debug.Entry(3, $"Finding {nameof(thisPath.Kid)} in {nameof(thisPath.EndCell)} [{thisPath.EndCell?.Location}]...", 
+                Debug.Entry(3, $"Finding {nameof(thisPath.Kid)} in {nameof(thisPath.LastStep)} [{thisPath.LastStep?.Location}]...", 
                     Indent: indent + 3, Toggle: getDoDebug());
-                if (FindKidInCell(Blinker, thisPath.EndCell, out bool kidIsNonHostileTarget) is GameObject kid)
+                if (FindKidInCell(Blinker, thisPath.LastStep, out bool kidIsNonHostileTarget) is GameObject kid)
                 {
                     PathsContainNonHostileTarget = PathsContainNonHostileTarget || kidIsNonHostileTarget;
                     thisPath.Kid = kid;
                     Debug.CheckYeh(4, $"{nameof(thisPath.Kid)}", $"{thisPath.Kid.DebugName}", Indent: indent + 4, Toggle: getDoDebug());
                     string kidDestSource = "invalid";
-                    if (kid.IsHolographicDistractionOf(Blinker))
+                    if (kid.IsHolographicDistractionOf(Blinker) && isThisPathValid)
                     {
-                        thisPath.KidDestination ??= thisPath.EndCell;
+                        thisPath.KidDestination ??= thisPath.LastStep;
                         kidDestSource = "swap";
                     }
                     else
                     if (isPrevPathValid)
                     {
-                        thisPath.KidDestination ??= prevPath.EndCell;
+                        thisPath.KidDestination ??= prevPath.LastStep;
                         kidDestSource = "prev";
                     }
                     else
                     if (isNextPathValid)
                     {
-                        thisPath.KidDestination ??= nextPath.EndCell;
+                        thisPath.KidDestination ??= nextPath.LastStep;
                         kidDestSource = "next";
                     }
                     else
@@ -326,11 +332,11 @@ namespace UD_Blink_Mutation
                     Debug.CheckNah(4, $"{nameof(thisPath.Kid)}", $"{NULL}", Indent: indent + 4, Toggle: getDoDebug());
                 }
 
-                Debug.Entry(3, $"Checking validity of {nameof(thisPath.EndCell)}...", Indent: indent + 3, Toggle: getDoDebug());
+                Debug.Entry(3, $"Checking validity of {nameof(thisPath.LastStep)}...", Indent: indent + 3, Toggle: getDoDebug());
                 string destinationLocation = "invalid";
                 if (isThisPathValid)
                 {
-                    thisPath.Destination = thisPath.EndCell;
+                    thisPath.Destination = thisPath.LastStep;
                     destinationLocation = $"{thisPath.Destination.Location}";
                 }
                 Debug.LoopItem(4, $"{nameof(Destination)}", $"[{destinationLocation}]",
@@ -342,9 +348,9 @@ namespace UD_Blink_Mutation
             Debug.Entry(4, $"{nameof(BlinkPaths)}", $"Initialized", Indent: indent + 1, Toggle: getDoDebug());
             Debug.LastIndent = indent;
         }
-        public void InitializePaths(GameObject Blinker, int BlinkRange)
+        public void InitializePaths(GameObject Blinker, int BaseRange)
         {
-            InitializePaths(Blinker, BlinkRange, out _);
+            InitializePaths(Blinker, BaseRange, out _);
         }
 
         public BlinkPath SelectBlinkPath(bool IsNothinPersonnelKid = false)
