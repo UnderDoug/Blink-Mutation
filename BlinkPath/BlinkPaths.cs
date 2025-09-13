@@ -257,11 +257,11 @@ namespace UD_Blink_Mutation
             }
         }
 
-        public void InitializePaths(GameObject Blinker, int Range)
+        public void InitializePaths(GameObject Blinker, int BlinkRange, out bool PathsContainNonHostileTarget)
         {
             int indent = Debug.LastIndent;
             RemoveAll(B => B == null);
-
+            PathsContainNonHostileTarget = false;
             Debug.Entry(2, $"Initializing {nameof(BlinkPaths)} and acquiring destinations and target...", Indent: indent + 1, Toggle: getDoDebug());
 
             for (int i = 0; i < Count; i++)
@@ -275,9 +275,9 @@ namespace UD_Blink_Mutation
                 BlinkPath thisPath = this[i];
                 BlinkPath nextPath = !isLastPath ? this[i + 1] : null;
 
-                bool isPrevPathValid = !isFirstPath && prevPath.IsValidDestinationCell(Blinker, Range, suppressDebug: true);
-                bool isThisPathValid = this[i].IsValidDestinationCell(Blinker, Range, suppressDebug: true);
-                bool isNextPathValid = !isLastPath && nextPath.IsValidDestinationCell(Blinker, Range, suppressDebug: true);
+                bool isPrevPathValid = !isFirstPath && prevPath.IsValidDestinationCell(Blinker, BlinkRange, suppressDebug: true);
+                bool isThisPathValid = this[i].IsValidDestinationCell(Blinker, BlinkRange, suppressDebug: true);
+                bool isNextPathValid = !isLastPath && nextPath.IsValidDestinationCell(Blinker, BlinkRange, suppressDebug: true);
 
                 Debug.Divider(3, HONLY, 45, Indent: indent + 2, Toggle: getDoDebug());
                 Debug.Entry(3, $">{i,3}: Cell [{thisPath.EndCell?.Location}]",
@@ -287,15 +287,22 @@ namespace UD_Blink_Mutation
                     Indent: indent + 3, Toggle: getDoDebug());
 
                 Debug.LoopItem(4, $"{nameof(Path)} {nameof(Steps)} {nameof(Count)}", $"{thisPath.Count}",
-                    Good: !(thisPath.Count > Range), Indent: indent + 4, Toggle: getDoDebug());
+                    Good: !(thisPath.Count > BlinkRange), Indent: indent + 4, Toggle: getDoDebug());
 
                 Debug.Entry(3, $"Finding {nameof(thisPath.Kid)} in {nameof(thisPath.EndCell)} [{thisPath.EndCell?.Location}]...", 
                     Indent: indent + 3, Toggle: getDoDebug());
-                if (FindKidInCell(Blinker, thisPath.EndCell) is GameObject kid)
+                if (FindKidInCell(Blinker, thisPath.EndCell, out bool kidIsNonHostileTarget) is GameObject kid)
                 {
+                    PathsContainNonHostileTarget = PathsContainNonHostileTarget || kidIsNonHostileTarget;
                     thisPath.Kid = kid;
                     Debug.CheckYeh(4, $"{nameof(thisPath.Kid)}", $"{thisPath.Kid.DebugName}", Indent: indent + 4, Toggle: getDoDebug());
                     string kidDestSource = "invalid";
+                    if (kid.IsHolographicDistractionOf(Blinker))
+                    {
+                        thisPath.KidDestination ??= thisPath.EndCell;
+                        kidDestSource = "swap";
+                    }
+                    else
                     if (isPrevPathValid)
                     {
                         thisPath.KidDestination ??= prevPath.EndCell;
@@ -334,6 +341,10 @@ namespace UD_Blink_Mutation
             Debug.Divider(3, HONLY, 45, Indent: indent + 2, Toggle: getDoDebug());
             Debug.Entry(4, $"{nameof(BlinkPaths)}", $"Initialized", Indent: indent + 1, Toggle: getDoDebug());
             Debug.LastIndent = indent;
+        }
+        public void InitializePaths(GameObject Blinker, int BlinkRange)
+        {
+            InitializePaths(Blinker, BlinkRange, out _);
         }
 
         public BlinkPath SelectBlinkPath(bool IsNothinPersonnelKid = false)

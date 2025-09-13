@@ -2189,6 +2189,16 @@ namespace UD_Blink_Mutation
             return "\u0003".Color("r") + String;
         }
 
+        public static bool IsHolographicDistractionOf(this GameObject Hologram, GameObject Object)
+        {
+            return Hologram != null
+                && Object != null
+                && Hologram != Object
+                && Hologram.HasPart<HologramMaterial>()
+                && Hologram.TryGetPart(out Distraction distraction)
+                && distraction.Original == Object;
+        }
+
         public static bool IsHostileTowardsInRadius(this GameObject GO, GameObject Actor, int Radius)
         {
             return GO != null && Actor != null

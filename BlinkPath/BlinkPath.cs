@@ -88,10 +88,11 @@ namespace UD_Blink_Mutation
         {
             int indent = Debug.LastIndent;
 
-            Debug.Entry(4, $"{nameof(HasValidDestination)}: {nameof(EndCell)} [{EndCell?.Location}]", Indent: indent + 1, Toggle: getDoDebug());
+            // Debug.Entry(4, $"{nameof(HasValidDestination)}: {nameof(EndCell)} [{EndCell?.Location}]", Indent: indent + 1, Toggle: getDoDebug());
             if (IsNothinPersonnelKid && AnyKid && (Kid == null || KidDestination == null) && !IsValidKidDestination)
             {
-                Debug.CheckNah(4, 
+                Debug.CheckNah(4,
+                    $"[{EndCell?.Location}] " +
                     $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
                     $"{nameof(AnyKid)}: {AnyKid} and " +
                     $"{nameof(Kid)}: {Kid?.DebugName ?? NULL} and (" +
@@ -103,7 +104,8 @@ namespace UD_Blink_Mutation
             }
             bool hasValid = Destination != null || (IsNothinPersonnelKid && IsValidKidDestination);
             Debug.LoopItem(4,
-                $"{nameof(Destination)}: [{Destination?.Location}] or (" +
+                $"[{EndCell?.Location}] " +
+                $"{nameof(Destination)} set, or (" +
                 $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
                 $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})", 
                 Good: hasValid, Indent: indent + 2, Toggle: getDoDebug());

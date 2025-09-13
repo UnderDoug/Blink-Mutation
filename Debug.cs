@@ -395,18 +395,10 @@ namespace UD_Blink_Mutation
             if (!The.Game.HasBooleanGameState(DEBUG_HIGHLIGHT_CELLS))
                 The.Game.SetBooleanGameState(DEBUG_HIGHLIGHT_CELLS, Options.DebugVerbosity > 3);
             if (Cell.IsEmpty() && Cell.GetFirstVisibleObject() == null && Cell.GetHighestRenderLayerObject() == null)
-                Cell.AddObject("Cell Highlighter");
-
-            GameObject gameObject = null;
-            foreach (GameObject Object in Cell.GetObjects())
             {
-                gameObject ??= Object;
-                if (Object.Render.RenderLayer >= gameObject.Render.RenderLayer)
-                {
-                    gameObject = Object;
-                }
+                Cell.AddObject("Cell Highlighter").Render.Visible = true;
             }
-            gameObject = Cell.GetHighestRenderLayerObject();
+            GameObject gameObject = Cell.GetHighestRenderLayerObject();
             UDBM_CellHighlighter highlighter = gameObject.RequirePart<UDBM_CellHighlighter>();
             if (Priority >= highlighter.HighlightPriority)
             {

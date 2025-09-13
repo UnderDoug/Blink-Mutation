@@ -9,11 +9,13 @@ using System.Text;
 using System.Threading;
 using UD_Blink_Mutation;
 using UnityEngine;
+using UnityEngine.SocialPlatforms;
 using XRL.Core;
 using XRL.Language;
 using XRL.Rules;
 using XRL.UI;
 using XRL.Wish;
+using XRL.World.AI.GoalHandlers;
 using XRL.World.AI.Pathfinding;
 using XRL.World.Anatomy;
 using XRL.World.Capabilities;
@@ -23,6 +25,7 @@ using XRL.World.Skills;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
+using static UnityEngine.ParticleSystem;
 using static XRL.World.Parts.Mutation.UD_Blink;
 using Debug = UD_Blink_Mutation.Debug;
 
@@ -529,12 +532,13 @@ namespace XRL.World.Parts.Mutation
             return GetBlinkDirection(Blinker, BlinkRange, false, null, true, TargetCell);
         }
 
-        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false)
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPaths BlinkPaths, out bool SuppressMessageOnFail, bool IsNothinPersonnelKid = false)
         {
             Destination = null;
             Kid = null;
             KidDestination = null;
             BlinkPaths = null;
+            SuppressMessageOnFail = false;
             Cell origin = Blinker.CurrentCell;
 
             UD_Blink blinkSkill = Blinker.GetPart<UD_Blink>();
@@ -598,10 +602,24 @@ namespace XRL.World.Parts.Mutation
                 int index = blinkCells.Count - 1 - i;
                 BlinkPaths.Add(new(Blinker, origin, blinkCells[index]));
             }
-
+            bool PathsContainNonHostileTarget = false;
             if (!BlinkPaths.IsNullOrEmpty())
             {
-                BlinkPaths.InitializePaths(Blinker, Range);
+                BlinkPaths.InitializePaths(Blinker, Range, out PathsContainNonHostileTarget);
+            }
+
+            Debug.Entry(2, $"Confirming non-hostile okay to cold steel...", Indent: indent + 1, Toggle: getDoDebug());
+            GameObject target = Blinker.Target;
+            if (PathsContainNonHostileTarget 
+                && Popup.ShowYesNo(
+                    $"{target.T()} is not hostile to you.\n\n" +
+                    $"Blinking {Directions.GetExpandedDirection(Direction)} could result in them tasting {UD_ColdSteel.DamageType}.\n\n" +
+                    $"Is it nothin' personnel?") != DialogResult.Yes)
+            {
+                Debug.CheckNah(3, $"{nameof(PathsContainNonHostileTarget)}: {PathsContainNonHostileTarget}...", Indent: indent + 1, Toggle: getDoDebug());
+                SuppressMessageOnFail = true;
+                Debug.LastIndent = indent;
+                return false;
             }
 
             Debug.Entry(2, $"Selecting {nameof(BlinkPath)}...", Indent: indent + 1, Toggle: getDoDebug());
@@ -625,17 +643,31 @@ namespace XRL.World.Parts.Mutation
         }
         public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination)
         {
-            return TryGetBlinkDestination(Blinker, Direction, Range, out Destination, out _, out _, out _, false);
+            return TryGetBlinkDestination(Blinker, Direction, Range, out Destination, out _, out _, out _, out _, false);
+        }
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out bool SuppressMessageOnFail)
+        {
+            return TryGetBlinkDestination(Blinker, Direction, Range, out Destination, out _, out _, out _, out SuppressMessageOnFail, false);
+        }
+        public static bool TryGetBlinkDestination(GameObject Blinker, string Direction, int Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false)
+        {
+            return TryGetBlinkDestination(Blinker, Direction, Range, out Destination, out Kid, out KidDestination, out BlinkPaths, out _, false);
         }
 
-        public static GameObject FindKidInCell(GameObject Blinker, Cell Cell)
+        public static GameObject FindKidInCell(GameObject Blinker, Cell Cell, out bool KidIsNonHostileTarget)
         {
+            KidIsNonHostileTarget = false;
             if (Blinker == null || Cell == null)
             {
                 return null;
             }
             foreach (GameObject combatObject in Cell.GetObjectsWithPart(nameof(Combat)))
             {
+                if (combatObject == Blinker.Target)
+                {
+                    KidIsNonHostileTarget = !combatObject.IsHostileTowards(Blinker);
+                    return combatObject;
+                }
                 if (combatObject.IsHostileTowards(Blinker))
                 {
                     return combatObject;
@@ -709,7 +741,7 @@ namespace XRL.World.Parts.Mutation
             return true;
         }
 
-        public static IEnumerable<Cell> GetBlinkCellsInDirection(GameObject Blinker, string Direction, int Range)
+        public static IEnumerable<Cell> GetBlinkCellsInDirection(GameObject Blinker, string Direction, int Range, bool BuiltOnly = false)
         {
             if (Blinker != null && Direction != null && Range > 1)
             {
@@ -719,7 +751,7 @@ namespace XRL.World.Parts.Mutation
                     Cell currentCell = origin;
                     for (int i = 0; i < Range; i++)
                     {
-                        currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: false);
+                        currentCell = currentCell.GetCellFromDirection(Direction, BuiltOnly: BuiltOnly);
                         yield return currentCell;
                     }
                 }
@@ -788,6 +820,41 @@ namespace XRL.World.Parts.Mutation
                 Debug.LastIndent = indent;
                 return false;
             }
+            Debug.Entry(2, $"Checking is currently Hooking...", Indent: indent + 1, Toggle: getDoDebug());
+            GameObject hookee = null;
+            GameObject hookingEquipment = null;
+            foreach (Cell adjacentCell in Blinker.CurrentCell.GetAdjacentCells())
+            {
+                List<GameObject> hookedObjects = Event.NewGameObjectList(adjacentCell.GetObjectsWithEffect(nameof(Hooked)) ?? new());
+                if (!hookedObjects.IsNullOrEmpty())
+                {
+                    foreach (GameObject hookedObject in hookedObjects)
+                    {
+                        if (hookedObject.GetEffect<Hooked>() is Hooked hookedEffect
+                            && hookedEffect.HookingWeapon?.Equipped is GameObject hookingWeapon
+                            && hookingWeapon == Blinker)
+                        {
+                            hookee = hookedObject;
+                            hookingEquipment = hookingWeapon;
+                            break;
+                        }
+                    }
+                }
+                hookedObjects.Clear();
+                if (hookee != null)
+                {
+                    break;
+                }
+            }
+            if (hookee != null)
+            {
+                if (!Silent)
+                {
+                    Blinker.Fail($"You cannot {verb} while {hookee.t()} is hooked with {hookingEquipment?.t() ?? "your weapon"}.");
+                }
+                Debug.LastIndent = indent;
+                return false;
+            }
             Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 1, Toggle: getDoDebug());
             if (!Blinker.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
@@ -832,15 +899,35 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
-            if (Destination == null || (IsNothinPersonnelKid && KidDestination != null))
+            if (Destination == null || (IsNothinPersonnelKid && KidDestination == null)) // was KidDestination != null
             {
-                if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out BlinkPaths, IsNothinPersonnelKid))
+                if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out BlinkPaths, out bool suppressMessageOnFail, IsNothinPersonnelKid))
                 {
-                    if (Blinker.IsPlayer() && !Silent)
+                    if (Blinker.IsPlayer() && !Silent && !suppressMessageOnFail)
                     {
                         Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
                     }
                     Debug.CheckNah(4, $"{nameof(Destination)}", NULL, Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.LastIndent = indent;
+                    return false;
+                }
+            }
+            else
+            if (Destination != null && Kid.IsHolographicDistractionOf(Blinker))
+            {
+                BlinkPaths = new()
+                {
+                    new(Blinker, origin, Destination),
+                };
+                BlinkPaths.InitializePaths(Blinker, BlinkRange);
+                IsNothinPersonnelKid = false;
+                if (BlinkPaths.SelectBlinkPath(IsNothinPersonnelKid) == null)
+                {
+                    if (Blinker.IsPlayer() && !Silent)
+                    {
+                        Popup.ShowFail($"You're unable to find a path to swap places with your hologram!");
+                    }
+                    Debug.CheckNah(4, $"Swapping {nameof(BlinkPaths.Path)}", NULL, Indent: indent + 2, Toggle: getDoDebug());
                     Debug.LastIndent = indent;
                     return false;
                 }
@@ -910,10 +997,10 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
-            PlayAnimation(Blinker, Destination, BlinkPaths.Path);
+            PlayAnimation(Blinker, Destination, BlinkPaths.Path, BlinkRange);
 
             Debug.Entry(2, $"Direct Moving To [{Destination?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
-            bool didBlink = Blinker.DirectMoveTo(Destination, EnergyCost: 0, Forced: false, IgnoreCombat: true, IgnoreGravity: true, Ignore: null);
+            bool didBlink = Blinker.DirectMoveTo(Destination, EnergyCost: 0, IgnoreCombat: true, IgnoreGravity: true);
 
             Debug.Entry(2, $"Slammin doors...", Indent: indent + 1, Toggle: getDoDebug());
             if (didBlink && !BlinkPaths.IsNullOrEmpty())
@@ -926,9 +1013,38 @@ namespace XRL.World.Parts.Mutation
                         {
                             if (doorObject.TryGetPart(out Door doorPart))
                             {
-                                doorPart.AttemptOpen(Blinker, IgnoreMobility: true, FromMove: true, Silent: true);
+                                doorPart.AttemptOpen(Blinker, IgnoreMobility: true, FromMove: false, Silent: true);
                             }
                         }
+                    }
+                }
+            }
+
+            Debug.Entry(2, $"Rocket Skatin?...", Indent: indent + 1, Toggle: getDoDebug());
+            bool doRocketSkating = false;
+            RocketSkates rocketSkates = null;
+            if (!IsRetreat)
+            {
+                foreach (GameObject equippedItem in Blinker.GetEquippedObjectsAndInstalledCybernetics())
+                {
+                    if (equippedItem.GetPart<RocketSkates>() is RocketSkates equippedRocketSkates
+                        && equippedRocketSkates.IsSkating())
+                    {
+                        rocketSkates = equippedRocketSkates;
+                        doRocketSkating = true;
+                        break;
+                    }
+                }
+            }
+            if (doRocketSkating && rocketSkates.IsReady(UseCharge: true))
+            {
+                Cell previousStep = origin;
+                FlamingRay flamingRay = new();
+                foreach (Cell step in BlinkPaths.Path.Steps)
+                {
+                    if (step != Destination)
+                    {
+                        EmitFlamePlume(step, previousStep, Blinker, rocketSkates, flamingRay);
                     }
                 }
             }
@@ -1279,7 +1395,7 @@ namespace XRL.World.Parts.Mutation
             */
         }
 
-        public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path, int MaxMiliseconds = 500)
+        public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path, int BlinkRange, int MillisecondsPerRange = 42, int MaxMilliseconds = 500)
         {
             if (Blinker == null || Destination == null)
             {
@@ -1290,10 +1406,10 @@ namespace XRL.World.Parts.Mutation
             {
                 return;
             }
-
-            AnimatedMaterialGeneric prickleBallAnimation = null;
             UD_Blink blink = Blinker.GetPart<UD_Blink>();
-            if (IsBornThisWay(Blinker) && blink != null)
+            AnimatedMaterialGeneric prickleBallAnimation = null;
+            if (blink != null
+                && IsBornThisWay(Blinker))
             {
                 AddPrickleBallAnimation(Blinker);
                 prickleBallAnimation = blink.PrickleBallAnimation;
@@ -1316,11 +1432,14 @@ namespace XRL.World.Parts.Mutation
                     ToYOffset: 0f
                     );
 
-            int maxMiliseconds = Math.Max(1, Blinker.IsPlayer() ? MaxMiliseconds : (MaxMiliseconds / 3));
+            int blinkDuration = MillisecondsPerRange * BlinkRange;
+            blinkDuration = Blinker.IsPlayer() ? blinkDuration : (blinkDuration / 3);
+
+            int maxMilliseconds = Math.Max(1, Math.Min(blinkDuration, MaxMilliseconds));
             CombatJuice.BlockUntilFinished(
                 Entry: blinkPunch,
                 Hide: null, // new List<GameObject>() { Blinker },
-                MaxMilliseconds: maxMiliseconds,
+                MaxMilliseconds: maxMilliseconds,
                 Interruptible: false
                 );
 
@@ -1552,6 +1671,28 @@ namespace XRL.World.Parts.Mutation
 
             IsSteelCold = false;
             Debug.LastIndent = indent;
+        }
+
+        public static bool EmitFlamePlume(Cell FlameCell, Cell FromCell, GameObject Blinker, RocketSkates RocketSkates, FlamingRay FlamingRay, bool ShowMessage = false, bool UsePopup = false)
+        {
+            if (FlameCell == null)
+            {
+                return false;
+            }
+            if (ShowMessage)
+            {
+                RocketSkates.DidX("emit", "a {{fiery|plume of flame}}", "!", UsePopup: UsePopup);
+            }
+            FlamingRay ??= new();
+            FlamingRay.ParentObject = Blinker ?? RocketSkates.ParentObject.Equipped ?? RocketSkates.ParentObject;
+            FlamingRay.Level = RocketSkates.PlumeLevel;
+            FlameCell?.ParticleBlip("&r^W" + (char)(219 + Stat.Random(0, 4)), 6, 0L);
+            if (FromCell != FlameCell)
+            {
+                FromCell?.ParticleBlip("&R^W" + (char)(219 + Stat.Random(0, 4)), 3, 0L);
+            }
+            FlamingRay.Flame(FlameCell, null, DoEffect: false, UsePopup);
+            return true;
         }
 
         public override void TurnTick(long TimeTick, int Amount)

@@ -76,6 +76,8 @@ namespace XRL.World.Parts
 
         public bool IsSteelCold;
 
+        public bool SwapWithKid;
+
         public bool MidBlink;
         public bool MidFlicker;
         public bool MidAction => MidBlink || MidFlicker;
@@ -125,6 +127,8 @@ namespace XRL.World.Parts
             IsSteelCold = false;
             MidBlink = false;
             MidFlicker = false;
+
+            SwapWithKid = false;
 
             BaseFlickerChargeRechargeTurns = 15;
 
@@ -438,11 +442,11 @@ namespace XRL.World.Parts
             return true;
         }
 
-        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, BlinkPath Path, out bool DidFlicker, int? Charges = null)
+        public static bool PerformFlickerMove(GameObject Flickerer, Cell OriginCell, Cell DestinationCell, bool HaveFlickered, BlinkPath FlickerPath, int FlickerRadius, out bool DidFlicker, int? Charges = null)
         {
             int indent = Debug.LastIndent;
             DidFlicker = HaveFlickered;
-            if (Flickerer != null && DestinationCell != null && OriginCell != null && Path != null)
+            if (Flickerer != null && DestinationCell != null && OriginCell != null && FlickerPath != null)
             {
                 Debug.Entry(2, $"Playing world sound {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
                 Flickerer.PlayWorldSound(UD_Blink.BLINK_SOUND);
@@ -454,7 +458,7 @@ namespace XRL.World.Parts
                         maxMiliseconds = 500 / Math.Max(1, (int)Charges);
                     }
                     Debug.Entry(2, $"Playing Animation...", Indent: indent + 1, Toggle: getDoDebug());
-                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, Path, Math.Min(125, maxMiliseconds));
+                    UD_Blink.PlayAnimation(Flickerer, DestinationCell, FlickerPath, FlickerRadius, Math.Min(125, maxMiliseconds));
                 }
 
                 Debug.Entry(2, $"Direct Moving To [{DestinationCell?.Location}]...", Indent: indent + 1, Toggle: getDoDebug());
@@ -791,7 +795,8 @@ namespace XRL.World.Parts
                             OriginCell: currentOriginCell,
                             DestinationCell: destinationCell,
                             HaveFlickered: didFlicker,
-                            Path: path,
+                            FlickerPath: path,
+                            FlickerRadius: FlickerRadius,
                             DidFlicker: out didFlicker,
                             Charges: maxFlickerCharges)
                             || !didFlicker)
@@ -940,7 +945,8 @@ namespace XRL.World.Parts
                             OriginCell: currentOriginCell,
                             DestinationCell: originCell,
                             HaveFlickered: didFlicker,
-                            Path: finalPath,
+                            FlickerPath: finalPath,
+                            FlickerRadius: FlickerRadius,
                             DidFlicker: out _,
                             Charges: maxFlickerCharges);
                     }
@@ -1206,101 +1212,112 @@ namespace XRL.World.Parts
                 MidBlink = false;
                 MidFlicker = false;
             }
+            SwapWithKid = false;
             SyncFlickerAbilityName();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY && E.Actor == Implantee)
+            if (E.Actor == Implantee)
             {
-                IsNothinPersonnelKid = !IsNothinPersonnelKid;
-            }
-            else
-            if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY
-                && E.Actor == Implantee
-                && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
-            {
-                CommandEvent.Send(
-                    Actor: E.Actor,
-                    Command: COMMAND_UD_BLINK_CYBER,
-                    Handler: ParentObject);
-                SyncFlickerAbilityName();
-            }
-            else
-            if (E.Command == COMMAND_UD_FLICKER_ABILITY
-                && E.Actor == Implantee
-                && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
-            {
-                bool doFlicker = true;
-                GameObject originalTarget = E.Actor.Target;
-                if (E.Actor.IsPlayer() && (E.Actor.Target == null)) // || !E.Actor.Target.IsHostileTowards(E.Actor)))
+                if (E.Command == COMMAND_UD_COLDSTEEL_CYBER_ABILITY && !MidAction)
                 {
-                    /*
-                    StringBuilder SB = Event.NewStringBuilder();
-
-                    string yesString = PopupMessage.YesNoCancelButton[0].text;
-                    string noString = PopupMessage.YesNoCancelButton[1].text;
-                    string cancelString = PopupMessage.YesNoCancelButton[2].text;
-
-                    SB.Append("You do not have a target to focus your flicker strike on.").AppendLine();
-                    SB.Append("Would you like to select one before using this ability?").AppendLine().AppendLine();
-
-                    SB.AppendColored("K", "").Append(yesString).Append(" to pick a target.").AppendLine();
-
-                    SB.AppendColored("K", "").Append(noString).Append(" to perform flicker strike against random targets.").AppendLine();
-
-                    SB.AppendColored("K", "").Append(cancelString).Append(" to do nothing.");
-
-                    switch (Popup.ShowYesNoCancel(Event.FinalizeString(SB)))
-                    {
-                        case DialogResult.Yes:
-                            E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
-                            doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
-                            break;
-                        case DialogResult.Cancel:
-                        default:
-                            doFlicker = false;
-                            break;
-                        case DialogResult.No:
-                            break;
-                    }
-                    */ //Gonna force picking a target if one is not already picked.
-
-                    E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius);
-                    doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
-                }
-
-                bool singleTarget = true;
-                if (!E.Actor.IsPlayer())
-                {
-                    List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
-                    nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
-                    singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
+                    IsNothinPersonnelKid = !IsNothinPersonnelKid;
                 }
                 else
+                if (E.Command == COMMAND_UD_BLINK_CYBER_ABILITY
+                    && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
                 {
-                    GameObject target = E.Actor.Target;
-                    if (target != null && !target.IsHostileTowards(E.Actor)
-                        && Popup.ShowYesNo($"{target.T()} is not hostile to you, flicker strike {target.them} anyway?") != DialogResult.Yes)
+                    GameObject holoKid = null;
+                    if (E.Actor.Target is GameObject target
+                        && target.TryGetPart(out Distraction distraction)
+                        && distraction.Original == E.Actor
+                        && target.CurrentCell is Cell targetCell
+                        && UD_Blink.GetBlinkCellsInDirection(E.Actor, targetCell.GetDirectionFromCell(E.Actor.CurrentCell), BlinkRange, true).Contains(targetCell))
                     {
-                        doFlicker = false;
-                        E.Actor.Target = originalTarget;
+                        SwapWithKid = true;
+                        holoKid = target;
                     }
-                }
-
-                if (doFlicker)
-                {
                     CommandEvent.Send(
                         Actor: E.Actor,
-                        Command: COMMAND_UD_FLICKER,
-                        Target: singleTarget ? E.Actor.Target : null,
+                        Command: COMMAND_UD_BLINK_CYBER,
+                        Target: SwapWithKid ? holoKid : null,
+                        TargetCell: SwapWithKid ? holoKid.CurrentCell : null,
                         Handler: ParentObject);
+                    SyncFlickerAbilityName();
                 }
-            }
-            else
-            if (E.Command == COMMAND_UD_BLINK_CYBER && E.Actor == Implantee)
-            {
-                if (GameObject.Validate(E.Actor) && !MidAction)
+                else
+                if (E.Command == COMMAND_UD_FLICKER_ABILITY
+                    && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
+                {
+                    bool doFlicker = true;
+                    GameObject originalTarget = E.Actor.Target;
+                    if (E.Actor.IsPlayer() && (E.Actor.Target == null)) // || !E.Actor.Target.IsHostileTowards(E.Actor)))
+                    {
+                        /*
+                        StringBuilder SB = Event.NewStringBuilder();
+
+                        string yesString = PopupMessage.YesNoCancelButton[0].text;
+                        string noString = PopupMessage.YesNoCancelButton[1].text;
+                        string cancelString = PopupMessage.YesNoCancelButton[2].text;
+
+                        SB.Append("You do not have a target to focus your flicker strike on.").AppendLine();
+                        SB.Append("Would you like to select one before using this ability?").AppendLine().AppendLine();
+
+                        SB.AppendColored("K", "").Append(yesString).Append(" to pick a target.").AppendLine();
+
+                        SB.AppendColored("K", "").Append(noString).Append(" to perform flicker strike against random targets.").AppendLine();
+
+                        SB.AppendColored("K", "").Append(cancelString).Append(" to do nothing.");
+
+                        switch (Popup.ShowYesNoCancel(Event.FinalizeString(SB)))
+                        {
+                            case DialogResult.Yes:
+                                E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius, BlinkRange);
+                                doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
+                                break;
+                            case DialogResult.Cancel:
+                            default:
+                                doFlicker = false;
+                                break;
+                            case DialogResult.No:
+                                break;
+                        }
+                        */ //Gonna force picking a target if one is not already picked.
+
+                        E.Actor.Target = PickFlickerTarget(E.Actor, FlickerRadius);
+                        doFlicker = E.Actor.Target != null && E.Actor.Target != E.Actor;
+                    }
+
+                    bool singleTarget = true;
+                    if (!E.Actor.IsPlayer())
+                    {
+                        List<Cell> nearbyHostileCells = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(FlickerRadius));
+                        nearbyHostileCells.RemoveAll(c => !c.HasObject(GO => IsValidFlickerTarget(GO, E.Actor, BlinkRange)));
+                        singleTarget = !nearbyHostileCells.IsNullOrEmpty() && nearbyHostileCells.Count() < FlickerCharges;
+                    }
+                    else
+                    {
+                        GameObject target = E.Actor.Target;
+                        if (target != null && !target.IsHostileTowards(E.Actor)
+                            && Popup.ShowYesNo($"{target.T()} is not hostile to you, flicker strike {target.them} anyway?") != DialogResult.Yes)
+                        {
+                            doFlicker = false;
+                            E.Actor.Target = originalTarget;
+                        }
+                    }
+
+                    if (doFlicker)
+                    {
+                        CommandEvent.Send(
+                            Actor: E.Actor,
+                            Command: COMMAND_UD_FLICKER,
+                            Target: singleTarget ? E.Actor.Target : null,
+                            Handler: ParentObject);
+                    }
+                }
+                else
+                if (E.Command == COMMAND_UD_BLINK_CYBER && !MidAction)
                 {
                     MidBlink = true;
                     try
@@ -1330,6 +1347,7 @@ namespace XRL.World.Parts
                             E.Actor.Think(blinkThink);
                         }
 
+                        Cell originCell = E.Actor.CurrentCell;
                         bool blunk = UD_Blink.Blink(
                             Blinker: E.Actor,
                             Direction: Direction,
@@ -1339,21 +1357,42 @@ namespace XRL.World.Parts
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
                             Kid: E.Target,
                             IsRetreat: isRetreat,
-                            Silent: false
-                            );
+                            Silent: false);
 
                         if (blunk)
                         {
                             blinkThink = $"I blunk and ";
                             int energyCost = 1000;
+
+                            bool swappedWithKid = false;
+                            if (SwapWithKid
+                                && E.Target != null)
+                            {
+                                SwapWithKid = false;
+                                swappedWithKid = E.Target.DirectMoveTo(
+                                    targetCell: originCell,
+                                    EnergyCost: 0,
+                                    IgnoreCombat: true,
+                                    IgnoreGravity: true);
+
+                                if (swappedWithKid && HaveFlickerCharges)
+                                {
+                                    WeGoAgain = true;
+                                }
+                            }
+
                             if (AllowWeGoAgain && WeGoAgain)
                             {
                                 WeGoingAgain(false);
 
                                 if (HaveFlickerCharges)
                                 {
-                                    energyCost = 0;
+                                    if (!swappedWithKid)
+                                    {
+                                        energyCost = 0;
+                                    }
                                     FlickerCharges--;
+                                    SyncFlickerAbilityName();
                                 }
 
                                 Cell currentCell = E.Actor.CurrentCell;
@@ -1364,8 +1403,7 @@ namespace XRL.World.Parts
                                     Color1: "C",
                                     Symbol1: "\u203C",
                                     Color2: "Y",
-                                    Symbol2: "\u221E"
-                                    );
+                                    Symbol2: "\u221E");
 
                                 energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
                                 blinkThink += $"We Go Again";
@@ -1396,31 +1434,29 @@ namespace XRL.World.Parts
                         MidBlink = false;
                     }
                 }
-            }
-            else
-            if (E.Command == COMMAND_UD_FLICKER
-                && E.Actor == Implantee
-                && !MidAction)
-            {
-                MidFlicker = true;
-                try
+                else
+                if (E.Command == COMMAND_UD_FLICKER && !MidAction)
                 {
-                    if (GameObject.Validate(E.Actor) && HaveFlickerCharges)
+                    MidFlicker = true;
+                    try
                     {
-                        Flicker(E.Target, E.Silent);
+                        if (GameObject.Validate(E.Actor) && HaveFlickerCharges)
+                        {
+                            Flicker(E.Target, E.Silent);
+                        }
+                        if (!HaveFlickerCharges)
+                        {
+                            DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
+                        }
                     }
-                    if (!HaveFlickerCharges)
+                    catch (Exception x)
                     {
-                        DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
+                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
                     }
-                }
-                catch (Exception x)
-                {
-                    MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
-                }
-                finally
-                {
-                    MidFlicker = false;
+                    finally
+                    {
+                        MidFlicker = false;
+                    }
                 }
             }
             return base.HandleEvent(E);
@@ -1840,12 +1876,13 @@ namespace XRL.World.Parts
                     ActivatedAbilityEntry flickerEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_FLICKER_ABILITY);
                     if (flickerEntry != null)
                     {
-                        OC_CNS.ColdSteelActivatedAbilityID = flickerEntry.ID;
+                        OC_CNS.FlickerActivatedAbilityID = flickerEntry.ID;
                     }
                     else
                     {
                         OC_CNS.AddActivatedAbilityFlicker();
                     }
+                    OC_CNS.SyncFlickerAbilityName();
                     break;
                 }
             }

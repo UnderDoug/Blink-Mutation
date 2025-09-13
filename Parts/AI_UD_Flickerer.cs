@@ -548,7 +548,8 @@ namespace XRL.World.Parts
                                 OriginCell: currentOriginCell,
                                 DestinationCell: destinationCell,
                                 HaveFlickered: didFlicker,
-                                Path: path,
+                                FlickerPath: path,
+                                FlickerRadius: FlickerRadius,
                                 DidFlicker: out didFlicker,
                                 Charges: MaxFlickerCharges)
                                 || !didFlicker)
@@ -606,7 +607,8 @@ namespace XRL.World.Parts
                                     OriginCell: currentOriginCell,
                                     DestinationCell: originCell,
                                     HaveFlickered: didFlicker,
-                                    Path: path,
+                                    FlickerPath: path,
+                                    FlickerRadius: FlickerRadius,
                                     DidFlicker: out _,
                                     Charges: MaxFlickerCharges)
                                 && E.Actor.UseEnergy(1000, "Innate Idle Flicker"))
