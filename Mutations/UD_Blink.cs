@@ -898,6 +898,14 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
+            if (Destination != null 
+                && Kid.IsHolographicDistractionOf(Blinker)
+                && !GetBlinkCellsInDirection(Blinker, Direction, BlinkRange, true).Contains(Destination))
+            {
+                Kid = null;
+                Destination = null;
+                KidDestination = null;
+            }
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
             if (Destination == null || (IsNothinPersonnelKid && KidDestination == null)) // was KidDestination != null
             {
@@ -921,7 +929,7 @@ namespace XRL.World.Parts.Mutation
                 };
                 BlinkPaths.InitializePaths(Blinker, BlinkRange);
                 IsNothinPersonnelKid = false;
-                if (BlinkPaths.SelectBlinkPath(IsNothinPersonnelKid) == null)
+                if (BlinkPaths.SelectBlinkPath(false) == null)
                 {
                     if (Blinker.IsPlayer() && !Silent)
                     {
@@ -2531,6 +2539,12 @@ namespace XRL.World.Parts.Mutation
                     blink.AddActivatedAbilityColdSteel();
                 }
             }
+        }
+
+        [WishCommand(Command = "shut da doors")]
+        public static void ShutDoors_WishHandler()
+        {
+            The.ActiveZone.ForeachObjectWithPart("Door", GO => GO.GetPart<Door>().AttemptClose());
         }
     }
 }

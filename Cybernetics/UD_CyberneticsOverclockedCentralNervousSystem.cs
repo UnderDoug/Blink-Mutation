@@ -269,6 +269,18 @@ namespace XRL.World.Parts
                 activatedAbilityEntry.DisplayName = $"Flicker Strike ({FlickerCharges})";
             }
         }
+        public void SyncFlickerAbility()
+        {
+            if (HaveFlickerCharges)
+            {
+                EnableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
+            }
+            else
+            {
+                DisableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
+            }
+            SyncFlickerAbilityName();
+        }
 
         public static bool WeGoingAgain(GameObject Blinker, GameObject CyberneticsOverclockedCentralNervousSystemObject, bool? SetTo = null, bool Silent = false)
         {
@@ -815,8 +827,8 @@ namespace XRL.World.Parts
                         flickers++;
                         flickerEnergyCost += EnergyPerFlickerCharge;
 
-                        OC_CNS?.SyncFlickerAbilityName();
-                        aI_Flickerer?.SyncFlickerAbilityName();
+                        OC_CNS?.SyncFlickerAbility();
+                        aI_Flickerer?.SyncFlickerAbility();
 
                         Debug.LoopItem(4, $"{nameof(FlickerCharges)}", $"{FlickerCharges}", Indent: indent + 5, Toggle: getDoDebug());
                         Debug.LoopItem(4, $"{nameof(flickers)}", $"{flickers}", Indent: indent + 5, Toggle: getDoDebug());
@@ -1124,7 +1136,9 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{AllowWeGoAgain.YehNah()}]{HONLY}{nameof(AllowWeGoAgain)}: ").AppendColored("B", $"{AllowWeGoAgain}");
                 SB.AppendLine();
-                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah(!AllowWeGoAgain)}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
+                SB.Append(VANDR).Append($"[{WeGoAgain.YehNah(!AllowWeGoAgain)}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
+                SB.AppendLine();
+                SB.Append(TANDR).Append($"[{SwapWithKid.YehNah()}]{HONLY}{nameof(SwapWithKid)}: ").AppendColored("B", $"{SwapWithKid}");
                 SB.AppendLine();
 
                 E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
@@ -1166,6 +1180,7 @@ namespace XRL.World.Parts
                 E.AddEntry(this, nameof(MidFlicker), MidFlicker);
                 E.AddEntry(this, nameof(AllowWeGoAgain), AllowWeGoAgain);
                 E.AddEntry(this, nameof(WeGoAgain), WeGoAgain);
+                E.AddEntry(this, nameof(SwapWithKid), SwapWithKid);
             }
             return base.HandleEvent(E);
         }
@@ -1190,15 +1205,6 @@ namespace XRL.World.Parts
         public override bool HandleEvent(EndTurnEvent E)
         {
             CheckEMPed();
-            if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
-            {
-                FlickerCharges++;
-                FlickerChargeTurnCounter = 0;
-            }
-            if (FlickerChargeTurnCounter > 0 && FlickerCharges == MaxFlickerCharges)
-            {
-                FlickerChargeTurnCounter = 0;
-            }
             if (HaveFlickerCharges)
             {
                 EnableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
@@ -1207,13 +1213,13 @@ namespace XRL.World.Parts
             {
                 DisableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
             }
+            SyncFlickerAbility();
             if (MidAction)
             {
                 MidBlink = false;
                 MidFlicker = false;
             }
             SwapWithKid = false;
-            SyncFlickerAbilityName();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(CommandEvent E)
@@ -1232,8 +1238,7 @@ namespace XRL.World.Parts
                     if (E.Actor.Target is GameObject target
                         && target.TryGetPart(out Distraction distraction)
                         && distraction.Original == E.Actor
-                        && target.CurrentCell is Cell targetCell
-                        && UD_Blink.GetBlinkCellsInDirection(E.Actor, targetCell.GetDirectionFromCell(E.Actor.CurrentCell), BlinkRange, true).Contains(targetCell))
+                        && target.CurrentCell is Cell targetCell)
                     {
                         SwapWithKid = true;
                         holoKid = target;
@@ -1244,7 +1249,7 @@ namespace XRL.World.Parts
                         Target: SwapWithKid ? holoKid : null,
                         TargetCell: SwapWithKid ? holoKid.CurrentCell : null,
                         Handler: ParentObject);
-                    SyncFlickerAbilityName();
+                    SyncFlickerAbility();
                 }
                 else
                 if (E.Command == COMMAND_UD_FLICKER_ABILITY
@@ -1365,16 +1370,17 @@ namespace XRL.World.Parts
                             int energyCost = 1000;
 
                             bool swappedWithKid = false;
-                            if (SwapWithKid
-                                && E.Target != null)
+                            if (SwapWithKid && E.Target != null)
                             {
                                 SwapWithKid = false;
-                                swappedWithKid = E.Target.DirectMoveTo(
-                                    targetCell: originCell,
-                                    EnergyCost: 0,
-                                    IgnoreCombat: true,
-                                    IgnoreGravity: true);
-
+                                if (E.Actor.CurrentCell == E.Target.CurrentCell)
+                                {
+                                    swappedWithKid = E.Target.DirectMoveTo(
+                                        targetCell: originCell,
+                                        EnergyCost: 0,
+                                        IgnoreCombat: true,
+                                        IgnoreGravity: true);
+                                }
                                 if (swappedWithKid && HaveFlickerCharges)
                                 {
                                     WeGoAgain = true;
@@ -1392,7 +1398,7 @@ namespace XRL.World.Parts
                                         energyCost = 0;
                                     }
                                     FlickerCharges--;
-                                    SyncFlickerAbilityName();
+                                    SyncFlickerAbility();
                                 }
 
                                 Cell currentCell = E.Actor.CurrentCell;
@@ -1704,7 +1710,7 @@ namespace XRL.World.Parts
             {
                 Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
                 Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
-                SyncFlickerAbilityName();
+                SyncFlickerAbility();
             }
         }
 
@@ -1882,7 +1888,7 @@ namespace XRL.World.Parts
                     {
                         OC_CNS.AddActivatedAbilityFlicker();
                     }
-                    OC_CNS.SyncFlickerAbilityName();
+                    OC_CNS.SyncFlickerAbility();
                     break;
                 }
             }

@@ -185,6 +185,23 @@ namespace XRL.World.Parts
                 activatedAbilityEntry.DisplayName = $"Flicker Strike ({FlickerCharges})";
             }
         }
+        public void SyncFlickerAbility()
+        {
+            if (HaveFlickerCharges)
+            {
+                EnableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
+            }
+            else
+            {
+                DisableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
+            }
+            if (RecentlyFlickered && WantsToIdleFlicker && IdleFlickerTurnCounter++ > IdleFlickerTurnThreshold)
+            {
+                RecentlyFlickered = false;
+                IdleFlickerTurnCounter = 0;
+            }
+            SyncFlickerAbilityName();
+        }
 
         public virtual void CollectFlickerStats(Templates.StatCollector stats)
         {
@@ -285,7 +302,7 @@ namespace XRL.World.Parts
                     + $"{nameof(EndTurnEvent)} E)"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
                     Indent: 0, Toggle: getDoDebug('X'));
-
+                
                 if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
                 {
                     FlickerCharges++;
@@ -295,20 +312,8 @@ namespace XRL.World.Parts
                 {
                     FlickerChargeTurnCounter = 0;
                 }
-                if (HaveFlickerCharges)
-                {
-                    EnableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
-                }
-                else
-                {
-                    DisableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
-                }
-                if (RecentlyFlickered && WantsToIdleFlicker && IdleFlickerTurnCounter++ > IdleFlickerTurnThreshold)
-                {
-                    RecentlyFlickered = false;
-                    IdleFlickerTurnCounter = 0;
-                }
-                SyncFlickerAbilityName();
+                SyncFlickerAbility();
+
                 MidFlicker = false;
             }
             return base.HandleEvent(E);
@@ -640,11 +645,7 @@ namespace XRL.World.Parts
                         }
                     }
                 }
-                if (!HaveFlickerCharges)
-                {
-                    DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
-                }
-                SyncFlickerAbilityName();
+                SyncFlickerAbility();
                 MidFlicker = false;
             }
             return base.HandleEvent(E);

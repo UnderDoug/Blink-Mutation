@@ -105,7 +105,7 @@ namespace UD_Blink_Mutation
             bool hasValid = Destination != null || (IsNothinPersonnelKid && IsValidKidDestination);
             Debug.LoopItem(4,
                 $"[{EndCell?.Location}] " +
-                $"{nameof(Destination)} set, or (" +
+                $"{nameof(Destination)}: [{Destination?.Location}], or (" +
                 $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
                 $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})", 
                 Good: hasValid, Indent: indent + 2, Toggle: getDoDebug());

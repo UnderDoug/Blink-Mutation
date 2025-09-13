@@ -453,17 +453,20 @@ namespace UD_Blink_Mutation
                 return;
             }
             BlinkPaths blinkPaths;
-            int blinkRange; 
+            int blinkRange;
+            int effectiveBlinkRange;
             if (playerBlinkSkill != null && !playerBlinkSkill.PathCache.IsNullOrEmpty())
             {
                 blinkPaths = playerBlinkSkill.PathCache;
                 blinkRange = playerBlinkSkill.GetBlinkRange();
+                effectiveBlinkRange = playerBlinkSkill.EffectiveRange;
             }
             else
             if (OC_CNS != null && !OC_CNS.PathCache.IsNullOrEmpty())
             {
                 blinkPaths = OC_CNS.PathCache;
                 blinkRange = OC_CNS.BlinkRange;
+                effectiveBlinkRange = OC_CNS.EffectiveRange;
             }
             else
             {
@@ -505,7 +508,7 @@ namespace UD_Blink_Mutation
                     continue;
                 }
                 int rangeStep = Math.Min(blinkRange - 1, blinkPath.Count - 1);
-                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep])
+                if (step == blinkPath.Destination || step == blinkPath.Steps[rangeStep] || step == blinkPath.Steps[effectiveBlinkRange])
                 {
                     step.HighlightGreen(4, true);
                     continue;
