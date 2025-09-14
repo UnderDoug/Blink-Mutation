@@ -1,6 +1,7 @@
 ﻿using Qud.API;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UD_Blink_Mutation;
 using XRL;
 using XRL.Core;
@@ -441,6 +442,14 @@ namespace UD_Blink_Mutation
         {
             return Cell.HighlightColor(TileColor: "c", DetailColor: "C", BackgroundColor: "k", Priority, Solid);
         }
+        public static Cell HighlightOrange(this Cell Cell, int Priority = 0, bool Solid = false)
+        {
+            return Cell.HighlightColor(TileColor: "o", DetailColor: "O", BackgroundColor: "k", Priority, Solid);
+        }
+        public static Cell HighlightDarkOrange(this Cell Cell, int Priority = 0, bool Solid = false)
+        {
+            return Cell.HighlightColor(TileColor: "K", DetailColor: "o", BackgroundColor: "k", Priority, Solid);
+        }
 
         [WishCommand(Command = "debug blink path")]
         public static void DebugBlinkPathWish(string Path)
@@ -532,17 +541,78 @@ namespace UD_Blink_Mutation
                 }
                 step.HighlightBlue(2, true);
             }
-            foreach (BlinkPath path in blinkPaths)
+            if (blinkPaths.Count > 1)
             {
-                path?.LastStep?.HighlightYellow(1, true);
+                foreach (BlinkPath path in blinkPaths)
+                {
+                    path?.LastStep?.HighlightYellow(1, true);
+                }
             }
+            else
+            {
+                string direction = blinkPaths?.Direction ?? blinkPath?.Direction ?? blinkPath.Steps[0].GetDirectionFromCell(blinkPath.Steps[^1]);
+                if (direction != null)
+                {
+                    foreach (Cell step in UD_Blink.GetBlinkCellsInDirection(blinkPath.Origin, direction, blinkRange, true))
+                    {
+                        step?.HighlightYellow(1, true);
+                    }
+                }
+                else
+                {
+                    Popup.Show($"Direction came out null.");
+                }
+            }
+            blinkPath?.Origin?.HighlightOrange(1, true);
             blinkPath?.LastStep?.HighlightCyan(5, true);
             blinkPath?.KidDestination?.HighlightRed(3, true);
         }
         [WishCommand(Command = "debug blink path")]
         public static void DebugBlinkPathWish()
         {
-            DebugBlinkPathWish(null);
+            UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = null;
+            foreach (BodyPart bodyPart in The.Player.Body.LoopParts())
+            {
+                if (bodyPart.Cybernetics is GameObject cybernetic
+                    && cybernetic.TryGetPart(out OC_CNS))
+                {
+                    break;
+                }
+            }
+            UD_Blink playerBlinkSkill = The.Player.GetPart<UD_Blink>();
+            if (playerBlinkSkill is null && OC_CNS is null)
+            {
+                Popup.Show("No source of blink paths to Debug. Were you expecting one?");
+                return;
+            }
+            BlinkPaths blinkPaths;
+            if (playerBlinkSkill != null && !playerBlinkSkill.PathCache.IsNullOrEmpty())
+            {
+                blinkPaths = playerBlinkSkill.PathCache;
+            }
+            else
+            if (OC_CNS != null && !OC_CNS.PathCache.IsNullOrEmpty())
+            {
+                blinkPaths = OC_CNS.PathCache;
+            }
+            else
+            {
+                Popup.Show("No PathCache to Debug. Were you expecting one?");
+                return;
+            }
+            string message =
+                $"Enter a path number between 0 and {blinkPaths.Count - 1}\n" +
+                $"Selected path was {blinkPaths.Selected}.\n" +
+                $"Valid input includes:\n" +
+                $"\u2022 {"first".Color("C")} - [0]\n" +
+                $"\u2022 {"selected".Color("C")} - [{blinkPaths.Selected}]\n" +
+                $"\u2022 {"last".Color("C")} - [{blinkPaths.Count - 1}]\n" +
+                $"\u2022 {"clear".Color("C")}\n" +
+                $"\u2022 {"-1".Color("C")} - same as {"clear".Color("C")}\n\n" +
+
+                $"Invalid input will result in clearing path highlighting";
+
+            DebugBlinkPathWish(Popup.AskString(message, "", ReturnNullForEscape: true));
         }
     }
 }

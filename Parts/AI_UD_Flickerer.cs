@@ -540,9 +540,9 @@ namespace XRL.World.Parts
                             if (!UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
                                 Flickerer: E.Actor,
                                 FlickerRadius: FlickerRadius,
-                                OriginCell: currentOriginCell,
-                                DestinationCell: destinationCell,
-                                Path: out BlinkPath path))
+                                Origin: currentOriginCell,
+                                Destination: destinationCell,
+                                FlickerPath: out BlinkPath path))
                             {
                                 cellsInFlickerRadius.Remove(destinationCell);
                                 continue;
@@ -604,9 +604,9 @@ namespace XRL.World.Parts
                             if (UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
                                 Flickerer: E.Actor,
                                 FlickerRadius: FlickerRadius,
-                                OriginCell: currentOriginCell,
-                                DestinationCell: originCell,
-                                Path: out BlinkPath path)
+                                Origin: currentOriginCell,
+                                Destination: originCell,
+                                FlickerPath: out BlinkPath path)
                                 && UD_CyberneticsOverclockedCentralNervousSystem.PerformFlickerMove(
                                     Flickerer: E.Actor,
                                     OriginCell: currentOriginCell,

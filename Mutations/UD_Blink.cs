@@ -594,7 +594,7 @@ namespace XRL.World.Parts.Mutation
                 return false;
             }
 
-            BlinkPaths = new();
+            BlinkPaths = new(origin, Direction);
 
             for (int i = 0; i < blinkCells.Count; i++)
             {
@@ -607,18 +607,21 @@ namespace XRL.World.Parts.Mutation
                 BlinkPaths.InitializePaths(Blinker, BlinkRange, out PathsContainNonHostileTarget);
             }
 
-            Debug.Entry(2, $"Confirming non-hostile okay to cold steel...", Indent: indent + 1, Toggle: getDoDebug());
-            GameObject target = Blinker.Target;
-            if (PathsContainNonHostileTarget 
-                && Popup.ShowYesNo(
-                    $"{target.T()} is not hostile to you.\n\n" +
-                    $"Blinking {Directions.GetExpandedDirection(Direction)} could result in them tasting {UD_ColdSteel.DamageType}.\n\n" +
-                    $"Is it nothin' personnel?") != DialogResult.Yes)
+            if (Blinker.IsPlayer())
             {
-                Debug.CheckNah(3, $"{nameof(PathsContainNonHostileTarget)}: {PathsContainNonHostileTarget}...", Indent: indent + 1, Toggle: getDoDebug());
-                SuppressMessageOnFail = true;
-                Debug.LastIndent = indent;
-                return false;
+                Debug.Entry(2, $"Confirming non-hostile okay to cold steel...", Indent: indent + 1, Toggle: getDoDebug());
+                GameObject target = Blinker.Target;
+                if (PathsContainNonHostileTarget
+                    && Popup.ShowYesNo(
+                        $"{target.T()} is not hostile to you.\n\n" +
+                        $"Blinking {Directions.GetExpandedDirection(Direction)} could result in them tasting {UD_ColdSteel.DamageType}.\n\n" +
+                        $"Is it nothin' personnel?") != DialogResult.Yes)
+                {
+                    Debug.CheckNah(3, $"{nameof(PathsContainNonHostileTarget)}: {PathsContainNonHostileTarget}...", Indent: indent + 1, Toggle: getDoDebug());
+                    SuppressMessageOnFail = true;
+                    Debug.LastIndent = indent;
+                    return false;
+                }
             }
 
             Debug.Entry(2, $"Selecting {nameof(BlinkPath)}...", Indent: indent + 1, Toggle: getDoDebug());
@@ -748,14 +751,13 @@ namespace XRL.World.Parts.Mutation
             return true;
         }
 
-        public static IEnumerable<Cell> GetBlinkCellsInDirection(GameObject Blinker, string Direction, int BlinkRange, bool BuiltOnly = false)
+        public static IEnumerable<Cell> GetBlinkCellsInDirection(Cell Origin, string Direction, int BlinkRange, bool BuiltOnly = false)
         {
-            if (Blinker != null && Direction != null && BlinkRange > 1)
+            if (Origin != null && Direction != null && BlinkRange > 1)
             {
                 if (Directions.DirectionList.Contains(Direction))
                 {
-                    Cell origin = Blinker.CurrentCell;
-                    Cell currentCell = origin;
+                    Cell currentCell = Origin;
                     for (int i = 0; i < BlinkRange; i++)
                     {
                         currentCell = currentCell?.GetCellFromDirection(Direction, BuiltOnly: BuiltOnly);
@@ -767,6 +769,10 @@ namespace XRL.World.Parts.Mutation
                 }
             }
             yield break;
+        }
+        public static IEnumerable<Cell> GetBlinkCellsInDirection(GameObject Blinker, string Direction, int BlinkRange, bool BuiltOnly = false)
+        {
+            return GetBlinkCellsInDirection(Blinker?.CurrentCell, Direction, BlinkRange, BuiltOnly);
         }
 
         public static bool Blink(GameObject Blinker, string Direction, int BlinkRange, Cell Destination, out BlinkPaths BlinkPaths, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, bool Silent = false)
@@ -933,7 +939,7 @@ namespace XRL.World.Parts.Mutation
             else
             if (Destination != null && Kid.IsHolographicDistractionOf(Blinker))
             {
-                BlinkPaths = new()
+                BlinkPaths = new(origin, Direction)
                 {
                     new(Blinker, origin, Destination),
                 };

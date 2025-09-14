@@ -70,8 +70,12 @@ namespace UD_Blink_Mutation
             }
         }
 
-        public BlinkPath Path => Count > 0 ? this[Selected] : null;
+        [NonSerialized]
+        public Cell Origin;
 
+        public string Direction;
+
+        public BlinkPath Path => Count > 0 ? this[Selected] : null;
         private List<Cell> Steps => Path?.Steps;
 
         private Cell Destination => Count > 0 ? this[Selected].Destination : null;
@@ -154,6 +158,15 @@ namespace UD_Blink_Mutation
         public BlinkPaths()
         {
             _Selected = -1;
+            Origin = null;
+            Direction = null;
+        }
+
+        public BlinkPaths(Cell Origin, string Direction)
+            : this()
+        {
+            this.Origin = Origin;
+            this.Direction = Direction;
         }
 
         public BlinkPaths(IEnumerable<BlinkPath> SourceList)
@@ -178,6 +191,8 @@ namespace UD_Blink_Mutation
             }
             Clear();
             _Selected = -1;
+            Origin = null;
+            Direction = null;
         }
 
         public IEnumerable<BlinkPath> EnumeratePaths()
@@ -377,11 +392,12 @@ namespace UD_Blink_Mutation
         public void Write(SerializationWriter Writer)
         {
             Writer.WriteOptimized(_Selected);
+            Writer.Write(Origin);
         }
-
         public void Read(SerializationReader Reader)
         {
             _Selected = Reader.ReadOptimizedInt32();
+            Origin = Reader.ReadCell();
         }
 
         public static implicit operator BlinkPath(BlinkPaths Source)

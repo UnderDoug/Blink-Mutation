@@ -36,6 +36,10 @@ namespace UD_Blink_Mutation
 
             return doDebug;
         }
+        
+        [NonSerialized]
+        public Cell Origin;
+        public string Direction;
 
         public bool Selected;
         public FindPath Path;
@@ -54,6 +58,8 @@ namespace UD_Blink_Mutation
 
         public BlinkPath()
         {
+            Origin = null;
+            Direction = null;
             Selected = false;
             Path = null;
 
@@ -64,6 +70,8 @@ namespace UD_Blink_Mutation
         public BlinkPath(GameObject Blinker, Cell Origin, Cell EndCell)
             : this()
         {
+            this.Origin = Origin;
+            Direction = Origin.GetDirectionFromCell(EndCell);
             Path = new(
                 StartCell: Origin,
                 EndCell: EndCell,
@@ -137,6 +145,15 @@ namespace UD_Blink_Mutation
             output += $"{nameof(KidCell)}: [{KidCell?.Location}] ";
             output += "//";
             return output;
+        }
+
+        public void Write(SerializationWriter Writer)
+        {
+            Writer.Write(Origin);
+        }
+        public void Read(SerializationReader Reader)
+        {
+            Origin = Reader.ReadCell();
         }
     }
 }

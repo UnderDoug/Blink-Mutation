@@ -393,22 +393,22 @@ namespace XRL.World.Parts
             yield break;
         }
 
-        public static bool TryGetFlickerPath(GameObject Flickerer, int FlickerRadius, Cell OriginCell, Cell DestinationCell, out BlinkPath Path)
+        public static bool TryGetFlickerPath(GameObject Flickerer, int FlickerRadius, Cell Origin, Cell Destination, out BlinkPath FlickerPath)
         {
-            Path = null;
+            FlickerPath = null;
 
-            BlinkPaths possiblePaths = new()
+            BlinkPaths possiblePaths = new(Origin, Origin.GetDirectionFromCell(Destination))
             {
-                new(Flickerer, OriginCell, DestinationCell)
+                new(Flickerer, Origin, Destination)
             };
             possiblePaths.InitializePaths(Flickerer, FlickerRadius);
             BlinkPath possiblePath = possiblePaths;
 
-            if (UD_Blink.IsValidDestinationCell(Flickerer, DestinationCell, FlickerRadius, possiblePath.Steps.Count))
+            if (UD_Blink.IsValidDestinationCell(Flickerer, Destination, FlickerRadius, possiblePath.Steps.Count))
             {
-                Path = possiblePath;
+                FlickerPath = possiblePath;
             }
-            return Path != null;
+            return FlickerPath != null;
         }
         public static bool GetFlickerPaths(GameObject Flickerer, int FlickerRadius, Cell OriginCell, List<Cell> FlickerTargetAdjacentCells, out Dictionary<Cell, BlinkPath> DestinationPaths)
         {
@@ -749,7 +749,11 @@ namespace XRL.World.Parts
                                 FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
                                 DestinationPaths: out Dictionary<Cell, BlinkPath> destinationPaths))
                         {
-                            Debug.CheckNah(3, $"{nameof(flickerTargetAdjacentCells)} is empty. Removing flicker target from list and attempting again", Indent: indent + 5, Toggle: getDoDebug());
+                            Debug.CheckNah(3, 
+                                $"{nameof(flickerTargetAdjacentCells)} is empty. " +
+                                $"Removing flicker target from list and attempting again", 
+                                Indent: indent + 5, Toggle: getDoDebug());
+
                             flickerTargets.Remove(flickerTarget);
                             continue;
                         }
@@ -938,9 +942,9 @@ namespace XRL.World.Parts
                     if (TryGetFlickerPath(
                         Flickerer: Flickerer,
                         FlickerRadius: FlickerRadius,
-                        OriginCell: currentOriginCell,
-                        DestinationCell: originCell,
-                        Path: out BlinkPath finalPath))
+                        Origin: currentOriginCell,
+                        Destination: originCell,
+                        FlickerPath: out BlinkPath finalPath))
                     {
                         int maxFlickerCharges = 2;
                         if (OC_CNS != null)
@@ -1306,7 +1310,9 @@ namespace XRL.World.Parts
                     {
                         GameObject target = E.Actor.Target;
                         if (target != null && !target.IsHostileTowards(E.Actor)
-                            && Popup.ShowYesNo($"{target.T()} is not hostile to you, flicker strike {target.them} anyway?") != DialogResult.Yes)
+                            && Popup.ShowYesNo(
+                                $"{target.T()} is not hostile to you," +
+                                $" flicker strike {target.them} anyway?") != DialogResult.Yes)
                         {
                             doFlicker = false;
                             E.Actor.Target = originalTarget;
@@ -1862,32 +1868,39 @@ namespace XRL.World.Parts
                 {
                     OC_CNS.MidBlink = false;
                     OC_CNS.MidFlicker = false;
+                    Popup.Show($"{nameof(OC_CNS)} found on {nameof(bodyPart)} {bodyPart.Type}...");
                     ActivatedAbilityEntry cyberBlinkEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_BLINK_CYBER_ABILITY);
                     if (cyberBlinkEntry != null)
                     {
                         OC_CNS.BlinkActivatedAbilityID = cyberBlinkEntry.ID;
+                        Popup.Show($"{nameof(cyberBlinkEntry)} found and refreshed...");
                     }
                     else
                     {
                         OC_CNS.AddActivatedAbilityBlink();
+                        Popup.Show($"{nameof(cyberBlinkEntry)} not found, added...");
                     }
                     ActivatedAbilityEntry cyberColdSteelEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_COLDSTEEL_CYBER_ABILITY);
                     if (cyberColdSteelEntry != null)
                     {
                         OC_CNS.ColdSteelActivatedAbilityID = cyberColdSteelEntry.ID;
+                        Popup.Show($"{nameof(cyberColdSteelEntry)} found and refreshed...");
                     }
                     else
                     {
                         OC_CNS.AddActivatedAbilityColdSteel();
+                        Popup.Show($"{nameof(cyberColdSteelEntry)} not found, added...");
                     }
                     ActivatedAbilityEntry flickerEntry = The.Player.GetActivatedAbilityByCommand(COMMAND_UD_FLICKER_ABILITY);
                     if (flickerEntry != null)
                     {
                         OC_CNS.FlickerActivatedAbilityID = flickerEntry.ID;
+                        Popup.Show($"{nameof(flickerEntry)} found and refreshed...");
                     }
                     else
                     {
                         OC_CNS.AddActivatedAbilityFlicker();
+                        Popup.Show($"{nameof(flickerEntry)} not found, added...");
                     }
                     OC_CNS.SyncFlickerAbility();
                     break;

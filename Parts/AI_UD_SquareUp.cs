@@ -156,63 +156,83 @@ namespace XRL.World.Parts
                 IsPlayer: IsPlayer);
 
             bool isFirstWorthy =
-                !Squarer.IsAlliedTowards(FirstOpponent)
+                FirstOpponent != null
+             && !Squarer.IsAlliedTowards(FirstOpponent)
              && firstDifficultyEvaluation != null
              && (int)firstDifficultyEvaluation < 15
              && firstSquareUpScore > -1;
 
             bool isSecondWorthy =
-                !Squarer.IsAlliedTowards(SecondOpponent)
+                SecondOpponent != null
+             && !Squarer.IsAlliedTowards(SecondOpponent)
              && secondDifficultyEvaluation != null
              && (int)secondDifficultyEvaluation < 15
              && secondSquareUpScore > -1;
 
-            string firstOpponentName = $"[{FirstOpponent?.ID}]" + (FirstOpponent?.Render?.DisplayName ?? FirstOpponent?.Blueprint ?? "an unnamed first opponent");
-            string secondOpponentName = $"[{SecondOpponent?.ID}]" + (SecondOpponent?.Render?.DisplayName ?? SecondOpponent?.Blueprint ?? "an unnamed second opponent");
+            string firstOpponentName = FirstOpponent?.DebugName ?? "an unnamed first opponent";
+            string secondOpponentName = SecondOpponent?.DebugName ?? "an unnamed second opponent";
 
-            if (firstDifficultyEvaluation != null)
+            if (firstDifficultyEvaluation != null && FirstOpponent != null)
             {
                 Squarer.Think($"{firstOpponentName} looks {DifficultyEvaluation.GetDifficultyDescription(null, Rating: (int)firstDifficultyEvaluation).Strip()}");
             }
-            if (secondDifficultyEvaluation != null)
+            else
+            if (FirstOpponent == null)
+            {
+                Squarer.Think($"No opponent?? Looks {DifficultyEvaluation.GetDifficultyDescription(null, Rating: (int)firstDifficultyEvaluation).Strip()}");
+            }
+            if (secondDifficultyEvaluation != null && SecondOpponent != null)
             {
                 Squarer.Think($"{secondOpponentName} looks {DifficultyEvaluation.GetDifficultyDescription(null, Rating: (int)secondDifficultyEvaluation).Strip()}");
             }
-            if (!isFirstWorthy && !isSecondWorthy)
+            else
+            if (SecondOpponent == null)
+            {
+                Squarer.Think($"No opponent?? Looks {DifficultyEvaluation.GetDifficultyDescription(null, Rating: (int)secondDifficultyEvaluation).Strip()}");
+            }
+
+            if ((!isFirstWorthy || FirstOpponent == null) && (!isSecondWorthy || SecondOpponent == null))
             {
                 Squarer.Think($"Neither opponent would be worth fighting");
                 return null;
             }
-            else if (isFirstWorthy && !isSecondWorthy)
+            else
+            if (isFirstWorthy && !isSecondWorthy)
             {
                 Squarer.Think($"{firstOpponentName} is more worthy because {secondOpponentName} isn't worthy at all!");
                 return FirstOpponent;
             }
-            else if (!isFirstWorthy && isSecondWorthy)
+            else
+            if (!isFirstWorthy && isSecondWorthy)
             {
                 Squarer.Think($"{secondOpponentName} is more worthy because {firstOpponentName} isn't worthy at all!");
                 return SecondOpponent;
             }
+
             if ((int)firstDifficultyEvaluation > (int)secondDifficultyEvaluation)
             {
                 Squarer.Think($"{firstOpponentName} is more worthy because they are the more difficult opponent!");
                 return FirstOpponent;
             }
+
             if ((int)firstDifficultyEvaluation < (int)secondDifficultyEvaluation)
             {
                 Squarer.Think($"{secondOpponentName} is more worthy because they are the more difficult opponent!");
                 return SecondOpponent;
             }
+
             if (firstSquareUpScore > secondSquareUpScore)
             {
                 Squarer.Think($"{firstOpponentName} is more worthy because they square up tougher!");
                 return FirstOpponent;
             }
+
             if (firstSquareUpScore < secondSquareUpScore)
             {
                 Squarer.Think($"{secondOpponentName} is more worthy because they square up tougher!");
                 return SecondOpponent;
             }
+
             GameObject randomOpponent = Stat.RollCached("1d2") == 1 ? FirstOpponent : SecondOpponent;
             string randomeOpponentName = randomOpponent == FirstOpponent ? firstOpponentName : secondOpponentName;
             Squarer.Think($"Both opponents are equally worthy, I've picked {randomeOpponentName} by chance!");
@@ -369,9 +389,13 @@ namespace XRL.World.Parts
                     .FastFloodVisibility(
                         x1: cell.X,
                         y1: cell.Y,
-                        Radius: 10,
+                        Radius: Squarer.Brain.MaxKillRadius,
                         SearchPart: nameof(Combat),
-                        Looker: Squarer);
+                        Looker: Squarer,
+                        Filter:
+                            GO => GO != Squarer);
+                            // && !GO.IsRegardedAsAnAllyBy(Squarer)
+                            // && (int)DifficultyEvaluation.GetDifficultyRating(GO, Squarer) < 15);
 
                 if (!opponentList.IsNullOrEmpty())
                 {
@@ -430,7 +454,7 @@ namespace XRL.World.Parts
                             }
                         }
                         skipThought = false;
-                        if (firstOpponent == null)
+                        if (false && firstOpponent == null)
                         {
                             firstOpponent = secondOpponent;
                             continue;
@@ -443,9 +467,9 @@ namespace XRL.World.Parts
                         {
                             Squarer.Think($"I will fight {firstOpponentName}!");
                             SquareUpTarget = firstOpponent;
-                            Squarer.Brain.WantToKill(firstOpponent, $"because {firstOpponent.it} looks like a worthy opponent!", true);
-                            Squarer.AddOpinion<OpinionGoad>(firstOpponent);
-                            Squarer.Target = firstOpponent;
+                            Squarer.Target = SquareUpTarget;
+                            Squarer.Brain.WantToKill(SquareUpTarget, $"because {SquareUpTarget.it}{SquareUpTarget.GetVerb("look")} like a worthy opponent!", true);
+                            Squarer.AddOpinion<OpinionGoad>(SquareUpTarget);
                             TargetAcquired = true;
                             didSquare = true;
                         }
