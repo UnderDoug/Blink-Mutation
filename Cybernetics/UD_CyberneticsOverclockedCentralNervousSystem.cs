@@ -1858,6 +1858,12 @@ namespace XRL.World.Parts
             The.Player.ModIntProperty("FreeCyberneticsLicenses", 27);
         }
 
+        [WishCommand(Command = "OC_CNS test kit")]
+        public static void CNS_TestKit_WishHandler()
+        {
+            CNS_TestKit_WishHandler(null);
+        }
+
         [WishCommand(Command = "OC_CNS borked")]
         public static void BlinkBorked_WishHandler()
         {
