@@ -72,7 +72,7 @@ namespace XRL.World.Parts
         private bool _IgnoreSameFactionCache;
 
         public string IgnoreCreatures;
-        public List<string> IsPlayer;
+        public List<string> IgnoreCreaturesList;
 
         public bool IsMerciful;
 
@@ -93,7 +93,7 @@ namespace XRL.World.Parts
             IgnoreSameCreatureType = false;
             IgnoreSameFaction = false;
             IgnoreCreatures = null;
-            IsPlayer = IgnoreCreatures.CachedCommaExpansion() ?? new();
+            IgnoreCreaturesList = IgnoreCreatures.CachedCommaExpansion() ?? new();
             IsMerciful = false;
             MercyThreshold = 15;
             MercyPeriod = 1200L;
@@ -118,7 +118,7 @@ namespace XRL.World.Parts
             return IgnoreSameFaction = Value;
         }
 
-        public static GameObject GetMoreWorthyOpponent(GameObject Squarer, GameObject FirstOpponent, GameObject SecondOpponent, ref Dictionary<string, int> SquareUpCache, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false, bool IgnoreSameCreatureType = false, bool IgnoreSameFaction = false, List<string> IsPlayer = null)
+        public static GameObject GetMoreWorthyOpponent(GameObject Squarer, GameObject FirstOpponent, GameObject SecondOpponent, ref Dictionary<string, int> SquareUpCache, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false, bool IgnoreSameCreatureType = false, bool IgnoreSameFaction = false, List<string> IgnoreCreaturesList = null)
         {
             if (Squarer == null)
             {
@@ -135,7 +135,7 @@ namespace XRL.World.Parts
             int? secondDifficultyEvaluation = DifficultyEvaluation.GetDifficultyRating(SecondOpponent, Squarer, IgnoreSecondHideCon);
 
             SquareUpCache ??= new();
-            IsPlayer ??= new();
+            IgnoreCreaturesList ??= new();
 
             int firstSquareUpScore = GetSquareUpScore(
                 Squarer: Squarer, 
@@ -145,7 +145,7 @@ namespace XRL.World.Parts
                 WeightReason: "recency bias",
                 IgnoreSameCreatureType: IgnoreSameCreatureType,
                 IgnoreSameFaction: IgnoreSameFaction,
-                IsPlayer: IsPlayer);
+                IgnoreCreaturesList: IgnoreCreaturesList);
 
             int secondSquareUpScore = GetSquareUpScore(
                 Squarer: Squarer,
@@ -153,7 +153,7 @@ namespace XRL.World.Parts
                 SquareUpCache: ref SquareUpCache,
                 IgnoreSameCreatureType: IgnoreSameCreatureType,
                 IgnoreSameFaction: IgnoreSameFaction,
-                IsPlayer: IsPlayer);
+                IgnoreCreaturesList: IgnoreCreaturesList);
 
             bool isFirstWorthy =
                 FirstOpponent != null
@@ -240,10 +240,10 @@ namespace XRL.World.Parts
         }
         public GameObject GetMoreWorthyOpponent(GameObject FirstOpponent, GameObject SecondOpponent, bool IgnoreFirstHideCon = false, bool IgnoreSecondHideCon = false)
         {
-            return GetMoreWorthyOpponent(ParentObject, FirstOpponent, SecondOpponent, ref SquareUpCache, IgnoreFirstHideCon, IgnoreSecondHideCon, IgnoreSameCreatureType, IgnoreSameFaction, IsPlayer);
+            return GetMoreWorthyOpponent(ParentObject, FirstOpponent, SecondOpponent, ref SquareUpCache, IgnoreFirstHideCon, IgnoreSecondHideCon, IgnoreSameCreatureType, IgnoreSameFaction, IgnoreCreaturesList);
         }
 
-        public static int GetSquareUpScore(GameObject Squarer, GameObject Opponent, ref Dictionary<string, int> SquareUpCache, int Weight = 0, string WeightReason = null, bool IgnoreSameCreatureType = false, bool IgnoreSameFaction = false, List<string> IsPlayer = null)
+        public static int GetSquareUpScore(GameObject Squarer, GameObject Opponent, ref Dictionary<string, int> SquareUpCache, int Weight = 0, string WeightReason = null, bool IgnoreSameCreatureType = false, bool IgnoreSameFaction = false, List<string> IgnoreCreaturesList = null)
         {
             if (Squarer == null)
             {
@@ -255,7 +255,7 @@ namespace XRL.World.Parts
                 return -1;
             }
 
-            IsPlayer ??= new();
+            IgnoreCreaturesList ??= new();
 
             string opponentName = $"[{Opponent.ID}]" + (Opponent.Render?.DisplayName ?? Opponent.Blueprint ?? "an unnamed opponent");
             Squarer.Think($"I am squaring up {opponentName}");
@@ -266,7 +266,7 @@ namespace XRL.World.Parts
                 return -1;
             }
 
-            if (!IsPlayer.IsNullOrEmpty() && IsPlayer.Contains(Opponent.Blueprint))
+            if (!IgnoreCreaturesList.IsNullOrEmpty() && IgnoreCreaturesList.Contains(Opponent.Blueprint))
             {
                 Squarer.Think($"{opponentName} is a type of creature I already know I'm a better fighter than!");
                 return -1;
@@ -376,7 +376,7 @@ namespace XRL.World.Parts
 
             Cell cell = Squarer.CurrentCell;
             
-            bool notPlayer = !Squarer.IsPlayerControlled();
+            bool notPlayer = !Squarer.IsPlayer();
 
             bool byChance = Stat.RollCached("1d4") == 1;
 
