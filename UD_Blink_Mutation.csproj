@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <AssemblyName>UD_Blink_Mutation</AssemblyName>
     <PackageId>UD_Blink_Mutation</PackageId>
     <Authors>UnderDoug</Authors>
     <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
-    <Title>UD Blink Mutation</Title>
+    <BaseIntermediateOutputPath>.dotnet\obj\</BaseIntermediateOutputPath>
+    <BaseOutputPath>.dotnet\bin\</BaseOutputPath>
   </PropertyGroup>
   <Import Project="../Mods.csproj" />
 </Project>
