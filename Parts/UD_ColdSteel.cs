@@ -110,7 +110,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(BeforeMeleeAttackEvent E)
         {
-            if (E.Weapon == ParentObject 
+            if (E.Weapon == ParentObject
                 && IsReady(IgnoreEMP: true, IgnoreRealityStabilization: true)
                 && E.Actor is GameObject blinker
                 && E.Target is GameObject kid)

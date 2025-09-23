@@ -29,13 +29,13 @@ namespace UD_Blink_Mutation
              && player.GetStartingPregen() != null
              && player.GetStartingPregen() == "Cold Steel";
 
-            bool playerStartedWithBlink = 
-                playerExists 
+            bool playerStartedWithBlink =
+                playerExists
              && (player.GetStartingMutations().Contains("Blink") || player.GetStartingMutationClasses().Contains(nameof(UD_Blink)));
 
             bool playerStartedWithQuills =
                 playerExists
-             && (player.GetStartingMutations().Contains("Quills") 
+             && (player.GetStartingMutations().Contains("Quills")
                 || player.GetStartingMutationClasses().Contains("UD_QuillsPlus")
                 || player.GetStartingMutationClasses().Contains("Quills"));
 
@@ -50,10 +50,10 @@ namespace UD_Blink_Mutation
                 bool didSetSpecies = SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass(player);
                 if (!didSetSpecies)
                 {
-                    Debug.Warn(4, 
-                        nameof(PrepareColdSteelPreset), 
-                        nameof(SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass), 
-                        $"Failed to set Coldsteel Genotype and/or Subtype", 
+                    Debug.Warn(4,
+                        nameof(PrepareColdSteelPreset),
+                        nameof(SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass),
+                        $"Failed to set Coldsteel Genotype and/or Subtype",
                         Indent: 0);
                 }
 

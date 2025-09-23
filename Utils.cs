@@ -25,7 +25,7 @@ namespace UD_Blink_Mutation
     public static class Utils
     {
         private static bool doDebug => true;
-        private static bool getDoDebug (string MethodName)
+        private static bool getDoDebug(string MethodName)
         {
             if (MethodName == nameof(TryGetTilePath))
                 return false;
@@ -175,11 +175,11 @@ namespace UD_Blink_Mutation
             {
                 Debug.Entry(3, $"_TilePathCache contains {TileName}", TilePath ?? "null", Indent: 3, Toggle: getDoDebug(nameof(TryGetTilePath)));
             }
-            string foundLocation = 
-                inCache 
-                ? "_TilePathCache" 
-                : IsWholePath 
-                    ? "files" 
+            string foundLocation =
+                inCache
+                ? "_TilePathCache"
+                : IsWholePath
+                    ? "files"
                     : "supplied subfolders";
 
             Debug.Entry(3, $"Tile \"{TileName}\" {(TilePath == null ? "not" : "was")} found in {foundLocation}", Indent: 2, Toggle: getDoDebug(nameof(TryGetTilePath)));
@@ -282,12 +282,12 @@ namespace UD_Blink_Mutation
         {
             float duration = Math.Min(DurationMax, Cause * DurationFactor);
             CombatJuice.cameraShake(duration, Async: Async);
-            Debug.Entry(4, 
+            Debug.Entry(4,
                 $"* {nameof(Rumble)}:"
                 + $" Duration ({duration}),"
                 + $" Cause ({Cause}),"
                 + $" DurationFactor ({DurationFactor}), "
-                + $"DurationMax({DurationMax})", 
+                + $"DurationMax({DurationMax})",
                 Toggle: getDoDebug(nameof(Rumble)));
             return duration;
         }
@@ -311,7 +311,7 @@ namespace UD_Blink_Mutation
             string falseString = null;
             string output = "";
 
-            foreach(string @string in list)
+            foreach (string @string in list)
             {
                 if (@string.StartsWith("true;;"))
                 {

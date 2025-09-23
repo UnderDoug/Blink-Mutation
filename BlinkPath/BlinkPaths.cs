@@ -40,8 +40,8 @@ namespace UD_Blink_Mutation
 
         public int Selected
         {
-            get 
-            { 
+            get
+            {
                 if (_Selected == -1 && Count > 0)
                 {
                     _Selected = 0;
@@ -53,13 +53,13 @@ namespace UD_Blink_Mutation
                         }
                     }
                 }
-                return _Selected; 
+                return _Selected;
             }
             set
             {
                 if (value > Count - 1 || value < 0)
                 {
-                    MetricsManager.LogModWarning(ThisMod, 
+                    MetricsManager.LogModWarning(ThisMod,
                         $"Attempted to set {nameof(BlinkPaths)}.{nameof(Selected)} to an index outside the bounds of list ({value}).");
                 }
                 _Selected = Math.Max(0, Math.Min(value, Count - 1));
@@ -279,10 +279,10 @@ namespace UD_Blink_Mutation
             PathsContainNonHostileTarget = false;
             Debug.Entry(2, $"Initializing {nameof(BlinkPaths)} and acquiring destinations and target...", Indent: indent + 1, Toggle: getDoDebug());
 
-            Debug.Entry(2, 
+            Debug.Entry(2,
                 $"{nameof(Blinker)}: {Blinker?.DebugName ?? NULL}, " +
                 $"{nameof(BlinkRange)}: {BlinkRange}," +
-                $" EffectiveRange: {BlinkRange * Blinker.GetMovementsPerTurn(true)}", 
+                $" EffectiveRange: {BlinkRange * Blinker.GetMovementsPerTurn(true)}",
                 Indent: indent + 2, Toggle: getDoDebug());
 
             for (int i = 0; i < Count; i++)
@@ -310,7 +310,7 @@ namespace UD_Blink_Mutation
                 Debug.LoopItem(4, $"{nameof(Path)} {nameof(Steps)} {nameof(Count)}", $"{thisPath.Count}",
                     Good: !(thisPath.Count > BlinkRange), Indent: indent + 4, Toggle: getDoDebug());
 
-                Debug.Entry(3, $"Finding {nameof(thisPath.Kid)} in {nameof(thisPath.LastStep)} [{thisPath.LastStep?.Location}]...", 
+                Debug.Entry(3, $"Finding {nameof(thisPath.Kid)} in {nameof(thisPath.LastStep)} [{thisPath.LastStep?.Location}]...",
                     Indent: indent + 3, Toggle: getDoDebug());
                 if (FindKidInCell(Blinker, thisPath.LastStep, out bool kidIsNonHostileTarget) is GameObject kid)
                 {
@@ -339,7 +339,7 @@ namespace UD_Blink_Mutation
                     {
                         thisPath.KidDestination = null;
                     }
-                    Debug.LoopItem(4, $"{nameof(thisPath.KidDestination)}", $"[{thisPath.KidDestination?.Location}] ({kidDestSource})", 
+                    Debug.LoopItem(4, $"{nameof(thisPath.KidDestination)}", $"[{thisPath.KidDestination?.Location}] ({kidDestSource})",
                         Good: thisPath.KidDestination != null, Indent: indent + 4, Toggle: getDoDebug());
                 }
                 else

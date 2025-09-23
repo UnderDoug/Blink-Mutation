@@ -19,7 +19,7 @@ using Debug = UD_Blink_Mutation.Debug;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class AI_UD_SquareUp 
+    public class AI_UD_SquareUp
         : AIBehaviorPart
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
@@ -138,10 +138,10 @@ namespace XRL.World.Parts
             IgnoreCreaturesList ??= new();
 
             int firstSquareUpScore = GetSquareUpScore(
-                Squarer: Squarer, 
+                Squarer: Squarer,
                 Opponent: FirstOpponent,
                 SquareUpCache: ref SquareUpCache,
-                Weight: 5, 
+                Weight: 5,
                 WeightReason: "recency bias",
                 IgnoreSameCreatureType: IgnoreSameCreatureType,
                 IgnoreSameFaction: IgnoreSameFaction,
@@ -375,7 +375,7 @@ namespace XRL.World.Parts
             SquareUpTarget = null;
 
             Cell cell = Squarer.CurrentCell;
-            
+
             bool notPlayer = !Squarer.IsPlayer();
 
             bool byChance = Stat.RollCached("1d4") == 1;
@@ -394,8 +394,8 @@ namespace XRL.World.Parts
                         Looker: Squarer,
                         Filter:
                             GO => GO != Squarer);
-                            // && !GO.IsRegardedAsAnAllyBy(Squarer)
-                            // && (int)DifficultyEvaluation.GetDifficultyRating(GO, Squarer) < 15);
+                // && !GO.IsRegardedAsAnAllyBy(Squarer)
+                // && (int)DifficultyEvaluation.GetDifficultyRating(GO, Squarer) < 15);
 
                 if (!opponentList.IsNullOrEmpty())
                 {
@@ -546,9 +546,9 @@ namespace XRL.World.Parts
         }
         public void ShowMercy()
         {
-            if (IsMerciful 
-                && GameObject.Validate(ref CurrentSquareUpTarget) 
-                && CurrentSquareUpTarget.TryGetHitpointPercent(out int hitpointsPercent) 
+            if (IsMerciful
+                && GameObject.Validate(ref CurrentSquareUpTarget)
+                && CurrentSquareUpTarget.TryGetHitpointPercent(out int hitpointsPercent)
                 && hitpointsPercent < MercyThreshold)
             {
                 MercyList ??= new();

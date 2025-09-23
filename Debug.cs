@@ -291,7 +291,7 @@ namespace UD_Blink_Mutation
             else Entry(Verbosity, Output, Indent: Indent, Toggle: Toggle);
             foreach (T item in List)
             {
-                if (LoopItem) Debug.LoopItem(Verbosity, item.ToString(), Good: Good, Indent: Indent+1, Toggle: Toggle);
+                if (LoopItem) Debug.LoopItem(Verbosity, item.ToString(), Good: Good, Indent: Indent + 1, Toggle: Toggle);
                 else Entry(Verbosity, item.ToString(), Indent: Indent + 1, Toggle: Toggle);
             }
             if (DivAfter != "") Divider(4, DivAfter, 25, Indent: Indent + 1, Toggle: Toggle);
@@ -635,7 +635,7 @@ namespace XRL.World.Parts
         public UDBM_CellHighlighter()
         {
             BackgroundColor = "k";
-            DoHighlight = 
+            DoHighlight =
                 Options.DebugVerbosity > 3
              && The.Game.GetBooleanGameState(DEBUG_HIGHLIGHT_CELLS);
             HighlightPriority = 0;
@@ -646,7 +646,7 @@ namespace XRL.World.Parts
             if ((XRLCore.FrameTimer.ElapsedMilliseconds & 0x7F) == 0L)
             {
                 DoHighlight =
-                    Options.DebugVerbosity > 3 
+                    Options.DebugVerbosity > 3
                  && The.Game.GetBooleanGameState(DEBUG_HIGHLIGHT_CELLS);
             }
             if (DoHighlight)
@@ -655,11 +655,11 @@ namespace XRL.World.Parts
                     ParentObject.Render.Visible = true;
 
                 E.ApplyColors(
-                    Foreground: TileColor ?? E.DetailColor, 
-                    Background: BackgroundColor, 
+                    Foreground: TileColor ?? E.DetailColor,
+                    Background: BackgroundColor,
                     Detail: DetailColor ?? E.DetailColor,
-                    ICON_COLOR_PRIORITY, 
-                    ICON_COLOR_PRIORITY, 
+                    ICON_COLOR_PRIORITY,
+                    ICON_COLOR_PRIORITY,
                     ICON_COLOR_PRIORITY);
             }
             else

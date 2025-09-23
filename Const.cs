@@ -31,7 +31,7 @@ namespace UD_Blink_Mutation
         public const string TANDR = "\u2514"; // └
         public const string HONLY = "\u2500"; // ─
         public const string SPACE = "\x20";   //" "
-        public const string NBSP  = "\xFF";   //" " (NBSP)
+        public const string NBSP = "\xFF";   //" " (NBSP)
 
         public const string ITEM = VANDR + HONLY + HONLY + SPACE; // "├── "
         public const string BRAN = VONLY + SPACE + SPACE + SPACE; // "│   "

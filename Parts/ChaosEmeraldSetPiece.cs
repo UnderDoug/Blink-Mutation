@@ -98,8 +98,8 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            E.Infix.AppendRules(ChaosEmeraldSetBonus != null 
-                ? ChaosEmeraldSetBonus.GetSetPieceDescriptions() 
+            E.Infix.AppendRules(ChaosEmeraldSetBonus != null
+                ? ChaosEmeraldSetBonus.GetSetPieceDescriptions()
                 : ChaosEmeraldSetBonus.GetSetPieceDescriptions(0));
             return base.HandleEvent(E);
         }

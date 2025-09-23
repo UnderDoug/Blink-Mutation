@@ -23,7 +23,7 @@ namespace XRL.World.Parts
         public Guid mutationMod;
 
         public Mod_UD_ImprovedMutationEntry()
-            : base ()
+            : base()
         {
         }
 
@@ -50,7 +50,7 @@ namespace XRL.World.Parts
 
             NameForStatus = $"{ClassName ?? EntryName.Replace(" ", "")}Amp";
         }
-        
+
         public override bool WantEvent(int ID, int cascade)
         {
             return base.WantEvent(ID, cascade)
@@ -97,7 +97,7 @@ namespace XRL.World.Parts
         }
         public Guid ApplyMutationMod(GameObject who)
         {
-            if (MutationEntry == null) 
+            if (MutationEntry == null)
                 return Guid.Empty;
 
             NameForStatus = $"{ClassName ?? EntryName.Replace(" ", "")}Amp";

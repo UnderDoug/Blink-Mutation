@@ -16,7 +16,7 @@ using Debug = UD_Blink_Mutation.Debug;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class AI_UD_Blinker 
+    public class AI_UD_Blinker
         : AIBehaviorPart
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
@@ -79,13 +79,13 @@ namespace XRL.World.Parts
         [SerializeField]
         private bool RecentlyBlunk = false;
 
-        public int BlunkTurnThreshold => HasBlink 
-            ? BlinkMutation.GetMyActivatedAbilityCooldown(BlinkMutation.BlinkActivatedAbilityID) 
+        public int BlunkTurnThreshold => HasBlink
+            ? BlinkMutation.GetMyActivatedAbilityCooldown(BlinkMutation.BlinkActivatedAbilityID)
             : Math.Max(5, BaseCooldown - (BlinkLevel * CooldownFactor));
 
         [SerializeField]
         private int StoredTurnsSinceBlunk = 0;
-        
+
         public UD_Blink BlinkMutation => ParentObject?.GetPart<UD_Blink>();
         public bool HasBlink => BlinkMutation != null;
 
@@ -319,7 +319,7 @@ namespace XRL.World.Parts
         {
             if (E.IsRelevantCreature(ParentObject))
             {
-                E.Add("travel", BlinkLevel/2);
+                E.Add("travel", BlinkLevel / 2);
             }
             return base.HandleEvent(E);
         }
@@ -527,11 +527,11 @@ namespace XRL.World.Parts
                             Cell currentCell = ParentObject.CurrentCell;
                             UD_Blink.Arrive(
                                 From: currentCell.GetCellFromDirection(Direction),
-                                To: currentCell, 
-                                Life: 8, 
-                                Color1: "C", 
-                                Symbol1: "\u0013", 
-                                Color2: "Y", 
+                                To: currentCell,
+                                Life: 8,
+                                Color1: "C",
+                                Symbol1: "\u0013",
+                                Color2: "Y",
                                 Symbol2: "\u00EC"
                                 );
 

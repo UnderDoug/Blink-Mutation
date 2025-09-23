@@ -17,7 +17,7 @@ namespace XRL.World.Parts
     [Serializable]
     public class ChargeUseInspector : IScribedPart
     {
-        public int CumulativeChargeUsed = 0; 
+        public int CumulativeChargeUsed = 0;
 
         public Dictionary<int, (int Amount, GameObject Source)> ChargesUsed = new();
 
@@ -45,10 +45,10 @@ namespace XRL.World.Parts
         }
         public override void TurnTick(long TimeTick, int Amount)
         {
-            Debug.Entry(4, 
+            Debug.Entry(4,
                 $"{nameof(ChargeUseInspector)}." +
-                $"{nameof(TurnTick)}()" + 
-                $" For: {ParentObject?.ShortDisplayNameStripped ?? NULL}", 
+                $"{nameof(TurnTick)}()" +
+                $" For: {ParentObject?.ShortDisplayNameStripped ?? NULL}",
                 Indent: 0, Toggle: true
                 );
             LastChargeUseDescription = Event.NewStringBuilder();

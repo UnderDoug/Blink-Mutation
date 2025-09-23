@@ -39,7 +39,7 @@ namespace UD_Blink_Mutation.Harmony
             {
                 MetricsManager.LogException(
                     $"[{MOD_ID}] {nameof(QudGenotypeModule_Patches)}." +
-                    $"{nameof(handleUIEvent_NoPricklePigs_Prefix)}()", 
+                    $"{nameof(handleUIEvent_NoPricklePigs_Prefix)}()",
                     x);
             }
             return true;
@@ -63,7 +63,7 @@ namespace UD_Blink_Mutation.Harmony
             {
                 MetricsManager.LogException(
                     $"[{MOD_ID}] {nameof(QudGenotypeModule_Patches)}." +
-                    $"{nameof(getSelected_NoPricklePigs_Prefix)}()", 
+                    $"{nameof(getSelected_NoPricklePigs_Prefix)}()",
                     x);
             }
         }

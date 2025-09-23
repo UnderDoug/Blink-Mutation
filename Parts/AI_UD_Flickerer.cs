@@ -19,7 +19,7 @@ using Debug = UD_Blink_Mutation.Debug;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class AI_UD_Flickerer 
+    public class AI_UD_Flickerer
         : AIBehaviorPart
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
@@ -233,10 +233,10 @@ namespace XRL.World.Parts
             {
                 GameObject currentTarget = ParentObject?.Target;
 
-                string flickerChargColor = FlickerCharges == MaxFlickerCharges 
-                    ? "G" 
-                    : FlickerCharges > 0 
-                        ? "W" 
+                string flickerChargColor = FlickerCharges == MaxFlickerCharges
+                    ? "G"
+                    : FlickerCharges > 0
+                        ? "W"
                         : "R"
                     ;
 
@@ -302,7 +302,7 @@ namespace XRL.World.Parts
                     + $"{nameof(EndTurnEvent)} E)"
                     + $" For: {ParentObject?.DebugName ?? NULL}",
                     Indent: 0, Toggle: getDoDebug('X'));
-                
+
                 if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
                 {
                     FlickerCharges++;
@@ -585,9 +585,9 @@ namespace XRL.World.Parts
                             E.Actor.Physics.DidX(Verb: verb, Extra: "to a nearby location", EndMark: "!");
 
                             AfterBlinkEvent.Send(
-                                Blinker: E.Actor, 
-                                Blink: null, 
-                                Direction: null, 
+                                Blinker: E.Actor,
+                                Blink: null,
+                                Direction: null,
                                 BlinkRange: BlinkRange,
                                 Destination: destinationCell,
                                 IsNothinPersonnelKid: true,

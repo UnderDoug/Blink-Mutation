@@ -139,7 +139,7 @@ namespace XRL.World.WorldBuilders
             The.Game.SetBooleanGameState($"ChaosEmeraldSuperBoss", superBoss);
 
             GameObject pricklePig = GameObjectFactory.Factory.CreateObject(
-                ObjectBlueprint: "Metal Prickle Pig", 
+                ObjectBlueprint: "Metal Prickle Pig",
                 BeforeObjectCreated: delegate (GameObject GO) { HeroMaker.MakeHero(GO); });
 
             int zoneTier = 8;
@@ -148,10 +148,10 @@ namespace XRL.World.WorldBuilders
             Location2D parasang = parasang = Builder.getLocationOfTier(zoneTier);
             parasang = Location2D.Get(parasang.X * 3 + 1, parasang.Y * 3 + 1);
             int locationZ = Stat.Random(zMin, zMax);
-            string zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ); 
+            string zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ);
             string secretID = null;
 
-            foreach ((string color, GameObject emeraldObject) in  chaosEmeralds)
+            foreach ((string color, GameObject emeraldObject) in chaosEmeralds)
             {
                 Debug.LoopItem(4, $"{nameof(color)}", $"[{color}] ({emeraldObject.ID}) {emeraldObject.DebugName}",
                     Indent: indent + 2, Toggle: getDoDebug());
@@ -239,7 +239,7 @@ namespace XRL.World.WorldBuilders
 
                 The.Game.SetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}", int.Parse(emeraldObject.ID));
                 The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}", zoneID);
-                
+
                 Debug.LoopItem(4, $"{nameof(secretID)}", $"{secretID}",
                     Indent: indent + 3, Toggle: getDoDebug());
 
@@ -396,7 +396,7 @@ namespace XRL.World.WorldBuilders
                 {
                     int pricklePigID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{ChaosEmeraldSuperBoss}");
                     string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{ChaosEmeraldSuperBoss}");
-                    
+
                     if (pricklePigID != 0 && !zoneID.IsNullOrEmpty())
                     {
                         Zone pricklePigZone = The.ZoneManager.GetZone(zoneID);

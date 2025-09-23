@@ -27,7 +27,7 @@ using Debug = UD_Blink_Mutation.Debug;
 namespace XRL.World.Parts
 {
     [Serializable]
-    public class ChaosEmeraldSetBonus 
+    public class ChaosEmeraldSetBonus
         : IActivePart
         , IFlightSource
         , IModEventHandler<GetBlinkRangeEvent>
@@ -104,13 +104,13 @@ namespace XRL.World.Parts
             }
         }
 
-        public static List<string> SuperBeamDamageTypes = new() 
-        { 
-            "Acid", 
-            "Electric", 
-            "Heat", "Cold", 
-            "Poison", 
-            "Umbral", 
+        public static List<string> SuperBeamDamageTypes = new()
+        {
+            "Acid",
+            "Electric",
+            "Heat", "Cold",
+            "Poison",
+            "Umbral",
             "Cosmic",
         };
 
@@ -286,11 +286,11 @@ namespace XRL.World.Parts
                 7 => $"Unlocks {powerUpAbilityName}.",
                 _ => null,
             };
-            return $"{treePiece}({GetSetOutOfTotal(SetPiece).Color(GetSetPieceLineColor(SetPiece, SetPieces))}): {description.Color(GetSetPieceLineColor(SetPiece, SetPieces))}"; 
+            return $"{treePiece}({GetSetOutOfTotal(SetPiece).Color(GetSetPieceLineColor(SetPiece, SetPieces))}): {description.Color(GetSetPieceLineColor(SetPiece, SetPieces))}";
         }
         public string GetSetPieceDescriptionLine(int SetPiece)
         {
-            return GetSetPieceDescriptionLine(SetPiece, SetPieces); 
+            return GetSetPieceDescriptionLine(SetPiece, SetPieces);
         }
 
         public static string GetSetPieceLineColor(int SetPiece, int SetPieces)
@@ -299,11 +299,11 @@ namespace XRL.World.Parts
             {
                 return "W";
             }
-            return SetPiece > SetPieces ? "K" : "y"; 
+            return SetPiece > SetPieces ? "K" : "y";
         }
         public string GetSetPieceLineColor(int SetPiece)
         {
-            return GetSetPieceLineColor(SetPiece, SetPieces); 
+            return GetSetPieceLineColor(SetPiece, SetPieces);
         }
 
         public static string GetSetPieceDescriptions(int SetPieces = 0)
@@ -330,7 +330,7 @@ namespace XRL.World.Parts
         public static bool GrantBonus(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, GameObject Wielder, GameObject ExludeSetPiece = null, bool BonusActive = false)
         {
             bool granted = false;
-            if(!BonusActive)
+            if (!BonusActive)
             {
                 int indent = Debug.LastIndent;
                 Debug.Entry(4,
@@ -393,7 +393,7 @@ namespace XRL.World.Parts
                 }
 
                 // Always and scales off Emerald Count
-                
+
                 AddMutationModBlink(ChaosEmeraldSetBonus, Wielder, chaosEmeraldCount);
 
                 ChaosEmeraldSetBonus.SetStatShifterDisplayName();
@@ -560,7 +560,7 @@ namespace XRL.World.Parts
 
             Debug.Entry(4, $"adding {nameof(ChaosEmeraldSetBonus.mutationModRegeneration)}...",
                 Indent: indent + 2, Toggle: getDoDebug());
-            
+
             ChaosEmeraldSetBonus.mutationModRegeneration = Wielder.RequirePart<Mutations>().AddMutationMod(
                 Mutation: typeof(Regeneration),
                 Variant: null,
@@ -632,7 +632,7 @@ namespace XRL.World.Parts
         public static bool ApplySpeedBoosts(ChaosEmeraldSetBonus ChaosEmeraldSetBonus, int ChaosEmeraldsCount = 0)
         {
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(ApplySpeedBoosts)}({nameof(ChaosEmeraldsCount)}: {ChaosEmeraldsCount}) called...", 
+            Debug.Entry(4, $"{nameof(ApplySpeedBoosts)}({nameof(ChaosEmeraldsCount)}: {ChaosEmeraldsCount}) called...",
                 Indent: indent + 1, Toggle: getDoDebug());
             int speedFactor = ChaosEmeraldSetBonus.PoweredUp ? 20 : 10;
             int moveSpeedFactor = ChaosEmeraldSetBonus.PoweredUp ? -35 : -20;
@@ -752,7 +752,7 @@ namespace XRL.World.Parts
             ToggledOn ??= PoweredUp;
 
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(ActivatedAbilityPowerUpToggled)}: {nameof(ToggledOn)}", $"{ToggledOn}", 
+            Debug.Entry(4, $"{nameof(ActivatedAbilityPowerUpToggled)}: {nameof(ToggledOn)}", $"{ToggledOn}",
                 Indent: indent + 1, Toggle: getDoDebug());
 
             if ((bool)ToggledOn)
@@ -855,7 +855,7 @@ namespace XRL.World.Parts
             Creature ??= ParentObject;
 
             int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(FireSuperBeam)}({nameof(Creature)}", $"{Creature?.DebugName ?? NULL})", 
+            Debug.Entry(4, $"{nameof(FireSuperBeam)}({nameof(Creature)}", $"{Creature?.DebugName ?? NULL})",
                 Indent: indent + 1, Toggle: getDoDebug());
 
             if (Creature == null || !PoweredUp || !IsMyActivatedAbilityUsable(SuperBeamActivatedAbilityID))
@@ -871,14 +871,14 @@ namespace XRL.World.Parts
             }
 
             List<Cell> beamCells = PickLine(
-                Length: 999, 
-                VisLevel: AllowVis.Any, 
+                Length: 999,
+                VisLevel: AllowVis.Any,
                 Filter: GO => GO.HasPart<Combat>() && GO.PhaseMatches(ParentObject),
-                IgnoreSolid: true, 
-                IgnoreLOS: true, 
-                Attacker: Creature, 
-                Projectile: SuperBeamProjectile, 
-                Label: SuperBeamAbilityName, 
+                IgnoreSolid: true,
+                IgnoreLOS: true,
+                Attacker: Creature,
+                Projectile: SuperBeamProjectile,
+                Label: SuperBeamAbilityName,
                 Snap: true);
 
             if (beamCells == null || beamCells.Count <= 0)
@@ -940,7 +940,7 @@ namespace XRL.World.Parts
                     if (damageAmount > 0)
                     {
                         wretchedSoul.TakeDamage(
-                            Amount: ref damageAmount, 
+                            Amount: ref damageAmount,
                             Attacker: Creature,
                             Message: "");
                     }
@@ -961,9 +961,9 @@ namespace XRL.World.Parts
                         string preposition = damageAmount + " damage from";
                         wretchedSoul.Physics.DidXToY(
                             Verb: "take",
-                            Preposition: preposition, 
-                            Object: SuperBeamProjectile, 
-                            ColorAsBadFor: wretchedSoul, 
+                            Preposition: preposition,
+                            Object: SuperBeamProjectile,
+                            ColorAsBadFor: wretchedSoul,
                             UseVisibilityOf: Creature);
                     }
                 }
@@ -990,7 +990,7 @@ namespace XRL.World.Parts
             {
                 int previousCostAtPoint = int.MaxValue;
                 int previousBeamCellToPlayer = int.MaxValue;
-                foreach (Cell beamCell in  BeamCells)
+                foreach (Cell beamCell in BeamCells)
                 {
                     int costAtPoint = Zone.SoundMap.GetCostAtPoint(beamCell.Location);
                     int beamCellToPlayer = beamCell.PathDistanceTo(playerCell);
@@ -1102,20 +1102,20 @@ namespace XRL.World.Parts
                 Charge = PerEmeraldChargeCost;
             }
             bool haveSufficientCharge = !(LowestEmeraldCharge < Charge);
-            Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(DrawChargeFromChaosEmeralds)}() {nameof(haveSufficientCharge)}: {haveSufficientCharge}", 
+            Debug.Entry(4, $"{nameof(ChaosEmeraldSetBonus)}.{nameof(DrawChargeFromChaosEmeralds)}() {nameof(haveSufficientCharge)}: {haveSufficientCharge}",
                 Indent: indent + 1, Toggle: getDoDebug("TT"));
             if (haveSufficientCharge)
             {
                 foreach (GameObject chaosEmerald in GetEquippedChaosEmeralds())
                 {
                     chaosEmerald.UseCharge(Charge);
-                    Debug.LoopItem(4, $"{nameof(chaosEmerald)}: {chaosEmerald.DebugName}", 
+                    Debug.LoopItem(4, $"{nameof(chaosEmerald)}: {chaosEmerald.DebugName}",
                         Indent: indent + 2, Toggle: getDoDebug("TT"));
                 }
             }
             else
             {
-                Debug.CheckNah(4, $"Charge Insufficient", 
+                Debug.CheckNah(4, $"Charge Insufficient",
                     Indent: indent + 2, Toggle: getDoDebug("TT"));
             }
             Debug.LastIndent = indent;
@@ -1171,7 +1171,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(EndTurnEvent E)
         {
-            Debug.Entry(4, 
+            Debug.Entry(4,
                 $"{nameof(ChaosEmeraldSetBonus)}." +
                 $"{nameof(HandleEvent)}(" +
                 $"{nameof(EndTurnEvent)} E)",
@@ -1423,9 +1423,9 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIGetPassiveAbilityListEvent E)
         {
-            if (!FlightFlying 
-                && E.Actor == FlightUser 
-                && Flight.EnvironmentAllowsFlight(E.Actor) 
+            if (!FlightFlying
+                && E.Actor == FlightUser
+                && Flight.EnvironmentAllowsFlight(E.Actor)
                 && Flight.IsAbilityAIUsable(this, E.Actor))
             {
                 E.Actor.Think("I might start flying.");
@@ -1435,9 +1435,9 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
-            if (!FlightFlying 
-                && FlightUser == E.Actor 
-                && Flight.EnvironmentAllowsFlight(E.Actor) 
+            if (!FlightFlying
+                && FlightUser == E.Actor
+                && Flight.EnvironmentAllowsFlight(E.Actor)
                 && Flight.IsAbilityAIUsable(this, E.Actor))
             {
                 E.Actor.Think("I might start flying (agressively).");
@@ -1602,18 +1602,18 @@ namespace XRL.World.Parts
                     string Color1 = colorsBag.DrawRandomToken();
                     string Color2 = colorsBag.DrawRandomToken(ExceptForToken: Color1);
                     TransformationParticles(
-                        Transformer: ParentObject, 
-                        Count: Stat.RandomCosmetic(3, 5), 
-                        Life: 2, 
-                        Symbol1: ".", 
-                        Color1: Color1, 
-                        Symbol2: "\u00B0", 
+                        Transformer: ParentObject,
+                        Count: Stat.RandomCosmetic(3, 5),
+                        Life: 2,
+                        Symbol1: ".",
+                        Color1: Color1,
+                        Symbol2: "\u00B0",
                         Color2: Color2);
                 }
                 if (frame == 9 || frame == 39)
                 {
                     string powerUpSFX = true || CoinToss() ? "Sounds/Interact/sfx_interact_jetpack_activate" : "Sounds/Interact/sfx_interact_torch_light";
-                    PlayWorldSound(powerUpSFX, Stat.RandomCosmetic(14,18)/10f, Delay: Stat.RandomCosmetic(1,2)/10f, SourceCell: currentCell);
+                    PlayWorldSound(powerUpSFX, Stat.RandomCosmetic(14, 18) / 10f, Delay: Stat.RandomCosmetic(1, 2) / 10f, SourceCell: currentCell);
                 }
             }
             return base.Render(E);
@@ -1629,8 +1629,8 @@ namespace XRL.World.Parts
                 float f = Stat.RandomCosmetic(-75, 75) * (MathF.PI / 180f) + angle;
                 float xDel = Mathf.Sin(f) / (Life / 2f);
                 float yDel = Mathf.Cos(f) / (Life / 2f);
-                string particle = (Stat.RandomCosmetic(1, 4) < 4) 
-                    ? $"&{Color1}{((Stat.RandomCosmetic(1, 4) < 4) ? Symbol1 : Symbol2)}" 
+                string particle = (Stat.RandomCosmetic(1, 4) < 4)
+                    ? $"&{Color1}{((Stat.RandomCosmetic(1, 4) < 4) ? Symbol1 : Symbol2)}"
                     : $"&{Color2}{((Stat.RandomCosmetic(1, 4) < 4) ? Symbol2 : Symbol1)}"
                     ;
                 int fromX = CoinToss() ? from.X : from.X + Stat.RandomCosmetic(-1, 1);

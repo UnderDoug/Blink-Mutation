@@ -103,7 +103,7 @@ namespace UD_Blink_Mutation
                 return new(type, DieRoll.Left.AdjustDieCount(Amount), DieRoll.Right);
             }
         } //!-- public static DieRoll AdjustDieCount(this DieRoll DieRoll, int Amount)
-       
+
         public static string AdjustDieCount(this string DieRoll, int Amount)
         {
             DieRoll dieRoll = new(DieRoll);
@@ -125,7 +125,7 @@ namespace UD_Blink_Mutation
             return true;
         }
 
-        public static string BonusOrPenalty(this int Int) 
+        public static string BonusOrPenalty(this int Int)
         {
             return Int >= 0 ? "bonus" : "penalty";
         }
@@ -312,8 +312,8 @@ namespace UD_Blink_Mutation
                         list.Add(equipped);
                         int partCountEquippedOn = Body.GetPartCountEquippedOn(equipped);
                         int slotsRequiredFor = equipped.GetSlotsRequiredFor(Actor, bodyPart.Type, true);
-                        if (!partCountEquippedOn.Is(slotsRequiredFor) 
-                            && bodyPart.TryUnequip(true, true, false, false) 
+                        if (!partCountEquippedOn.Is(slotsRequiredFor)
+                            && bodyPart.TryUnequip(true, true, false, false)
                             && partCountEquippedOn > slotsRequiredFor)
                         {
                             equipped.SplitFromStack();
@@ -520,7 +520,7 @@ namespace UD_Blink_Mutation
             if (!Object.Understood())
                 return "artifact";
 
-            if (Object.InheritsFrom("FoldingChair") 
+            if (Object.InheritsFrom("FoldingChair")
                 && Object.HasPart<ModGigantic>())
                 return "folding chair";
 
@@ -565,8 +565,8 @@ namespace UD_Blink_Mutation
 
             if (Object.TryGetPart(out MissileWeapon missileWeapon))
             {
-                if (missileWeapon.Skill.Contains("Shotgun") 
-                    || Object.InheritsFrom("BaseShotgun") 
+                if (missileWeapon.Skill.Contains("Shotgun")
+                    || Object.InheritsFrom("BaseShotgun")
                     || (Object.TryGetPart(out MagazineAmmoLoader loader) && loader.AmmoPart.Is("AmmoShotgunShell")))
                     return "shotgun";
 
@@ -679,7 +679,8 @@ namespace UD_Blink_Mutation
                             }
                         default:
                             return "armor";
-                    };
+                    }
+                    ;
                 }
                 switch (armor.WornOn)
                 {
@@ -829,25 +830,25 @@ namespace UD_Blink_Mutation
         public static bool IsImprovised(this MeleeWeapon MeleeWeapon)
         {
             bool isImprovisedButGigantic = MeleeWeapon.ParentObject.HasPart<ModGigantic>()
-             && MeleeWeapon.MaxStrengthBonus == 0 
-             && MeleeWeapon.PenBonus == 0 
-             && MeleeWeapon.HitBonus == 0 
-             && (MeleeWeapon.BaseDamage.Is("1d2") || MeleeWeapon.BaseDamage.Is("1d2+3")) 
-             && MeleeWeapon.Ego == 0 
-             && MeleeWeapon.Skill.Is("Cudgel") 
-             && MeleeWeapon.Stat.Is("Strength") 
-             && MeleeWeapon.Slot.Is("Hand") 
+             && MeleeWeapon.MaxStrengthBonus == 0
+             && MeleeWeapon.PenBonus == 0
+             && MeleeWeapon.HitBonus == 0
+             && (MeleeWeapon.BaseDamage.Is("1d2") || MeleeWeapon.BaseDamage.Is("1d2+3"))
+             && MeleeWeapon.Ego == 0
+             && MeleeWeapon.Skill.Is("Cudgel")
+             && MeleeWeapon.Stat.Is("Strength")
+             && MeleeWeapon.Slot.Is("Hand")
              && MeleeWeapon.Attributes.IsNullOrEmpty();
 
-            bool hasImprovisedProp = 
-                MeleeWeapon.ParentObject.HasTagOrStringProperty("IsImprovisedMelee") 
+            bool hasImprovisedProp =
+                MeleeWeapon.ParentObject.HasTagOrStringProperty("IsImprovisedMelee")
              && !MeleeWeapon.ParentObject.GetStringProperty("IsImprovisedMelee").Is("false");
 
             MeleeWeapon @default = new();
 
-            return MeleeWeapon.SameAs(@default) 
-                || MeleeWeapon.IsImprovisedWeapon() 
-                || isImprovisedButGigantic 
+            return MeleeWeapon.SameAs(@default)
+                || MeleeWeapon.IsImprovisedWeapon()
+                || isImprovisedButGigantic
                 || MeleeWeapon.ParentObject.GetIntProperty("IsImprovisedMelee") > 0
                 || hasImprovisedProp;
         }
@@ -1201,7 +1202,7 @@ namespace UD_Blink_Mutation
             where T : class
         {
             T Output = WeightedList.Sample();
-            if(--WeightedList[Output] == 0)
+            if (--WeightedList[Output] == 0)
                 WeightedList.Remove(Output);
             return Output;
         }
@@ -1220,9 +1221,9 @@ namespace UD_Blink_Mutation
 
         public static bool TagIsIncludedOrNotExcluded(this GameObjectBlueprint Blueprint, string TagName, Dictionary<string, bool> IncludeExclude)
         {
-            Debug.Entry(4, 
+            Debug.Entry(4,
                 $"* ({Blueprint.Name})."
-                + $"{nameof(TagIsIncludedOrNotExcluded)}" 
+                + $"{nameof(TagIsIncludedOrNotExcluded)}"
                 + $"(string TagName: {TagName}, Dictionary<string, bool> IncludeExclude)",
                 Indent: 0, Toggle: getDoDebug(nameof(TagIsIncludedOrNotExcluded)));
 
@@ -1239,13 +1240,13 @@ namespace UD_Blink_Mutation
                 {
                     if (entryInclude) includeTags.Add(entryValue);
                     else excludeTags.Add(entryValue);
-                    Debug.LoopItem(4, $"{(entryInclude ? "include" : "exclude")}: {entryValue}", 
+                    Debug.LoopItem(4, $"{(entryInclude ? "include" : "exclude")}: {entryValue}",
                         Indent: 2, Good: entryInclude, Toggle: getDoDebug(nameof(TagIsIncludedOrNotExcluded)));
                 }
 
                 bool noBlueprintTagValue = !Blueprint.TryGetTag(TagName, out string blueprintTagValue);
                 bool noBlueprintPart = true;
-                foreach ((string part,_) in Blueprint.Parts)
+                foreach ((string part, _) in Blueprint.Parts)
                 {
                     if (includeTags.Contains(part.ToLower()))
                     {
@@ -1256,14 +1257,14 @@ namespace UD_Blink_Mutation
                 bool noBlueprintTagOrPart = noBlueprintTagValue && noBlueprintPart;
                 if (!includeTags.IsNullOrEmpty() && noBlueprintTagOrPart)
                 {
-                    Debug.CheckNah(4, $"includeTags not empty and {Blueprint.Name} doesn't have \"{TagName}\" tag or equivalent Part", 
+                    Debug.CheckNah(4, $"includeTags not empty and {Blueprint.Name} doesn't have \"{TagName}\" tag or equivalent Part",
                         Indent: 1, Toggle: getDoDebug(nameof(TagIsIncludedOrNotExcluded)));
-                    return false; 
+                    return false;
                 }
                 else if (noBlueprintTagOrPart)
                 {
-                    Debug.CheckYeh(4, 
-                        $"includeTags is empty and {Blueprint.Name} doesn't have \"{TagName}\" tag or equivalent Part, " + 
+                    Debug.CheckYeh(4,
+                        $"includeTags is empty and {Blueprint.Name} doesn't have \"{TagName}\" tag or equivalent Part, " +
                         $"exclusions are irrelevant",
                         Indent: 1, Toggle: getDoDebug(nameof(TagIsIncludedOrNotExcluded)));
                     return true;
@@ -1389,7 +1390,7 @@ namespace UD_Blink_Mutation
             return Utils.Quote($"{@string}");
         }
 
-        public static Dictionary<string,List<Cell>> GetHutRegion(this Zone Z, Rect2D R, bool Round = false)
+        public static Dictionary<string, List<Cell>> GetHutRegion(this Zone Z, Rect2D R, bool Round = false)
         {
             string Inner = "Inner";
             string Outer = "Outer";
@@ -1486,8 +1487,8 @@ namespace UD_Blink_Mutation
                 if (doorSide != null)
                 {
                     Cell newDoor = Region[doorSide].GetRandomElement();
-                    
-                    Dictionary<string,List<Cell>> Edges = new()
+
+                    Dictionary<string, List<Cell>> Edges = new()
                     {
                         { NorthEdge, Region[NorthEdge] },
                         { SouthEdge, Region[SouthEdge] },
@@ -1531,12 +1532,12 @@ namespace UD_Blink_Mutation
             return cellsList;
         }
 
-        public static Point2D PullInsideFromEdges(this Cell Cell, Dictionary<string,List<Cell>> Edges, string DoorSide = "")
+        public static Point2D PullInsideFromEdges(this Cell Cell, Dictionary<string, List<Cell>> Edges, string DoorSide = "")
         {
             Debug.Entry(4,
                 $"@ {typeof(Extensions).Name}."
                 + $"{nameof(PullInsideFromEdges)}"
-                + $"(Cell: {Cell}, List<Cell> Edge, " 
+                + $"(Cell: {Cell}, List<Cell> Edge, "
                 + $"string DoorSide: {(DoorSide.IsNullOrEmpty() ? $"".Quote() : DoorSide.Quote())})",
                 Indent: 0, Toggle: getDoDebug(nameof(PullInsideFromEdges)));
 
@@ -1586,13 +1587,13 @@ namespace UD_Blink_Mutation
                 }
                 Debug.Entry(4, $"Xs: {XsString}", Indent: 2, Toggle: getDoDebug(nameof(PullInsideFromEdge)));
                 Debug.Entry(4, $"Ys: {YsString}", Indent: 2, Toggle: getDoDebug(nameof(PullInsideFromEdge)));
-                if (Xs.Count > 1 &&  Ys.Count > 1)
+                if (Xs.Count > 1 && Ys.Count > 1)
                 {
-                    Debug.Entry(2, 
-                        $"WARN [GigantismPlus]: " + 
-                        $"{typeof(Extensions).Name}." + 
-                        $"{nameof(PullInsideFromEdge)}() " + 
-                        $"List<Cell> Edge must be a straight line.", 
+                    Debug.Entry(2,
+                        $"WARN [GigantismPlus]: " +
+                        $"{typeof(Extensions).Name}." +
+                        $"{nameof(PullInsideFromEdge)}() " +
+                        $"List<Cell> Edge must be a straight line.",
                         Indent: 0, Toggle: getDoDebug(nameof(PullInsideFromEdge)));
                     return output;
                 }
@@ -1602,7 +1603,7 @@ namespace UD_Blink_Mutation
                 int min = int.MaxValue;
                 if (edgeIsLat)
                 {
-                    foreach(int x in Xs)
+                    foreach (int x in Xs)
                     {
                         max = Math.Max(max, x);
                         min = Math.Min(min, x);
@@ -1654,14 +1655,14 @@ namespace UD_Blink_Mutation
                 + $"(string Source: {Source})",
                 Indent: 0, Toggle: getDoDebug(nameof(GetNumberedTileVariants)));
             List<string> output = new();
-            
+
             string[] sourcePieces = Source.Split("~");
             string pathBefore = sourcePieces[0];
             string pathAfter = sourcePieces[2];
 
             Debug.Entry(4, $"pathBefore: {pathBefore}, pathAfter: {pathAfter}", Indent: 1, Toggle: getDoDebug(nameof(GetNumberedTileVariants)));
             Debug.Entry(4, $"sourcePieces[1] {sourcePieces[1]}", Indent: 1, Toggle: getDoDebug(nameof(GetNumberedTileVariants)));
-            
+
             string[] pathRange = sourcePieces[1].Split('-');
             int first = int.Parse(pathRange[0]);
             int last = int.Parse(pathRange[1]);
@@ -1968,9 +1969,9 @@ namespace UD_Blink_Mutation
 
         public static bool IsInOrthogonalDirectionWith(this Cell OriginCell, Cell TargetCell)
         {
-            return OriginCell != null && TargetCell != null 
-                && (OriginCell.X == TargetCell.X 
-                    || OriginCell.Y == TargetCell.Y 
+            return OriginCell != null && TargetCell != null
+                && (OriginCell.X == TargetCell.X
+                    || OriginCell.Y == TargetCell.Y
                     || Math.Abs(OriginCell.X - TargetCell.X) == Math.Abs(OriginCell.Y - TargetCell.Y));
         }
         public static bool IsInOrthogonalDirectionWith(this GameObject Origin, GameObject Target)
@@ -2024,8 +2025,8 @@ namespace UD_Blink_Mutation
                         {
                             list.TryAdd(baseMutation.GetMutationEntry());
                         }
-                        
-                        IPart part = mutationBlueprint.Reflector?.GetInstance() 
+
+                        IPart part = mutationBlueprint.Reflector?.GetInstance()
                             ?? (Activator.CreateInstance(mutationBlueprint.T) as IPart);
                         if (part is BaseMutation mutationPart)
                         {
@@ -2155,7 +2156,7 @@ namespace UD_Blink_Mutation
             if (Mover != null && Mover.TryGetStat("MoveSpeed", out Statistic MS) && Mover.TryGetStat("Speed", out Statistic QN))
             {
                 int indent = Debug.LastIndent;
-                Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint})", 
+                Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint})",
                     Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
 
                 int EMS = 100 - MS.Value + 100;

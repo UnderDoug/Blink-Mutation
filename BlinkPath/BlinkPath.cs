@@ -36,7 +36,7 @@ namespace UD_Blink_Mutation
 
             return doDebug;
         }
-        
+
         [NonSerialized]
         public Cell Origin;
         public string Direction;
@@ -105,7 +105,7 @@ namespace UD_Blink_Mutation
                     $"{nameof(AnyKid)}: {AnyKid} and " +
                     $"{nameof(Kid)}: {Kid?.DebugName ?? NULL} and (" +
                     $"{nameof(KidDestination)}: [{KidDestination?.Location}] or " +
-                    $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})", 
+                    $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})",
                     Indent: indent + 2, Toggle: getDoDebug());
                 Debug.LastIndent = indent;
                 return false;
@@ -115,7 +115,7 @@ namespace UD_Blink_Mutation
                 $"[{LastStep?.Location}] " +
                 $"{nameof(Destination)}: [{Destination?.Location}], or (" +
                 $"{nameof(IsNothinPersonnelKid)}: {IsNothinPersonnelKid} and " +
-                $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})", 
+                $"{nameof(IsValidKidDestination)}: {IsValidKidDestination})",
                 Good: hasValid, Indent: indent + 2, Toggle: getDoDebug());
             Debug.LastIndent = indent;
             return hasValid;

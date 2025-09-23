@@ -20,7 +20,7 @@ namespace XRL.World.Parts
 {
     [HasWishCommand]
     [Serializable]
-    public class UD_CyberneticsOverclockedCentralNervousSystem 
+    public class UD_CyberneticsOverclockedCentralNervousSystem
         : IActivePart
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
@@ -289,7 +289,7 @@ namespace XRL.World.Parts
                 return false;
             }
 
-            if (Blinker.Body != null 
+            if (Blinker.Body != null
                 && !Blinker.Body.GetInstalledCybernetics().Contains(CyberneticsOverclockedCentralNervousSystemObject))
             {
                 return false;
@@ -375,7 +375,7 @@ namespace XRL.World.Parts
             {
                 foreach (Cell flickerRadiusCell in CellsInFlickerRadius)
                 {
-                    List<GameObject> cellObjects = 
+                    List<GameObject> cellObjects =
                         Event.NewGameObjectList(flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)));
 
                     if (!cellObjects.IsNullOrEmpty())
@@ -495,14 +495,14 @@ namespace XRL.World.Parts
             string verb = "flicker";
             int indent = Debug.LastIndent;
 
-            Debug.Entry(2, 
+            Debug.Entry(2,
                 $"* {nameof(UD_CyberneticsOverclockedCentralNervousSystem)}."
                 + $"{nameof(Flicker)}("
                 + $"{nameof(Flickerer)}: {Flickerer?.DebugName ?? NULL}, "
                 + $"{nameof(FlickerRadius)}: {FlickerRadius}, "
                 + $"{nameof(FlickerCharges)}: {FlickerCharges}, "
                 + $"{nameof(FlickerTargetOverride)}: {FlickerTargetOverride?.DebugName ?? NULL}, "
-                + $"{nameof(Silent)}: {Silent})", 
+                + $"{nameof(Silent)}: {Silent})",
                 Indent: indent + 1, Toggle: getDoDebug());
 
             if (Flickerer == null)
@@ -722,10 +722,10 @@ namespace XRL.World.Parts
 
                         if (Flickerer.IsPlayer() && !flickerTarget.IsVisible())
                         {
-                            Debug.CheckNah(3, 
+                            Debug.CheckNah(3,
                                 $"{nameof(flickerTarget)} is not visible. " +
                                 $"Continuing without removal " +
-                                $"(they may become visible with subsequent flickers)...", 
+                                $"(they may become visible with subsequent flickers)...",
                                 Indent: indent + 5, Toggle: getDoDebug());
                             continue;
                         }
@@ -749,9 +749,9 @@ namespace XRL.World.Parts
                                 FlickerTargetAdjacentCells: flickerTargetAdjacentCells,
                                 DestinationPaths: out Dictionary<Cell, BlinkPath> destinationPaths))
                         {
-                            Debug.CheckNah(3, 
+                            Debug.CheckNah(3,
                                 $"{nameof(flickerTargetAdjacentCells)} is empty. " +
-                                $"Removing flicker target from list and attempting again", 
+                                $"Removing flicker target from list and attempting again",
                                 Indent: indent + 5, Toggle: getDoDebug());
 
                             flickerTargets.Remove(flickerTarget);
@@ -906,7 +906,7 @@ namespace XRL.World.Parts
 
                         if (OC_CNS != null && !CyberFlickerFallsBackToRandom && didKill)
                         {
-                            Debug.Entry(2, $"{nameof(CyberFlickerFallsBackToRandom)} disabled and target died, aborting flicker loop...", 
+                            Debug.Entry(2, $"{nameof(CyberFlickerFallsBackToRandom)} disabled and target died, aborting flicker loop...",
                                 Indent: indent + 4, Toggle: getDoDebug());
                             break;
                         }
@@ -998,7 +998,7 @@ namespace XRL.World.Parts
         public bool Flicker(GameObject FlickerTargetOverride = null, bool Silent = false)
         {
             return Flicker(
-                Flickerer: Implantee, 
+                Flickerer: Implantee,
                 FlickerRadius: FlickerRadius,
                 BlinkRange: BlinkRange,
                 FlickerCharges: ref FlickerCharges,
@@ -1047,7 +1047,7 @@ namespace XRL.World.Parts
 
             GameObject pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && !GO.IsHolographicDistractionOf(Flickerer));
 
-            if (pickedCell !=null && pickedTarget == null && Flickerer.IsPlayer() && !Silent)
+            if (pickedCell != null && pickedTarget == null && Flickerer.IsPlayer() && !Silent)
             {
                 Popup.Show($"There are no creatures in that location to flicker strike.");
             }
@@ -1496,7 +1496,7 @@ namespace XRL.World.Parts
             if (MidBlink && E.Attacker == Implantee)
             {
                 int indent = Debug.LastIndent;
-                Debug.Entry(4, $"@ {nameof(GetAttackerMeleePenetrationEvent)}: {nameof(E.Penetrations)}", $"{E.Penetrations}", 
+                Debug.Entry(4, $"@ {nameof(GetAttackerMeleePenetrationEvent)}: {nameof(E.Penetrations)}", $"{E.Penetrations}",
                     Indent: indent + 1, Toggle: getDoDebug());
                 WeGoAgain = true;
 
@@ -1512,10 +1512,10 @@ namespace XRL.World.Parts
         public override bool HandleEvent(GetMovementCapabilitiesEvent E)
         {
             E.Add(
-                Description: "Blink a short distance", 
-                Command: COMMAND_UD_BLINK_CYBER_ABILITY, 
-                Order: 5600, 
-                Ability: MyActivatedAbility(BlinkActivatedAbilityID, E.Actor), 
+                Description: "Blink a short distance",
+                Command: COMMAND_UD_BLINK_CYBER_ABILITY,
+                Order: 5600,
+                Ability: MyActivatedAbility(BlinkActivatedAbilityID, E.Actor),
                 IsAttack: IsNothinPersonnelKid);
             return base.HandleEvent(E);
         }
@@ -1662,14 +1662,14 @@ namespace XRL.World.Parts
         }
         public override bool FireEvent(Event E)
         {
-            if (MidBlink 
+            if (MidBlink
                 && E.ID == "AttackerAfterAttack"
-                && E.GetParameter("Attacker") is GameObject attacker 
-                && attacker == Implantee 
+                && E.GetParameter("Attacker") is GameObject attacker
+                && attacker == Implantee
                 && E.GetIntParameter("Penetrations") > 0)
             {
                 int indent = Debug.LastIndent;
-                Debug.Entry(4, $"@ AttackerAfterAttack: Penetrations", $"{E.GetIntParameter("Penetrations")}", 
+                Debug.Entry(4, $"@ AttackerAfterAttack: Penetrations", $"{E.GetIntParameter("Penetrations")}",
                     Indent: indent + 1, Toggle: getDoDebug());
                 WeGoAgain = true;
                 Debug.LastIndent = indent;
