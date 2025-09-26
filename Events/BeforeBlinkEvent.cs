@@ -95,9 +95,9 @@ namespace UD_Blink_Mutation
             Debug.LastIndent = indent;
             return null;
         }
-        public static bool Check(GameObject Blinker, UD_Blink Blink, out string Message, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, BlinkPath Path = null)
+        public static bool Check(GameObject Blinker, UD_Blink Blink, out string Message, string Direction, int BlinkRange, Cell Destination, bool IsNothinPersonnelKid = false, GameObject Kid = null, bool IsRetreat = false, BlinkPath BlinkPath = null)
         {
-            BeforeBlinkEvent E = FromPool(Blinker, Blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, Path);
+            BeforeBlinkEvent E = FromPool(Blinker, Blink, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, BlinkPath);
 
             bool haveBlinker = Blinker != null;
             bool haveKid = Kid != null;
@@ -144,7 +144,7 @@ namespace UD_Blink_Mutation
                     @event.SetParameter(nameof(IsNothinPersonnelKid), IsNothinPersonnelKid);
                     @event.SetParameter(nameof(Kid), Kid);
                     @event.SetParameter(nameof(IsRetreat), IsRetreat);
-                    @event.SetParameter(nameof(Path), Path);
+                    @event.SetParameter(nameof(BlinkPath), BlinkPath);
                     if (proceed && blinkerWantsStr)
                     {
                         proceed = Blinker.FireEvent(@event);

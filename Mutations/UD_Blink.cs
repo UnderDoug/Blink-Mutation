@@ -783,6 +783,30 @@ namespace XRL.World.Parts.Mutation
                 $"{nameof(Blink)}()",
                 Indent: indent, Toggle: getDoDebug());
 
+            Debug.LoopItem(4, nameof(Blinker), Blinker?.DebugName ?? NULL,
+                Good: Blinker != null, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(Direction), Direction ?? NULL,
+                Good: !Direction.IsNullOrEmpty(), Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(BlinkRange), BlinkRange.ToString(),
+                Good: BlinkRange > 0, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(Destination), Destination?.Location?.ToString(),
+                Good: Destination != null, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(IsNothinPersonnelKid), IsNothinPersonnelKid.ToString(),
+                Good: IsNothinPersonnelKid, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(Kid), Kid?.DebugName ?? NULL,
+                Good: Kid != null, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(IsRetreat), IsRetreat.ToString(),
+                Good: IsRetreat, Indent: indent + 1, Toggle: doDebug);
+
+            Debug.LoopItem(4, nameof(Silent), Silent.ToString(),
+                Good: Silent, Indent: indent + 1, Toggle: doDebug);
+
             BlinkPaths = null;
             Debug.Entry(2, $"Checking for {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (Blinker == null)
@@ -923,20 +947,6 @@ namespace XRL.World.Parts.Mutation
                 KidDestination = null;
             }
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
-            if (Destination == null || (IsNothinPersonnelKid && KidDestination == null)) // was KidDestination != null
-            {
-                if (!TryGetBlinkDestination(Blinker, Direction, BlinkRange, out Destination, out Kid, out KidDestination, out BlinkPaths, out bool suppressMessageOnFail, IsNothinPersonnelKid))
-                {
-                    if (Blinker.IsPlayer() && !Silent && !suppressMessageOnFail)
-                    {
-                        Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
-                    }
-                    Debug.CheckNah(4, $"{nameof(Destination)}", NULL, Indent: indent + 2, Toggle: getDoDebug());
-                    Debug.LastIndent = indent;
-                    return false;
-                }
-            }
-            else
             if (Destination != null && Kid.IsHolographicDistractionOf(Blinker))
             {
                 BlinkPaths = new(origin, Direction)
@@ -956,37 +966,56 @@ namespace XRL.World.Parts.Mutation
                     return false;
                 }
             }
+            else
+            // if (Destination == null || (IsNothinPersonnelKid && KidDestination == null)) // was KidDestination != null
+            {
+                if (!TryGetBlinkDestination(
+                    Blinker: Blinker, 
+                    Direction: Direction, 
+                    BlinkRange: BlinkRange, 
+                    Destination: out Destination,
+                    Kid: out Kid, 
+                    KidDestination: out KidDestination,
+                    BlinkPaths: out BlinkPaths,
+                    SuppressMessageOnFail: out bool suppressMessageOnFail,
+                    IsNothinPersonnelKid: IsNothinPersonnelKid))
+                {
+                    if (!Silent && !suppressMessageOnFail && Blinker.IsPlayer())
+                    {
+                        Popup.ShowFail($"Something is preventing you from {verb}ing in that direction!");
+                    }
+                    Debug.CheckNah(4, $"{nameof(Destination)}", NULL, Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.LastIndent = indent;
+                    return false;
+                }
+            }
 
             Debug.Entry(2, $"Checking {nameof(Destination)} adjacency to {nameof(Blinker)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (((!IsNothinPersonnelKid || Kid == null) && Blinker.CurrentCell.GetAdjacentCells().Contains(Destination))
                 || (IsNothinPersonnelKid && Kid != null && Blinker.CurrentCell.GetAdjacentCells().Contains(KidDestination)))
             {
                 Debug.CheckNah(3, $"{nameof(Destination)} is adjacent to {nameof(Blinker)}", Indent: indent + 2, Toggle: getDoDebug());
-                if (Blinker.IsPlayer())
+                if (!Silent && Blinker.IsPlayer())
                 {
-                    if (!Silent)
-                    {
-                        Popup.ShowFail("You don't have room to build momentum!");
-                    }
-                    Debug.LastIndent = indent;
-                    return false;
+                    Popup.ShowFail("You don't have room to build momentum!");
                 }
+                Debug.LastIndent = indent;
+                return false;
             }
 
             Debug.Entry(2, $"Checking {nameof(BeforeBlinkEvent)}...", Indent: indent + 1, Toggle: getDoDebug());
             if (!BeforeBlinkEvent.Check(Blinker, blink, out string eventBlockReason, Direction, BlinkRange, Destination, IsNothinPersonnelKid, Kid, IsRetreat, BlinkPaths.Path))
             {
-                Debug.CheckNah(3, $"{nameof(BeforeBlinkEvent)} blocked Blink: {nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}",
+                Debug.CheckNah(3, 
+                    $"{nameof(BeforeBlinkEvent)} blocked Blink: " +
+                    $"{nameof(eventBlockReason)} {eventBlockReason?.Quote() ?? NULL}",
                     Indent: indent + 2, Toggle: getDoDebug());
-                if (Blinker.IsPlayer())
+                if (!Silent && !eventBlockReason.IsNullOrEmpty() && Blinker.IsPlayer())
                 {
-                    if (!Silent && !eventBlockReason.IsNullOrEmpty())
-                    {
-                        Popup.ShowFail(eventBlockReason);
-                    }
-                    Debug.LastIndent = indent;
-                    return false;
+                    Popup.ShowFail(eventBlockReason);
                 }
+                Debug.LastIndent = indent;
+                return false;
             }
 
             bool isNani = false;
@@ -1860,7 +1889,9 @@ namespace XRL.World.Parts.Mutation
             {
                 IsNothinPersonnelKid = !IsNothinPersonnelKid;
             }
-            if (E.Command == COMMAND_UD_BLINK_ABILITY && E.Actor == ParentObject && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, ParentObject))
+            if (E.Command == COMMAND_UD_BLINK_ABILITY
+                && E.Actor == ParentObject
+                && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, ParentObject))
             {
                 GameObject Blinker = ParentObject;
 
@@ -1873,7 +1904,8 @@ namespace XRL.World.Parts.Mutation
                     Forced: false,
                     Silent: false);
             }
-            if (E.Command == COMMAND_UD_BLINK && E.Actor == ParentObject)
+            if (E.Command == COMMAND_UD_BLINK
+                && E.Actor == ParentObject)
             {
                 if (GameObject.Validate(E.Actor) && !MidBlink)
                 {
@@ -1881,7 +1913,7 @@ namespace XRL.World.Parts.Mutation
                     try
                     {
                         int blinkRange = GetBlinkRange();
-                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target == null;
                         bool isMovement = !isRetreat && E.TargetCell != null;
 
                         string Direction = null;
@@ -1894,7 +1926,8 @@ namespace XRL.World.Parts.Mutation
                             {
                                 blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
                             }
-                            else if (isMovement)
+                            else
+                            if (isMovement)
                             {
                                 blinkThink = $"I don't think you have any idea how fast I really am";
                             }
@@ -1915,8 +1948,7 @@ namespace XRL.World.Parts.Mutation
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
                             Kid: E.Target,
                             IsRetreat: isRetreat,
-                            Silent: false
-                            );
+                            Silent: false);
 
                         if (blunk)
                         {
@@ -2567,7 +2599,7 @@ namespace XRL.World.Parts.Mutation
             {
                 if (GO.GetPart<Door>() is Door door && door.Open)
                 {
-                    door.AttemptClose(The.Player, IgnoreMobility: true, Silent: true);
+                    door.AttemptClose(The.Player, IgnoreMobility: true, Silent: true, FromMove: true);
                     Loading.SetLoadingStatus($"Closing Door ({currentDoor++.ToString().PadLeft(doorPadding, ' ')}/{totalDoors})");
                 }
             });

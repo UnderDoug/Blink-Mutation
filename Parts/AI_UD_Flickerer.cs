@@ -380,7 +380,7 @@ namespace XRL.World.Parts
                                 {
                                     E.Actor.Think($"I've found a path I could use to flicker strike {targetName}");
                                     E.Actor.Think($"I might try and flicker strike {targetName}, omae wa mou shindeiru");
-                                    E.Add(COMMAND_AI_UD_FLICKER, 1, E.Actor, TargetOverride: E.Target);
+                                    E.Add(COMMAND_AI_UD_FLICKER_ABILITY, 1, E.Actor, TargetOverride: E.Target);
                                     break;
                                 }
                             }
@@ -412,13 +412,16 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY && E.Actor == ParentObject && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
+            if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY
+                && E.Actor == ParentObject
+                && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
             {
                 CommandEvent.Send(
                     Actor: E.Actor,
                     Command: COMMAND_AI_UD_FLICKER);
             }
-            if (E.Command == COMMAND_AI_UD_FLICKER && E.Actor == ParentObject)
+            if (E.Command == COMMAND_AI_UD_FLICKER
+                && E.Actor == ParentObject)
             {
                 MidFlicker = true;
                 bool nearbyHostile = The.ActiveZone.GetFirstObject(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)) != null;

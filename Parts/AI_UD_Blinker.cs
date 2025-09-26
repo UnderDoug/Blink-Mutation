@@ -365,7 +365,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
                     E.Actor.Think($"I might teleport behind {E?.Target?.ShortDisplayNameStripped ?? NULL}, it's nothin personnel");
-                    E.Add(COMMAND_AI_UD_BLINK, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
+                    E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -394,7 +394,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
                 {
                     E.Actor.Brain.Think($"I might blink away from {E.Target.ShortDisplayNameStripped}");
-                    E.Add(COMMAND_AI_UD_BLINK, Priority: 3, TargetCellOverride: Destination);
+                    E.Add(COMMAND_AI_UD_BLINK_ABILITY, Priority: 3, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
@@ -418,7 +418,7 @@ namespace XRL.World.Parts
                 if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
-                    E.Add(COMMAND_AI_UD_BLINK, TargetCellOverride: Destination);
+                    E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetCellOverride: Destination);
                 }
             }
             return base.HandleEvent(E);
