@@ -1,28 +1,28 @@
 ﻿using System;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Text.RegularExpressions;
 
 using Genkit;
 
 using XRL;
-using XRL.CharacterBuilds;
-using XRL.CharacterBuilds.Qud;
-using XRL.Language;
-using XRL.Rules;
 using XRL.UI;
+using XRL.Rules;
+using XRL.Language;
 using XRL.World;
-using XRL.World.Anatomy;
-using XRL.World.Capabilities;
-using XRL.World.Effects;
-using XRL.World.ObjectBuilders;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
 using XRL.World.Parts.Skill;
+using XRL.World.Effects;
+using XRL.World.Anatomy;
+using XRL.World.ObjectBuilders;
+using XRL.World.Capabilities;
 using XRL.World.Tinkering;
+using XRL.CharacterBuilds;
+using XRL.CharacterBuilds.Qud;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
@@ -32,37 +32,21 @@ namespace UD_Blink_Mutation
     public static class Extensions
     {
         private static bool doDebug => true;
-        private static bool getDoDebug(string MethodName)
+        private static bool getDoDebug(string MethodName) => MethodName switch
         {
-            if (MethodName == nameof(CheckEquipmentSlots))
-                return false;
+            nameof(CheckEquipmentSlots) => false,
+            nameof(TagIsIncludedOrNotExcluded) => false,
+            nameof(MakeIncludeExclude) => false,
+            nameof(PullInsideFromEdges) => false,
+            nameof(PullInsideFromEdge) => false,
+            nameof(GetNumberedTileVariants) => false,
+            nameof(GetMovementsPerTurn) => false,
+            nameof(GetQuicknessFactor) => false,
+            nameof(DrawSeededToken) => false,
+            nameof(Think) => true,
 
-            if (MethodName == nameof(TagIsIncludedOrNotExcluded))
-                return false;
-
-            if (MethodName == nameof(MakeIncludeExclude))
-                return false;
-
-            if (MethodName == nameof(PullInsideFromEdges))
-                return false;
-
-            if (MethodName == nameof(PullInsideFromEdge))
-                return false;
-
-            if (MethodName == nameof(GetNumberedTileVariants))
-                return false;
-
-            if (MethodName == nameof(GetMovementsPerTurn))
-                return false;
-
-            if (MethodName == nameof(DrawSeededToken))
-                return false;
-
-            if (MethodName == nameof(Think))
-                return true;
-
-            return doDebug;
-        }
+            _ => doDebug
+        };
 
         public static int GetDieCount(this DieRoll DieRoll)
         {
@@ -2156,29 +2140,49 @@ namespace UD_Blink_Mutation
             if (Mover != null && Mover.TryGetStat("MoveSpeed", out Statistic MS) && Mover.TryGetStat("Speed", out Statistic QN))
             {
                 int indent = Debug.LastIndent;
+                bool doDebug = getDoDebug(nameof(GetMovementsPerTurn));
+
                 Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint})",
-                    Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                    Indent: indent, Toggle: doDebug);
 
                 int EMS = 100 - MS.Value + 100;
                 Debug.Entry(4, $"{nameof(EMS)}", $"{EMS}",
-                    Indent: indent + 1, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                    Indent: indent + 1, Toggle: doDebug);
                 if (IgnoreSprint && Mover.TryGetEffect(out Running running))
                 {
                     EMS -= running.MovespeedBonus;
                     Debug.Entry(4, $"{nameof(running.MovespeedBonus)}", $"{running.MovespeedBonus}",
-                        Indent: indent + 2, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                        Indent: indent + 2, Toggle: doDebug);
                     Debug.Entry(4, $"{nameof(EMS)}", $"{EMS}",
-                        Indent: indent + 2, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                        Indent: indent + 2, Toggle: doDebug);
                 }
                 int EQN = QN.Value;
                 Debug.Entry(4, $"{nameof(EQN)}", $"{EQN}",
-                    Indent: indent + 1, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                    Indent: indent + 1, Toggle: doDebug);
 
                 Debug.Entry(4, $"x {nameof(GameObject)}.{nameof(GetMovementsPerTurn)}(IgnoreSprint: {IgnoreSprint}) *//",
-                    Indent: indent, Toggle: getDoDebug(nameof(GetMovementsPerTurn)));
+                    Indent: indent, Toggle: doDebug);
                 return Math.Round(EQN * EMS / 10000.0, 2);
             }
             return default;
+        }
+        
+        public static double GetQuicknessFactor(this GameObject Speedster)
+        {
+            if (Speedster != null && Speedster.TryGetStat("Speed", out Statistic QN))
+            {
+                int indent = Debug.LastIndent;
+                bool doDebug = getDoDebug(nameof(GetQuicknessFactor));
+
+                Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetQuicknessFactor)}()",
+                    Indent: indent, Toggle: doDebug);
+                int EQN = QN.Value;
+                Debug.Entry(4, $"{nameof(EQN)}", $"{EQN}",
+                    Indent: indent + 1, Toggle: doDebug);
+
+                return Math.Round(EQN / 100.0, 2);
+            }
+            return 1.0;
         }
 
         public static string Pens(this string String)
@@ -2226,5 +2230,101 @@ namespace UD_Blink_Mutation
             return TryGetStatisticPercent(GO?.GetStat("Hitpoints"), out Percent);
         }
 
-    } //!-- public static class Extensions
+        public static bool OverrideDeathReason(this IDeathEvent E, GameObject Killer, GameObject Dying, ref bool ContingentOn, string DeathReason, string ThirdPersonDeathReason)
+        {
+            int indent = Debug.LastIndent;
+            bool doDebug = getDoDebug(nameof(OverrideDeathReason));
+            if (ContingentOn)
+            {
+                Debug.Entry(4, 
+                    $"{nameof(OverrideDeathReason)}(" +
+                    $"{nameof(Killer)}: {Killer?.DebugName ?? NULL}, " +
+                    $"{nameof(Dying)}: {Dying?.DebugName ?? NULL}, " +
+                    $"{nameof(ContingentOn)}: {ContingentOn}, " +
+                    $"{nameof(DeathReason)}: {DeathReason ?? NULL}, " +
+                    $"{nameof(ThirdPersonDeathReason)}: {ThirdPersonDeathReason ?? NULL})", 
+                    Indent: indent + 1, Toggle: doDebug);
+
+                Debug.LoopItem(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 2, Toggle: doDebug);
+                Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+                Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+
+                Debug.Entry(4, $"Overriding reason...", Indent: indent + 1, Toggle: doDebug);
+
+                string deathReason = $"{Killer.t()}'s {UD_ColdSteel.DamageType} personnely...";
+
+                E.Reason = GameText.VariableReplace(DeathReason, Dying, Killer);
+                E.ThirdPersonReason = GameText.VariableReplace(ThirdPersonDeathReason, Dying, Killer);
+
+                Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+                Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+
+                ContingentOn = false;
+                Debug.LastIndent = indent;
+                return true;
+            }
+            Debug.LastIndent = indent;
+            return false;
+        }
+
+        public static bool TryGetPrimaryLimbAndWeapon(this GameObject Creature, out BodyPart primaryLimb, out GameObject primaryWeapon, bool Fallback = true)
+        {
+            int indent = Debug.LastIndent;
+            bool doDebug = getDoDebug(nameof(TryGetPrimaryLimbAndWeapon));
+
+            Debug.Entry(4, 
+                $"{nameof(GameObject)}.{nameof(TryGetPrimaryLimbAndWeapon)}(" +
+                $"{Creature?.DebugName ?? NULL})",
+                Indent: indent + 1, Toggle: doDebug);
+
+            primaryLimb = null;
+            primaryWeapon = null;
+
+            if (Creature != null && Creature.Body != null)
+            {
+                foreach (BodyPart bodyPart in Creature.Body.LoopParts())
+                {
+                    if (bodyPart.Primary)
+                    {
+                        primaryLimb = bodyPart;
+                        primaryWeapon = primaryLimb.Equipped ?? primaryLimb.DefaultBehavior;
+                        break;
+                    }
+                }
+
+                if ((primaryLimb == null || primaryWeapon == null) && Fallback)
+                {
+                    string fallbackDebug;
+                    if (Fallback)
+                    {
+                        primaryWeapon = Creature.GetPrimaryWeapon();
+                        primaryLimb = primaryWeapon.DefaultOrEquippedPart();
+                        fallbackDebug = $"{nameof(Fallback)} to {nameof(Creature.GetPrimaryWeapon)}";
+                    }
+                    else
+                    {
+                        primaryLimb = null;
+                        primaryWeapon = null;
+                        fallbackDebug = $"{nameof(Fallback)} disallowed.";
+                    }
+                    Debug.CheckNah(4, $"Failed to find {nameof(primaryLimb)} or {nameof(primaryWeapon)}, {fallbackDebug}",
+                        Indent: indent + 2, Toggle: doDebug);
+                }
+
+                Debug.Entry(4, $"Final check for {nameof(primaryLimb)} and {nameof(primaryWeapon)}...", Indent: indent + 1, Toggle: doDebug);
+                Debug.LoopItem(4, $"{nameof(primaryLimb)}: {primaryLimb?.DebugName() ?? NULL}",
+                    Good: primaryLimb != null, Indent: indent + 2, Toggle: doDebug);
+                Debug.LoopItem(4, $"{nameof(primaryWeapon)}: {primaryWeapon?.DebugName ?? NULL}",
+                    Good: primaryWeapon != null, Indent: indent + 2, Toggle: doDebug);
+            }
+            else
+            {
+                Debug.CheckNah(4, $"{nameof(Creature)} null or lacks {nameof(Creature.Body)}",
+                    Indent: indent + 2, Toggle: doDebug);
+            }
+
+            Debug.LastIndent = indent;
+            return primaryLimb != null && primaryWeapon != null;
+        }
+    }
 }

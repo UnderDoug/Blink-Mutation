@@ -5,12 +5,14 @@ using System.Text;
 using XRL.Rules;
 using XRL.UI;
 using XRL.World.AI.Pathfinding;
-using XRL.World.Capabilities;
 using XRL.World.Parts.Mutation;
+
+using static XRL.World.Parts.UD_CyberneticsOverclockedCentralNervousSystem;
 
 using SerializeField = UnityEngine.SerializeField;
 
 using UD_Blink_Mutation;
+
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
@@ -320,7 +322,9 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(EnteredCellEvent E)
         {
-            if (FlickerActivatedAbilityID == Guid.Empty && ParentObject != null && ParentObject?.CurrentZone == The.ActiveZone)
+            if (FlickerActivatedAbilityID == Guid.Empty 
+                && ParentObject != null 
+                && ParentObject?.CurrentZone == The.ActiveZone)
             {
                 AddActivatedAbilityFlicker(ParentObject);
             }
@@ -341,7 +345,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
-            string targetName = $"{E?.Target?.ShortDisplayNameStripped ?? NULL}";
+            string targetName = E?.Target?.DebugName ?? NULL;
             if ((WantsToFlicker || OverrideMinFlickerCharges)
                 && !E.Actor.OnWorldMap()
                 && HaveFlickerCharges
@@ -396,14 +400,17 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(AIBoredEvent E)
         {
-
-            if (WantsToIdleFlicker && !RecentlyFlickered && 25.in100() && E.Actor.Target == null && !E.Actor.HasPart<Temporary>())
+            if (WantsToIdleFlicker 
+                && !RecentlyFlickered 
+                && 25.in100() 
+                && E.Actor.Target == null 
+                && !E.Actor.HasPart<Temporary>())
             {
                 Debug.Entry(4,
                     $"@ {nameof(AI_UD_Flickerer)}."
                     + $"{nameof(HandleEvent)}("
-                    + $"{nameof(AIBoredEvent)} E)"
-                    + $" For: {ParentObject?.DebugName ?? NULL}",
+                    + $"{nameof(AIBoredEvent)} E) For: "
+                    + $"{ParentObject?.DebugName ?? NULL}",
                     Indent: 0, Toggle: getDoDebug());
                 E.Actor.Think("I got too much beans!");
                 CommandEvent.Send(E.Actor, COMMAND_AI_UD_FLICKER);
@@ -412,244 +419,218 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY
-                && E.Actor == ParentObject
-                && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
+            if (E.Actor == ParentObject)
             {
-                CommandEvent.Send(
-                    Actor: E.Actor,
-                    Command: COMMAND_AI_UD_FLICKER);
-            }
-            if (E.Command == COMMAND_AI_UD_FLICKER
-                && E.Actor == ParentObject)
-            {
-                MidFlicker = true;
-                bool nearbyHostile = The.ActiveZone.GetFirstObject(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)) != null;
-                bool haveTarget = E.Target != null || nearbyHostile;
-                if (haveTarget)
+                int indent = Debug.LastIndent;
+
+                if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY
+                    && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
                 {
-                    UD_CyberneticsOverclockedCentralNervousSystem.Flicker(
-                        Flickerer: E.Actor,
-                        FlickerRadius: FlickerRadius,
-                        BlinkRange: BlinkRange,
-                        FlickerCharges: ref FlickerCharges,
-                        EnergyPerFlickerCharge: EnergyPerFlickerCharge,
-                        OC_CNS: null,
-                        FlickerTargetOverride: null,
-                        Silent: E.Silent);
+                    CommandEvent.Send(
+                        Actor: E.Actor,
+                        Command: COMMAND_AI_UD_FLICKER);
                 }
-                else
+                if (E.Command == COMMAND_AI_UD_FLICKER
+                    && !MidFlicker
+                    && GameObject.Validate(ParentObject))
                 {
-                    string verb = "flicker";
-                    int indent = Debug.LastIndent;
-
-                    Debug.Entry(2, $"Checking for being on the world map...", Indent: indent + 1, Toggle: getDoDebug());
-                    if (E.Actor.OnWorldMap())
+                    try
                     {
-                        if (!E.Silent)
+                        MidFlicker = true;
+                        bool nearbyHostile = The.ActiveZone.GetFirstObject(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)) != null;
+                        bool haveTarget = E.Target != null || nearbyHostile;
+                        if (haveTarget)
                         {
-                            E.Actor.Fail($"You cannot {verb} on the world map.");
-                        }
-                        Debug.LastIndent = indent;
-                        return false;
-                    }
-                    Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 1, Toggle: getDoDebug());
-                    if (E.Actor.IsFlying)
-                    {
-                        Debug.Entry(3, $"Attempting to land and checking again...", Indent: indent + 2, Toggle: getDoDebug());
-                        Flight.Land(E.Actor, E.Silent);
-                        if (E.Actor.IsFlying)
-                        {
-                            Debug.Warn(1,
-                                $"{nameof(AI_UD_Flickerer)}",
-                                $"{nameof(HandleEvent)}({nameof(CommandEvent)})",
-                                $"Still flying despite calling " +
-                                $"{nameof(Flight)}.{nameof(Flight.Land)} on " +
-                                $"{nameof(E.Actor)} {E.Actor?.DebugName ?? NULL}");
-
-                            if (!E.Silent)
-                            {
-                                E.Actor.Fail($"You cannot {verb} while flying.");
-                            }
-                            Debug.LastIndent = indent;
-                            return false;
-                        }
-                    }
-                    Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 1, Toggle: getDoDebug());
-                    if (!E.Actor.CanChangeMovementMode("Blinking", ShowMessage: !E.Silent))
-                    {
-                        Debug.LastIndent = indent;
-                        return false;
-                    }
-                    Debug.Entry(2, $"Checking can change body position...", Indent: indent + 1, Toggle: getDoDebug());
-                    if (!E.Actor.CanChangeBodyPosition("Blinking", ShowMessage: !E.Silent))
-                    {
-                        Debug.LastIndent = indent;
-                        return false;
-                    }
-
-                    Cell originCell = E.Actor.CurrentCell;
-
-                    List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
-                    cellsInFlickerRadius.RemoveAll(
-                        c => c.IsSolidFor(E.Actor)
-                        || c.HasVisibleCombatObject()
-                        || !c.IsSolidGround());
-
-                    if (!cellsInFlickerRadius.IsNullOrEmpty())
-                    {
-                        int attempts = 0;
-                        int maxAttempts = 65;
-                        Cell currentOriginCell = originCell;
-                        bool didFlicker = false;
-                        int flickers = 0;
-                        int flickerCharges = Stat.RandomCosmetic(1, FlickerCharges);
-
-                        string actorName = E.Actor.T(WithoutTitles: true, Short: true);
-                        string message;
-                        string messageColor = "Y";
-                        char particleColor = 'y';
-                        List<string> effortSounds = new()
-                        {
-                            "hup!",
-                            "hya!",
-                            "hyap!",
-                            "hrup!",
-                            "haya!",
-                            "aya!",
-                            "ayap!",
-                            "ayup!",
-                            "hur!",
-                            "rup!",
-                            "rya!",
-                            "rhup!",
-                            "ruh!",
-                            "rah!",
-                            "uhr!",
-                            "urr!",
-                            "ahr!",
-                            "arr!",
-                        };
-
-                        while (flickerCharges > 0 && attempts < maxAttempts)
-                        {
-                            attempts++;
-
-                            Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
-                            SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
-
-                            Cell destinationCell = cellsInFlickerRadius.GetRandomElementCosmetic();
-
-                            if (!UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
+                            Flicker(
                                 Flickerer: E.Actor,
                                 FlickerRadius: FlickerRadius,
-                                Origin: currentOriginCell,
-                                Destination: destinationCell,
-                                FlickerPath: out BlinkPath path))
-                            {
-                                cellsInFlickerRadius.Remove(destinationCell);
-                                continue;
-                            }
-
-                            if (!UD_CyberneticsOverclockedCentralNervousSystem.PerformFlickerMove(
-                                Flickerer: E.Actor,
-                                OriginCell: currentOriginCell,
-                                DestinationCell: destinationCell,
-                                HaveFlickered: didFlicker,
-                                FlickerPath: path,
-                                FlickerRadius: FlickerRadius,
-                                DidFlicker: out didFlicker,
-                                Charges: MaxFlickerCharges)
-                                || !didFlicker)
-                            {
-                                cellsInFlickerRadius.Remove(destinationCell);
-                                continue;
-                            }
-
-                            currentOriginCell = destinationCell;
-                            flickerCharges--;
-                            flickers++;
-
-                            if (6.in10() && !ParentObject.IsInActiveZone() && !destinationCell.InActiveZone)
-                            {
-                                message = effortSounds.DrawRandomToken();
-                                E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
-                                if (ObnoxiousYelling)
-                                {
-                                    destinationCell.ParticleText(
-                                        Text: message,
-                                        Color: particleColor,
-                                        juiceDuration: 1.5f,
-                                        floatLength: 8.0f
-                                        );
-                                }
-                            }
-
-                            E.Actor.Physics.DidX(Verb: verb, Extra: "to a nearby location", EndMark: "!");
-
-                            AfterBlinkEvent.Send(
-                                Blinker: E.Actor,
-                                Blink: null,
-                                Direction: null,
                                 BlinkRange: BlinkRange,
-                                Destination: destinationCell,
-                                IsNothinPersonnelKid: true,
-                                Kid: null,
-                                IsRetreat: false,
-                                Path: path);
+                                FlickerCharges: ref FlickerCharges,
+                                EnergyPerFlickerCharge: EnergyPerFlickerCharge,
+                                OC_CNS: null,
+                                FlickerTargetOverride: null,
+                                Silent: E.Silent);
                         }
-
-                        if (currentOriginCell != originCell)
+                        else
                         {
-                            Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
-                            SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
-
-                            if (UD_CyberneticsOverclockedCentralNervousSystem.TryGetFlickerPath(
-                                Flickerer: E.Actor,
-                                FlickerRadius: FlickerRadius,
-                                Origin: currentOriginCell,
-                                Destination: originCell,
-                                FlickerPath: out BlinkPath path)
-                                && UD_CyberneticsOverclockedCentralNervousSystem.PerformFlickerMove(
-                                    Flickerer: E.Actor,
-                                    OriginCell: currentOriginCell,
-                                    DestinationCell: originCell,
-                                    HaveFlickered: didFlicker,
-                                    FlickerPath: path,
-                                    FlickerRadius: FlickerRadius,
-                                    DidFlicker: out _,
-                                    Charges: MaxFlickerCharges)
-                                && E.Actor.UseEnergy(1000, "Innate Idle Flicker"))
+                            string verb = "flicker";
+                            if (!CanFlicker(E.Actor, Silent: E.Silent))
                             {
-                                message = "*sigh*";
-                                particleColor = 'w';
-                                E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
-                                if (ObnoxiousYelling)
-                                {
-                                    E.Actor.ParticleText(
-                                        Text: message,
-                                        Color: particleColor,
-                                        juiceDuration: 1.5f,
-                                        floatLength: 8.0f
-                                        );
-                                }
-                                E.Actor.Physics.DidX(Verb: verb, Extra: $"back to {E.Actor.its} original location", EndMark: "!");
-                                RecentlyFlickered = true;
-                                E.Actor.Think("I've calmed down a bit now!");
+                                Debug.LastIndent = indent;
+                                return false;
                             }
 
+                            Cell originCell = E.Actor.CurrentCell;
+
+                            List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
+                            cellsInFlickerRadius.RemoveAll(c => CellIsInvalidFlickerDestination(c, E.Actor));
+
+                            if (!cellsInFlickerRadius.IsNullOrEmpty())
+                            {
+                                int attempts = 0;
+                                int maxAttempts = 65;
+                                Cell currentOriginCell = originCell;
+                                bool didFlicker = false;
+                                int flickers = 0;
+                                int flickerCharges = Stat.RandomCosmetic(1, FlickerCharges);
+
+                                string actorName = E.Actor.T(WithoutTitles: true, Short: true);
+                                string message;
+                                string messageColor = "Y";
+                                char particleColor = 'y';
+                                List<string> effortSounds = new()
+                                {
+                                    "hup!",
+                                    "hya!",
+                                    "hyap!",
+                                    "hrup!",
+                                    "haya!",
+                                    "aya!",
+                                    "ayap!",
+                                    "ayup!",
+                                    "hur!",
+                                    "rup!",
+                                    "rya!",
+                                    "rhup!",
+                                    "ruh!",
+                                    "rah!",
+                                    "uhr!",
+                                    "urr!",
+                                    "ahr!",
+                                    "arr!",
+                                };
+
+                                while (flickerCharges > 0 && attempts < maxAttempts)
+                                {
+                                    attempts++;
+
+                                    Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
+                                    SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
+
+                                    Cell destinationCell = cellsInFlickerRadius.GetRandomElementCosmetic();
+
+                                    if (!TryGetFlickerPath(
+                                        Flickerer: E.Actor,
+                                        FlickerRadius: FlickerRadius,
+                                        Origin: currentOriginCell,
+                                        Destination: destinationCell,
+                                        FlickerPath: out BlinkPath path))
+                                    {
+                                        cellsInFlickerRadius.Remove(destinationCell);
+                                        continue;
+                                    }
+
+                                    if (!PerformFlickerMove(
+                                        Flickerer: E.Actor,
+                                        OriginCell: currentOriginCell,
+                                        DestinationCell: destinationCell,
+                                        HaveFlickered: didFlicker,
+                                        FlickerPath: path,
+                                        FlickerRadius: FlickerRadius,
+                                        DidFlicker: out didFlicker,
+                                        Charges: MaxFlickerCharges)
+                                        || !didFlicker)
+                                    {
+                                        cellsInFlickerRadius.Remove(destinationCell);
+                                        continue;
+                                    }
+
+                                    currentOriginCell = destinationCell;
+                                    flickerCharges--;
+                                    flickers++;
+
+                                    if (6.in10() && !ParentObject.IsInActiveZone() && !destinationCell.InActiveZone)
+                                    {
+                                        message = effortSounds.DrawRandomToken();
+                                        E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
+                                        if (ObnoxiousYelling)
+                                        {
+                                            destinationCell.ParticleText(
+                                                Text: message,
+                                                Color: particleColor,
+                                                juiceDuration: 1.5f,
+                                                floatLength: 8.0f);
+                                        }
+                                    }
+
+                                    E.Actor.Physics.DidX(Verb: verb, Extra: "to a nearby location", EndMark: "!");
+
+                                    AfterBlinkEvent.Send(
+                                        Blinker: E.Actor,
+                                        Blink: null,
+                                        Direction: null,
+                                        BlinkRange: BlinkRange,
+                                        Destination: destinationCell,
+                                        IsNothinPersonnelKid: true,
+                                        Kid: null,
+                                        IsRetreat: false,
+                                        Path: path);
+                                }
+
+                                if (currentOriginCell != originCell)
+                                {
+                                    Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
+                                    SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
+
+                                    if (TryGetFlickerPath(
+                                        Flickerer: E.Actor,
+                                        FlickerRadius: FlickerRadius,
+                                        Origin: currentOriginCell,
+                                        Destination: originCell,
+                                        FlickerPath: out BlinkPath path)
+                                        && PerformFlickerMove(
+                                            Flickerer: E.Actor,
+                                            OriginCell: currentOriginCell,
+                                            DestinationCell: originCell,
+                                            HaveFlickered: didFlicker,
+                                            FlickerPath: path,
+                                            FlickerRadius: FlickerRadius,
+                                            DidFlicker: out _,
+                                            Charges: MaxFlickerCharges)
+                                        && E.Actor.UseEnergy(1000, "Innate Idle Flicker"))
+                                    {
+                                        message = "*sigh*";
+                                        particleColor = 'w';
+                                        E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
+                                        if (ObnoxiousYelling)
+                                        {
+                                            E.Actor.ParticleText(
+                                                Text: message,
+                                                Color: particleColor,
+                                                juiceDuration: 1.5f,
+                                                floatLength: 8.0f);
+                                        }
+                                        E.Actor.Physics.DidX(Verb: verb, Extra: $"back to {E.Actor.its} original location", EndMark: "!");
+                                        RecentlyFlickered = true;
+                                        E.Actor.Think("I've calmed down a bit now!");
+                                    }
+
+                                }
+                            }
+                            else
+                            {
+                                if (!E.Silent && E.Actor.IsPlayer())
+                                {
+                                    Popup.Show($"There's no room to {verb}!");
+                                }
+                            }
                         }
                     }
-                    else
+                    catch (Exception x)
                     {
-                        if (!E.Silent && E.Actor.IsPlayer())
-                        {
-                            Popup.Show($"There's no room to {verb}!");
-                        }
+                        string context =
+                            $"{nameof(AI_UD_Flickerer)}." +
+                            $"{nameof(HandleEvent)}({nameof(CommandEvent)} E." +
+                            $"{nameof(E.Command)}: {E.Command.Quote()})";
+                        MetricsManager.LogException(context, x, "game_mod_exception");
+                    }
+                    finally
+                    {
+                        SyncFlickerAbility();
+                        MidFlicker = false;
                     }
                 }
-                SyncFlickerAbility();
-                MidFlicker = false;
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }

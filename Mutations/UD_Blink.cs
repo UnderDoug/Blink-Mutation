@@ -64,7 +64,7 @@ namespace XRL.World.Parts.Mutation
         private static bool DoDebugDescriptions => DebugBlinkDebugDescriptions;
 
         // "Constants"
-        public const string DieSize = "d2";
+        public const string DIE_SIZE = "d2";
 
         public const string BLINK_SOUND = "Sounds/Missile/Fires/Rifles/sfx_missile_spaserRifle_fire";
         public const string WE_GO_AGAIN_SOUND = "Sounds/Missile/Reloads/sfx_missile_spaser_reload";
@@ -227,7 +227,7 @@ namespace XRL.World.Parts.Mutation
         {
             int DieCount = (int)Math.Max(1, Math.Floor((Level + 1) / 2.0));
             int DamageBonus = (int)Math.Floor(Level / 2.0);
-            return DieCount + DieSize + (DamageBonus != 0 ? DamageBonus.Signed() : "");
+            return DieCount + DIE_SIZE + (DamageBonus != 0 ? DamageBonus.Signed() : "");
         }
         public static string GetColdSteelDamage(GameObject Blinker)
         {
@@ -1140,15 +1140,7 @@ namespace XRL.World.Parts.Mutation
                         ColorAsBadFor: isNani ? Blinker : Kid
                         );
 
-                    Debug.Entry(2, $"Doing Attack, {nameof(hasBlink)}: {hasBlink}...", Indent: indent + 2, Toggle: getDoDebug());
-                    attacked =
-                        hasBlink
-                        ? PerformNothinPersonnel(Blinker, Kid)
-                        : Combat.PerformMeleeAttack(
-                            Attacker: Blinker,
-                            Defender: Kid,
-                            HitModifier: 5)
-                        ;
+                    attacked = PerformNothinPersonnel(Blinker, Kid, blink);
 
                     Debug.Entry(3, $"Checking {nameof(attacked)}...", Indent: indent + 2, Toggle: getDoDebug());
                     if (attacked && blink != null)
@@ -1335,17 +1327,27 @@ namespace XRL.World.Parts.Mutation
             return Blink(Blinker, Direction, Range, null, out BlinkPaths, IsNothinPersonnelKid, null, Silent);
         }
 
-        public static bool PerformNothinPersonnel(GameObject Blinker, GameObject Kid)
+        public static bool PerformNothinPersonnel(GameObject Blinker, GameObject Kid, UD_Blink Blink)
         {
+            int indent = Debug.LastIndent;
+            bool doDebug = getDoDebug(nameof(PerformNothinPersonnel));
+
+            Debug.Entry(4, 
+                $"{nameof(PerformNothinPersonnel)}(" +
+                $"{nameof(Blinker)}: {Blinker?.DebugName ?? NULL}" +
+                $"{nameof(Kid)}: {Kid?.DebugName ?? NULL})",
+                Indent: indent, Toggle: doDebug);
+
             if (Blinker == null || Kid == null)
             {
+                Debug.LastIndent = indent;
                 return false;
             }
 
-            if (!Blinker.TryGetPart(out UD_Blink blink))
-            {
-                return false;
-            }
+            bool hasBlinkMutation = Blink != null;
+
+            var oC_CNS = UD_CyberneticsOverclockedCentralNervousSystem.GetInstalledCybernetic(Blinker);
+            bool hasOC_CNS = oC_CNS != null;
 
             static bool isSecondaryShortBlade(GameObject GO)
             {
@@ -1359,54 +1361,85 @@ namespace XRL.World.Parts.Mutation
                 && Blinker.FindEquippedItem(isSecondaryShortBlade) is GameObject secondaryShortBlade
                 && secondaryShortBlade.EquippedOn() is BodyPart nonPrimaryLimb)
             {
-                penBonus = 2;
+                Debug.CheckYeh(4, $"Offhand shortblade found, boosting {nameof(penBonus)}", Indent: indent + 1, Toggle: doDebug);
+                penBonus = 1;
             }
-            if (Blinker.GetPrimaryWeapon() is GameObject primaryWeapon
-                && primaryWeapon.EquippedOn() is BodyPart primaryLimb)
+
+            if (Blinker.TryGetPrimaryLimbAndWeapon(out BodyPart primaryLimb, out GameObject primaryWeapon))
             {
                 bool weaponAlreadyColdSteel = false;
                 string existingBaseDamage = "";
                 if (primaryWeapon.TryGetPart(out UD_ColdSteel coldSteel))
                 {
+                    Debug.CheckNah(4, $"{nameof(coldSteel)} already present, storing details...", Indent: indent + 1, Toggle: doDebug);
                     weaponAlreadyColdSteel = true;
                     existingBaseDamage = coldSteel.BaseDamage;
                 }
                 else
                 {
+                    Debug.CheckYeh(4, $"{nameof(coldSteel)} added, configuring...", Indent: indent + 1, Toggle: doDebug);
                     coldSteel = primaryWeapon.RequirePart<UD_ColdSteel>();
                     coldSteel.PenetrationBonus = penBonus;
 
-                    string tileColor = null;
-                    if (blink?.TileColor != null)
+                    string coldSteelEffectColor = null;
+                    if (Blink?.TileColor != null)
                     {
-                        tileColor = blink.TileColor;
-                        if (!tileColor.StartsWith("&"))
+                        coldSteelEffectColor = Blink.TileColor;
+                        if (!coldSteelEffectColor.StartsWith("&"))
                         {
-                            tileColor = $"&{tileColor[0]}";
+                            coldSteelEffectColor = $"&{coldSteelEffectColor[0]}";
                         }
                     }
-                    if (!tileColor.IsNullOrEmpty())
+                    else
+                    if (hasOC_CNS)
                     {
-                        coldSteel.EffectColor = tileColor;
+                        coldSteelEffectColor = "&C";
                     }
-                    if (blink.Shouts)
+
+                    if (!coldSteelEffectColor.IsNullOrEmpty())
                     {
-                        coldSteel.ShoutMessage = blink.Shout;
-                        coldSteel.ShoutColor = blink.ShoutColor;
+                        coldSteel.EffectColor = coldSteelEffectColor;
+                    }
+                    if (hasBlinkMutation && Blink.Shouts)
+                    {
+                        coldSteel.ShoutMessage = Blink.Shout;
+                        coldSteel.ShoutColor = Blink.ShoutColor;
                     }
                 }
-                coldSteel.BaseDamage = blink.GetColdSteelDamage();
+                coldSteel.BaseDamage = hasBlinkMutation ? Blink.GetColdSteelDamage() : null;
+                Debug.LoopItem(4, 
+                    $"{nameof(coldSteel)}.{nameof(coldSteel.BaseDamage)}", coldSteel.BaseDamage ?? NULL,
+                    Indent: indent + 2, Toggle: doDebug);
 
                 string psssh = Kid.IsPlayer() ? "psssh..." : null;
                 Kid.TryGetStringProperty("CustomDeathMessage", out string existingCustomDeathMessage);
                 Kid.SetStringProperty("CustomDeathMessage", $"{psssh}=subject.t= took =object.t's= {UD_ColdSteel.DamageType} personnely...");
-                blink.IsSteelCold = true;
+
+                bool blinkSteelIsCold = false;
+                bool oC_CNSSteelIsCold = false;
+
+                if (hasBlinkMutation)
+                {
+                    Blink.IsSteelCold = true;
+                    blinkSteelIsCold = true;
+                }
+                if (hasOC_CNS)
+                {
+                    oC_CNS.IsSteelCold = true;
+                    oC_CNSSteelIsCold = true;
+                }
+                bool isSteelCold = blinkSteelIsCold || oC_CNSSteelIsCold;
+                Debug.LoopItem(4,
+                    $"{nameof(IsSteelCold)}", isSteelCold.ToString(),
+                    Good: isSteelCold, Indent: indent + 1, Toggle: doDebug);
+
                 if ((bool)Combat.MeleeAttackWithWeapon(
                     Attacker: Blinker,
                     Defender: Kid,
                     Weapon: primaryWeapon,
                     BodyPart: primaryLimb,
-                    Properties: "ColdSteel,Blink,Autohit",
+                    Properties: "ColdSteel,Blink" + (hasBlinkMutation ? ",Autohit" : ""),
+                    HitModifier: hasOC_CNS ? 5 : 0,
                     Primary: true))
                 {
                     Kid.SetStringProperty("CustomDeathMessage", existingCustomDeathMessage, true);
@@ -1420,32 +1453,13 @@ namespace XRL.World.Parts.Mutation
                 {
                     coldSteel.BaseDamage = existingBaseDamage;
                 }
+                Debug.CheckYeh(4, $"{nameof(PerformNothinPersonnel)}()", Indent: indent, Toggle: doDebug);
+                Debug.LastIndent = indent;
                 return true;
             }
+            Debug.CheckNah(4, $"{nameof(PerformNothinPersonnel)}()", Indent: indent, Toggle: doDebug);
+            Debug.LastIndent = indent;
             return false;
-            /*
-            CombatJuice.punch(Blinker, Kid);
-            int amount = Stat.Roll(blink.GetColdSteelDamage());
-            string damageMessage = "from %t {{coldsteel|Cold Steel}}!";
-            string deathReason = $"{Blinker.t()}'s cold steel personnely...";
-            blink.IsSteelCold = !Kid.TakeDamage(
-                Amount: ref amount,
-                Attributes: "Umbral ColdSteel NothinPersonnel Vorpal",
-                DeathReason: $"psssh...you took {deathReason}",
-                ThirdPersonDeathReason: $"psssh...{Kid.it}{Kid.GetVerb("take")} {deathReason}",
-                Owner: Blinker,
-                Attacker: Blinker,
-                DescribeAsFrom: weaponObject,
-                Message: damageMessage); //,
-                //ShowDamageType: " damage");
-            if (!blink.IsSteelCold)
-            {
-                Blinker.Target = Kid;
-                Kid.ParticleBlip("&m\u203C", 10, 0L);
-                Kid.Icesplatter();
-            }
-            return !blink.IsSteelCold;
-            */
         }
 
         public static void PlayAnimation(GameObject Blinker, Cell Destination, BlinkPath Path, int BlinkRange, int MillisecondsPerRange = 42, int MaxMilliseconds = 500)
@@ -1712,18 +1726,9 @@ namespace XRL.World.Parts.Mutation
 
         public static void OverrideDeathReason(GameObject Blinker, GameObject Kid, ref bool IsSteelCold, IDeathEvent E)
         {
-            int indent = Debug.LastIndent;
-            Debug.Entry(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-            Debug.Entry(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-            Debug.Entry(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 1, Toggle: getDoDebug());
-
-            string deathReason = $"{Blinker.t()}'s {UD_ColdSteel.DamageType} personnely...";
-
-            E.Reason = $"psssh...you took {deathReason}";
-            E.ThirdPersonReason = $"psssh...{Kid.it}{Kid.GetVerb("take")} {deathReason}";
-
-            IsSteelCold = false;
-            Debug.LastIndent = indent;
+            string reason = $"psssh...=subject.t= took =object.t's= {UD_ColdSteel.DamageType} personnely...";
+            string thirdPersonReason = reason.Replace(" took", "=verb:take:afterpronoun=");
+            E.OverrideDeathReason(Blinker, Kid, ref IsSteelCold, reason, thirdPersonReason);
         }
 
         public static bool EmitFlamePlume(Cell FlameCell, Cell FromCell, GameObject Blinker, RocketSkates RocketSkates, FlamingRay FlamingRay, bool ShowMessage = false, bool UsePopup = false)
@@ -1885,46 +1890,46 @@ namespace XRL.World.Parts.Mutation
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY && E.Actor == ParentObject)
+            if (E.Actor == ParentObject)
             {
-                IsNothinPersonnelKid = !IsNothinPersonnelKid;
-            }
-            if (E.Command == COMMAND_UD_BLINK_ABILITY
-                && E.Actor == ParentObject
-                && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, ParentObject))
-            {
-                GameObject Blinker = ParentObject;
-
-                CommandEvent.Send(
-                    Actor: Blinker,
-                    Command: COMMAND_UD_BLINK,
-                    Target: E.Target,
-                    TargetCell: E.TargetCell,
-                    StandoffDistance: 0,
-                    Forced: false,
-                    Silent: false);
-            }
-            if (E.Command == COMMAND_UD_BLINK
-                && E.Actor == ParentObject)
-            {
-                if (GameObject.Validate(E.Actor) && !MidBlink)
+                int indent = Debug.LastIndent;
+                if (E.Command == COMMAND_UD_COLDSTEEL_ABILITY)
                 {
-                    MidBlink = true;
+                    IsNothinPersonnelKid = !IsNothinPersonnelKid;
+                }
+                if (E.Command == COMMAND_UD_BLINK_ABILITY
+                    && IsMyActivatedAbilityUsable(BlinkActivatedAbilityID, E.Actor))
+                {
+                    CommandEvent.Send(
+                        Actor: E.Actor,
+                        Command: COMMAND_UD_BLINK,
+                        Target: E.Target,
+                        TargetCell: E.TargetCell,
+                        StandoffDistance: 0,
+                        Forced: false,
+                        Silent: false);
+                }
+                if (E.Command == COMMAND_UD_BLINK
+                    && !MidBlink
+                    && GameObject.Validate(E.Actor))
+                {
                     try
                     {
+                        MidBlink = true;
                         int blinkRange = GetBlinkRange();
                         bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target == null;
                         bool isMovement = !isRetreat && E.TargetCell != null;
 
                         string Direction = null;
                         string blinkThink = "hurr durr, i blinking";
+                        string targetName = E.Target?.DebugName ?? NULL;
                         if (!E.Actor.IsPlayer())
                         {
                             Direction = GetBlinkDirection(E.Actor, blinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
 
                             if (isRetreat)
                             {
-                                blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
+                                blinkThink = $"I am going to try and blink away from {targetName}";
                             }
                             else
                             if (isMovement)
@@ -1933,7 +1938,7 @@ namespace XRL.World.Parts.Mutation
                             }
                             else
                             {
-                                blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
+                                blinkThink = $"psssh...nothin personnel...{targetName}";
                             }
 
                             E.Actor.Think(blinkThink);
@@ -1966,11 +1971,17 @@ namespace XRL.World.Parts.Mutation
                                     Color1: "C",
                                     Symbol1: "\u0013",
                                     Color2: "Y",
-                                    Symbol2: "\u00EC"
-                                    );
+                                    Symbol2: "\u00EC");
 
-                                energyCost = (int)(energyCost * WeGoAgainEnergyFactor);
+                                double energyFactor = 1.0 + (WeGoAgainEnergyFactor - 1) + (E.Actor.GetQuicknessFactor() - 1);
+                                
+                                energyCost = (int)(energyCost * energyFactor);
                                 blinkThink += $"We Go Again";
+
+                                Debug.Entry(4,
+                                    $"{nameof(energyCost)}: {energyCost} (" +
+                                    $"{nameof(energyFactor)}: {energyFactor})",
+                                    Indent: indent, Toggle: doDebug);
                             }
                             else
                             {
@@ -1991,13 +2002,18 @@ namespace XRL.World.Parts.Mutation
                     }
                     catch (Exception x)
                     {
-                        MetricsManager.LogException(nameof(UD_CyberneticsOverclockedCentralNervousSystem), x);
+                        string context =
+                            $"{nameof(UD_Blink)}." +
+                            $"{nameof(HandleEvent)}({nameof(CommandEvent)} E." +
+                            $"{nameof(E.Command)}: {E.Command.Quote()})";
+                        MetricsManager.LogException(context, x, "game_mod_exception");
                     }
                     finally
                     {
                         MidBlink = false;
                     }
                 }
+                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
@@ -2211,16 +2227,6 @@ namespace XRL.World.Parts.Mutation
                 takeDamage.AddAttributes("Umbral ColdSteel NothinPersonnel Vorpal");
                 E.SetParameter("Damage", takeDamage);
                 E.SetFlag("DidSpecialEffect", State: true);
-                /*
-                E.SetParameter("Message", "from %t cold steel!");
-                E.SetParameter("DeathReason", $"psssh...you took {blinker.t()}'s cold steel personnely...");
-                if (blinker.Target is GameObject kid)
-                {
-                    E.SetParameter("ThirdPersonDeathReason", $"psssh...{kid.it}{kid.GetVerb("take")} {blinker.t()}'s cold steel personnely...");
-                }
-                E.SetParameter("Owner", blinker);
-                E.SetParameter("ShowDamageType", "{{coldsteel|Cold Steel}} damage");
-                */
                 IsSteelCold = true;
             }
             Debug.LastIndent = indent;

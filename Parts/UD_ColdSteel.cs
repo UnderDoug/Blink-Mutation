@@ -24,18 +24,22 @@ namespace XRL.World.Parts
 
         public string ShoutColor;
 
+        public bool Shouted;
+
         public static string Attributes => "Umbral ColdSteel NothinPersonnel Vorpal";
         public static string DamageType => "Cold Steel".Color("coldsteel");
 
         public UD_ColdSteel()
         {
             PenetrationBonus = 0;
-            BaseDamage = "1d6";
+            BaseDamage = "1d2";
             EffectColor = "&m";
             Temporary = true;
 
             ShoutMessage = null;
             ShoutColor = null;
+
+            Shouted = false;
 
             ChargeUse = 0;
             IsPowerLoadSensitive = true;
@@ -57,6 +61,26 @@ namespace XRL.World.Parts
                 && coldSteel.PenetrationBonus == PenetrationBonus
                 && base.SameAs(p);
         }
+
+        public void HandleTemporary()
+        {
+            if (Temporary)
+            {
+                ParentObject.RemovePart(this);
+            }
+            Shouted = false;
+        }
+
+        public override void TurnTick(long TimeTick, int Amount)
+        {
+            HandleTemporary();
+            base.TurnTick(TimeTick, Amount);
+        }
+        public override bool WantTurnTick()
+        {
+            return base.WantTurnTick()
+                || Temporary;
+        }
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register("WeaponHit");
@@ -74,18 +98,12 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(UnequippedEvent E)
         {
-            if (Temporary)
-            {
-                ParentObject.RemovePart(this);
-            }
+            HandleTemporary();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(EndTurnEvent E)
         {
-            if (Temporary)
-            {
-                ParentObject.RemovePart(this);
-            }
+            HandleTemporary();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(IsAdaptivePenetrationActiveEvent E)
@@ -111,13 +129,15 @@ namespace XRL.World.Parts
         public override bool HandleEvent(BeforeMeleeAttackEvent E)
         {
             if (E.Weapon == ParentObject
+                && !Shouted
                 && IsReady(IgnoreEMP: true, IgnoreRealityStabilization: true)
                 && E.Actor is GameObject blinker
                 && E.Target is GameObject kid)
             {
+                Shouted = true;
                 int indent = Debug.LastIndent;
 
-                string shoutColor = ShoutColor.Replace("&", "") ?? "m";
+                string shoutColor = ShoutColor?.Replace("&", "") ?? "m";
                 float floatLength = 8.0f;
 
                 if (!ShoutMessage.IsNullOrEmpty())
@@ -150,8 +170,8 @@ namespace XRL.World.Parts
                 }
                 // "Sounds/Interact/sfx_interact_timeCube_activate"
                 // "Sounds/Abilities/sfx_ability_sunderMind_final"
-                kid.PlayWorldSound("Sounds/Abilities/sfx_ability_sunderMind_final", Combat: true);
-
+                // "Sounds/Abilities/sfx_ability_sunderMind_final"
+                kid.PlayWorldSound("Sounds/Melee/shortBlades/sfx_melee_foldedCarbide_wristblade_swing", Combat: true);
                 Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
@@ -159,6 +179,7 @@ namespace XRL.World.Parts
         public override bool FireEvent(Event E)
         {
             if (E.ID == "WeaponAfterAttack" // "WeaponHit"
+                && !BaseDamage.IsNullOrEmpty()
                 && E.GetGameObjectParameter("Attacker") is GameObject blinker
                 && E.GetGameObjectParameter("Defender") is GameObject kid
                 && E.GetGameObjectParameter("Weapon") is GameObject weapon
@@ -179,13 +200,14 @@ namespace XRL.World.Parts
                     string attackOrType = describeAsFrom == null ? "attack" : DamageType;
                     string damageMessage = $"from %t {attackOrType}!";
 
-                    string deathReason = $"{blinker.t()}'s {DamageType} personnely...";
+                    string deathReason = $"psssh...=subject.t= took =object.t's= {DamageType} personnely...";
+                    string thirdPersonDeathReason = deathReason.Replace(" took", "=verb:take:afterpronoun=");
 
                     if (kid.TakeDamage(
                         Amount: ref amount,
                         Attributes: Attributes,
-                        DeathReason: $"psssh...you took {deathReason}",
-                        ThirdPersonDeathReason: $"psssh...{kid.it} took {deathReason}",
+                        DeathReason: deathReason,
+                        ThirdPersonDeathReason: thirdPersonDeathReason,
                         Owner: blinker,
                         Attacker: blinker,
                         DescribeAsFrom: describeAsFrom,
@@ -201,6 +223,8 @@ namespace XRL.World.Parts
                     }
                     kid.ParticleBlip($"{effectColor[..2]}{DBLEX}");
                     kid.Icesplatter();
+
+                    HandleTemporary();
                 }
             }
             return base.FireEvent(E);

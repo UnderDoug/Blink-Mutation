@@ -1,21 +1,24 @@
 ﻿using ConsoleLib.Console;
-using HistoryKit;
-using Kobold;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using HistoryKit;
+using Kobold;
+
 using XRL;
-using XRL.Language;
-using XRL.Rules;
 using XRL.UI;
+using XRL.Rules;
+using XRL.Language;
 using XRL.World;
-using XRL.World.Anatomy;
-using XRL.World.ObjectBuilders;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
+using XRL.World.Anatomy;
+using XRL.World.Tinkering;
+using XRL.World.ObjectBuilders;
 using XRL.World.Text.Attributes;
 using XRL.World.Text.Delegates;
-using XRL.World.Tinkering;
+
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 

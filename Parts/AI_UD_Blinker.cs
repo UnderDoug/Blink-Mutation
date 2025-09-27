@@ -5,6 +5,8 @@ using System.Text;
 using XRL.World.AI.GoalHandlers;
 using XRL.World.Parts.Mutation;
 
+using static XRL.World.Parts.Mutation.UD_Blink;
+
 using SerializeField = UnityEngine.SerializeField;
 
 using UD_Blink_Mutation;
@@ -93,7 +95,7 @@ namespace XRL.World.Parts
         public int BaseCooldown;
         public int BlinkLevel;
         public int BaseRange;
-        public int Range => UD_Blink.GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
+        public int Range => GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
 
         public AI_UD_Blinker()
         {
@@ -353,7 +355,7 @@ namespace XRL.World.Parts
                 && GameObject.Validate(E.Target))
             {
                 E.Actor.Think($"I want to attack {E.Target.ShortDisplayNameStripped}");
-                string Direction = UD_Blink.GetAggressiveBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target);
+                string Direction = GetAggressiveBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
                     E.Actor.Think($"{E?.Target?.ShortDisplayNameStripped ?? NULL} is {Direction ?? NULL} of me");
@@ -362,7 +364,7 @@ namespace XRL.World.Parts
                 {
                     E.Actor.Think($"I can't blink to {E?.Target?.ShortDisplayNameStripped ?? NULL}");
                 }
-                if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
+                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
                 {
                     E.Actor.Think($"I might teleport behind {E?.Target?.ShortDisplayNameStripped ?? NULL}, it's nothin personnel");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
@@ -382,7 +384,7 @@ namespace XRL.World.Parts
                     IsNothinPersonnelKid = false;
                 }
                 E.Actor.Think($"I want to retreat from {E.Target.ShortDisplayNameStripped}");
-                string Direction = UD_Blink.GetRetreatingBlinkDirection(E.Actor, Range, E.Target);
+                string Direction = GetRetreatingBlinkDirection(E.Actor, Range, E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
                     E.Actor.Think($"Away from {E.Target.ShortDisplayNameStripped} is {Direction} of me");
@@ -391,7 +393,7 @@ namespace XRL.World.Parts
                 {
                     E.Actor.Brain.Think($"I can't blink away from {E.Target.ShortDisplayNameStripped}");
                 }
-                if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
+                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
                 {
                     E.Actor.Brain.Think($"I might blink away from {E.Target.ShortDisplayNameStripped}");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, Priority: 3, TargetCellOverride: Destination);
@@ -406,7 +408,7 @@ namespace XRL.World.Parts
                 && 25.in100())
             {
                 E.Actor.Think($"I gotta go fast");
-                string Direction = UD_Blink.GetMovementBlinkDirection(E.Actor, Range, E.TargetCell);
+                string Direction = GetMovementBlinkDirection(E.Actor, Range, E.TargetCell);
                 if (!Direction.IsNullOrEmpty())
                 {
                     E.Actor.Think($"{Direction} of me would be fast");
@@ -415,7 +417,7 @@ namespace XRL.World.Parts
                 {
                     E.Actor.Think($"My style is pretty cramped here");
                 }
-                if (!Direction.IsNullOrEmpty() && UD_Blink.TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
+                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetCellOverride: Destination);
@@ -441,126 +443,142 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(CommandEvent E)
         {
-            if (E.Command == COMMAND_AI_UD_COLDSTEEL_ABILITY && E.Actor == ParentObject)
+            if (E.Actor == ParentObject)
             {
-                IsNothinPersonnelKid = !IsNothinPersonnelKid;
-            }
-            if (E.Command == COMMAND_AI_UD_BLINK_ABILITY && E.Actor == ParentObject && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, ParentObject))
-            {
-                GameObject Blinker = ParentObject;
-
-                CommandEvent.Send(
-                    Actor: Blinker,
-                    Command: COMMAND_AI_UD_BLINK,
-                    Target: E.Target,
-                    TargetCell: E.TargetCell,
-                    StandoffDistance: 0,
-                    Forced: false,
-                    Silent: false);
-            }
-            if (E.Command == COMMAND_AI_UD_BLINK && E.Actor == ParentObject)
-            {
-                MidBlink = true;
-                if (GameObject.Validate(E.Actor))
+                if (E.Command == COMMAND_AI_UD_COLDSTEEL_ABILITY)
                 {
-                    bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
-                    bool isMovement = !isRetreat && E.TargetCell != null;
+                    IsNothinPersonnelKid = !IsNothinPersonnelKid;
+                }
+                if (E.Command == COMMAND_AI_UD_BLINK_ABILITY
+                    && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor))
+                {
+                    GameObject Blinker = ParentObject;
 
-                    string Direction = null;
-                    string blinkThink = "hurr durr, i blinking";
-                    if (!E.Actor.IsPlayer())
+                    CommandEvent.Send(
+                        Actor: Blinker,
+                        Command: COMMAND_AI_UD_BLINK,
+                        Target: E.Target,
+                        TargetCell: E.TargetCell,
+                        StandoffDistance: 0,
+                        Forced: false,
+                        Silent: false);
+                }
+                if (E.Command == COMMAND_AI_UD_BLINK
+                    && !MidBlink
+                    && GameObject.Validate(E.Actor))
+                {
+                    try
                     {
-                        Direction = UD_Blink.GetBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target, isRetreat);
+                        MidBlink = true;
+                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
+                        bool isMovement = !isRetreat && E.TargetCell != null;
 
-                        if (isRetreat)
+                        string Direction = null;
+                        string blinkThink = "hurr durr, i blinking";
+                        string targetName = E?.Target?.DebugName ?? NULL;
+                        if (!E.Actor.IsPlayer())
                         {
-                            blinkThink = $"I am going to try and blink away from {E?.Target?.Render?.DisplayName ?? NULL}";
+                            Direction = GetBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target, isRetreat);
+
+                            if (isRetreat)
+                            {
+                                blinkThink = $"I am going to try and blink away from {targetName}";
+                            }
+                            else if (isMovement)
+                            {
+                                blinkThink = $"I don't think you have any idea how fast I really am";
+                            }
+                            else
+                            {
+                                blinkThink = $"psssh...nothin personnel...{targetName}";
+                            }
+
+                            E.Actor.Think(blinkThink);
                         }
-                        else if (isMovement)
+
+                        bool blunk = false;
+                        if (HasBlink)
                         {
-                            blinkThink = $"I don't think you have any idea how fast I really am";
+                            blunk = CommandEvent.Send(
+                                Actor: ParentObject,
+                                Command: COMMAND_UD_BLINK,
+                                Target: E.Target,
+                                TargetCell: E.TargetCell,
+                                StandoffDistance: 0,
+                                Forced: false,
+                                Silent: false);
                         }
-                        else
+                        if (!HasBlink || !blunk)
                         {
-                            blinkThink = $"psssh...nothin personnel...{E.Target?.Render?.DisplayName ?? NULL}";
+                            blunk = Blink(
+                                Blinker: E.Actor,
+                                Direction: Direction,
+                                BlinkRange: Range,
+                                Destination: E.TargetCell,
+                                BlinkPaths: out _,
+                                IsNothinPersonnelKid: IsNothinPersonnelKid,
+                                Kid: E.Target,
+                                IsRetreat: isRetreat,
+                                Silent: false);
                         }
 
-                        E.Actor.Think(blinkThink);
-                    }
-
-                    bool blunk = false;
-                    if (HasBlink)
-                    {
-                        blunk = CommandEvent.Send(
-                            Actor: ParentObject,
-                            Command: UD_Blink.COMMAND_UD_BLINK,
-                            Target: E.Target,
-                            TargetCell: E.TargetCell,
-                            StandoffDistance: 0,
-                            Forced: false,
-                            Silent: false
-                            );
-                    }
-                    if (!HasBlink || !blunk)
-                    {
-                        blunk = UD_Blink.Blink(
-                            Blinker: E.Actor,
-                            Direction: Direction,
-                            BlinkRange: Range,
-                            Destination: E.TargetCell,
-                            BlinkPaths: out _,
-                            IsNothinPersonnelKid: IsNothinPersonnelKid,
-                            Kid: E.Target,
-                            IsRetreat: isRetreat,
-                            Silent: false
-                            );
-                    }
-
-                    if (blunk && !HasBlink)
-                    {
-                        blinkThink = $"I blunk and ";
-                        int energyCost = 1000;
-                        if (WeGoAgain)
+                        if (blunk && !HasBlink)
                         {
-                            BlinkMutation.WeGoingAgain(false);
+                            blinkThink = $"I blunk and ";
+                            int energyCost = 1000;
+                            if (WeGoAgain)
+                            {
+                                BlinkMutation.WeGoingAgain(false);
 
-                            Cell currentCell = ParentObject.CurrentCell;
-                            UD_Blink.Arrive(
-                                From: currentCell.GetCellFromDirection(Direction),
-                                To: currentCell,
-                                Life: 8,
-                                Color1: "C",
-                                Symbol1: "\u0013",
-                                Color2: "Y",
-                                Symbol2: "\u00EC"
-                                );
+                                Cell currentCell = ParentObject.CurrentCell;
+                                Arrive(
+                                    From: currentCell.GetCellFromDirection(Direction),
+                                    To: currentCell,
+                                    Life: 8,
+                                    Color1: "C",
+                                    Symbol1: "\u0013",
+                                    Color2: "Y",
+                                    Symbol2: "\u00EC"
+                                    );
 
-                            energyCost = (int)(energyCost * 1.25f);
-                            blinkThink += $"We Go Again";
+                                energyCost = (int)(energyCost * 1.25f);
+                                blinkThink += $"We Go Again";
+                            }
+                            else
+                            {
+                                RecentlyBlunk = true;
+                                CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
+                                blinkThink += $"I am knackered";
+                            }
+                            ParentObject.UseEnergy(energyCost, "Physical AI Capability Blink");
                         }
-                        else
+                        else if (!blunk)
                         {
-                            RecentlyBlunk = true;
+                            blinkThink = "I blunked out :(";
+                        }
+                        else if (blunk && HasBlink)
+                        {
+                            RecentlyBlunk = !BlinkMutation.IsMyActivatedAbilityCoolingDown(BlinkMutation.BlinkActivatedAbilityID);
                             CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
-                            blinkThink += $"I am knackered";
                         }
-                        ParentObject.UseEnergy(energyCost, "Physical AI Capability Blink");
+                        if (!E.Actor.IsPlayer())
+                        {
+                            E.Actor.Think(blinkThink);
+                        }
                     }
-                    else if (!blunk)
+                    catch (Exception x)
                     {
-                        blinkThink = "I blunked out :(";
+                        string context =
+                            $"{nameof(AI_UD_Blinker)}." +
+                            $"{nameof(HandleEvent)}({nameof(CommandEvent)} E." +
+                            $"{nameof(E.Command)}: {E.Command.Quote()})";
+                        MetricsManager.LogException(context, x, "game_mod_exception");
                     }
-                    else if (blunk && HasBlink)
+                    finally
                     {
-                        RecentlyBlunk = !BlinkMutation.IsMyActivatedAbilityCoolingDown(BlinkMutation.BlinkActivatedAbilityID);
-                        CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
-                    }
-                    if (!E.Actor.IsPlayer())
-                    {
-                        E.Actor.Think(blinkThink);
+                        MidBlink = false;
                     }
                 }
-                MidBlink = false;
             }
             return base.HandleEvent(E);
         }
