@@ -76,7 +76,7 @@ namespace XRL.World.Parts
         public bool WeGoAgain => HasBlink && BlinkMutation.WeGoAgain;
 
         public double CellsPerRange => ParentObject == null ? 0 : (int)ParentObject.GetMovementsPerTurn(true);
-        public int EffectiveRange => (int)(Range * CellsPerRange);
+        public int EffectiveRange => (int)(BlinkRange * CellsPerRange);
 
         [SerializeField]
         private bool RecentlyBlunk = false;
@@ -95,7 +95,7 @@ namespace XRL.World.Parts
         public int BaseCooldown;
         public int BlinkLevel;
         public int BaseRange;
-        public int Range => GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
+        public int BlinkRange => GetBlinkRange(ParentObject, BlinkLevel, BaseRange, nameof(AI_UD_Blinker));
 
         public AI_UD_Blinker()
         {
@@ -203,7 +203,7 @@ namespace XRL.World.Parts
 
         public virtual void CollectStats(Templates.StatCollector stats)
         {
-            stats.Set("BlinkRange", Range);
+            stats.Set("BlinkRange", BlinkRange);
             stats.Set(nameof(CellsPerRange), CellsPerRange.ToString());
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), BlunkTurnThreshold);
@@ -251,7 +251,7 @@ namespace XRL.World.Parts
                 SB.AppendLine();
                 SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseRange}").Append($"){HONLY}{nameof(BaseRange)}");
                 SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{Range}").Append($"){HONLY}{nameof(Range)}");
+                SB.Append(VANDR).Append("(").AppendColored("G", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}");
                 SB.AppendLine();
                 SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}");
                 SB.AppendLine();
@@ -354,19 +354,29 @@ namespace XRL.World.Parts
                 && 25.in100()
                 && GameObject.Validate(E.Target))
             {
-                E.Actor.Think($"I want to attack {E.Target.ShortDisplayNameStripped}");
-                string Direction = GetAggressiveBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target);
+                string targetName = E.Target.DebugName ?? NULL;
+                E.Actor.Think($"I want to attack {targetName}");
+                string Direction = GetAggressiveBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
-                    E.Actor.Think($"{E?.Target?.ShortDisplayNameStripped ?? NULL} is {Direction ?? NULL} of me");
+                    E.Actor.Think($"{targetName} is to the {Direction ?? NULL} of me");
                 }
                 else
                 {
-                    E.Actor.Think($"I can't blink to {E?.Target?.ShortDisplayNameStripped ?? NULL}");
+                    E.Actor.Think($"I can't blink to {targetName}");
                 }
-                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination, out GameObject Kid, out Cell KidDestination, out _, IsNothinPersonnelKid))
+                if (!Direction.IsNullOrEmpty() &&
+                    TryGetBlinkDestination(
+                        Blinker: E.Actor,
+                        Direction: Direction,
+                        BlinkRange: BlinkRange,
+                        Destination: out Cell Destination,
+                        Kid: out GameObject Kid,
+                        KidDestination: out Cell KidDestination,
+                        BlinkPaths: out _,
+                        IsNothinPersonnelKid: IsNothinPersonnelKid))
                 {
-                    E.Actor.Think($"I might teleport behind {E?.Target?.ShortDisplayNameStripped ?? NULL}, it's nothin personnel");
+                    E.Actor.Think($"I might teleport behind {targetName}, it's nothin personnel");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetOverride: Kid, TargetCellOverride: KidDestination ?? Destination);
                 }
             }
@@ -383,19 +393,25 @@ namespace XRL.World.Parts
                 {
                     IsNothinPersonnelKid = false;
                 }
-                E.Actor.Think($"I want to retreat from {E.Target.ShortDisplayNameStripped}");
-                string Direction = GetRetreatingBlinkDirection(E.Actor, Range, E.Target);
+                string targetName = E.Target.DebugName ?? NULL;
+                E.Actor.Think($"I want to retreat from {targetName}");
+                string Direction = GetRetreatingBlinkDirection(E.Actor, BlinkRange, E.Target);
                 if (!Direction.IsNullOrEmpty())
                 {
-                    E.Actor.Think($"Away from {E.Target.ShortDisplayNameStripped} is {Direction} of me");
+                    E.Actor.Think($"Away from {targetName} is {Direction} of me");
                 }
                 else
                 {
-                    E.Actor.Brain.Think($"I can't blink away from {E.Target.ShortDisplayNameStripped}");
+                    E.Actor.Brain.Think($"I can't blink away from {targetName}");
                 }
-                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
+                if (!Direction.IsNullOrEmpty()
+                    && TryGetBlinkDestination(
+                        Blinker: E.Actor,
+                        Direction: Direction,
+                        BlinkRange: BlinkRange,
+                        Destination: out Cell Destination))
                 {
-                    E.Actor.Brain.Think($"I might blink away from {E.Target.ShortDisplayNameStripped}");
+                    E.Actor.Brain.Think($"I might blink away from {targetName}");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, Priority: 3, TargetCellOverride: Destination);
                 }
             }
@@ -408,7 +424,7 @@ namespace XRL.World.Parts
                 && 25.in100())
             {
                 E.Actor.Think($"I gotta go fast");
-                string Direction = GetMovementBlinkDirection(E.Actor, Range, E.TargetCell);
+                string Direction = GetMovementBlinkDirection(E.Actor, BlinkRange, E.TargetCell);
                 if (!Direction.IsNullOrEmpty())
                 {
                     E.Actor.Think($"{Direction} of me would be fast");
@@ -417,7 +433,12 @@ namespace XRL.World.Parts
                 {
                     E.Actor.Think($"My style is pretty cramped here");
                 }
-                if (!Direction.IsNullOrEmpty() && TryGetBlinkDestination(E.Actor, Direction, Range, out Cell Destination))
+                if (!Direction.IsNullOrEmpty()
+                    && TryGetBlinkDestination(
+                        Blinker: E.Actor,
+                        Direction: Direction,
+                        BlinkRange: BlinkRange,
+                        Destination: out Cell Destination))
                 {
                     E.Actor.Think($"I might blink to the {Direction}");
                     E.Add(COMMAND_AI_UD_BLINK_ABILITY, TargetCellOverride: Destination);
@@ -470,31 +491,14 @@ namespace XRL.World.Parts
                     try
                     {
                         MidBlink = true;
-                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target != null;
-                        bool isMovement = !isRetreat && E.TargetCell != null;
 
-                        string Direction = null;
-                        string blinkThink = "hurr durr, i blinking";
-                        string targetName = E?.Target?.DebugName ?? NULL;
-                        if (!E.Actor.IsPlayer())
-                        {
-                            Direction = GetBlinkDirection(E.Actor, Range, IsNothinPersonnelKid, E.Target, isRetreat);
-
-                            if (isRetreat)
-                            {
-                                blinkThink = $"I am going to try and blink away from {targetName}";
-                            }
-                            else if (isMovement)
-                            {
-                                blinkThink = $"I don't think you have any idea how fast I really am";
-                            }
-                            else
-                            {
-                                blinkThink = $"psssh...nothin personnel...{targetName}";
-                            }
-
-                            E.Actor.Think(blinkThink);
-                        }
+                        string direction = UD_Blink.GetAIBlinkDirection(
+                            Blinker: E.Actor,
+                            BlinkRange: BlinkRange,
+                            Destination: E.TargetCell,
+                            Kid: E.Target,
+                            IsNothinPersonnelKid: IsNothinPersonnelKid,
+                            IsRetreat: out bool isRetreat);
 
                         bool blunk = false;
                         if (HasBlink)
@@ -512,8 +516,8 @@ namespace XRL.World.Parts
                         {
                             blunk = Blink(
                                 Blinker: E.Actor,
-                                Direction: Direction,
-                                BlinkRange: Range,
+                                Direction: direction,
+                                BlinkRange: BlinkRange,
                                 Destination: E.TargetCell,
                                 BlinkPaths: out _,
                                 IsNothinPersonnelKid: IsNothinPersonnelKid,
@@ -522,6 +526,7 @@ namespace XRL.World.Parts
                                 Silent: false);
                         }
 
+                        string blinkThink = null;
                         if (blunk && !HasBlink)
                         {
                             blinkThink = $"I blunk and ";
@@ -532,7 +537,7 @@ namespace XRL.World.Parts
 
                                 Cell currentCell = ParentObject.CurrentCell;
                                 Arrive(
-                                    From: currentCell.GetCellFromDirection(Direction),
+                                    From: currentCell.GetCellFromDirection(direction),
                                     To: currentCell,
                                     Life: 8,
                                     Color1: "C",
@@ -541,7 +546,8 @@ namespace XRL.World.Parts
                                     Symbol2: "\u00EC"
                                     );
 
-                                energyCost = (int)(energyCost * 1.25f);
+                                double energyCostFactor = 1 + 0.25 + (E.Actor.GetQuicknessFactor() - 1);
+                                energyCost = (int)(energyCost * energyCostFactor);
                                 blinkThink += $"We Go Again";
                             }
                             else
@@ -552,15 +558,17 @@ namespace XRL.World.Parts
                             }
                             ParentObject.UseEnergy(energyCost, "Physical AI Capability Blink");
                         }
-                        else if (!blunk)
-                        {
-                            blinkThink = "I blunked out :(";
-                        }
-                        else if (blunk && HasBlink)
+                        else
+                        if (blunk && HasBlink)
                         {
                             RecentlyBlunk = !BlinkMutation.IsMyActivatedAbilityCoolingDown(BlinkMutation.BlinkActivatedAbilityID);
                             CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
                         }
+                        else
+                        {
+                            blinkThink = "I blunked out :(";
+                        }
+
                         if (!E.Actor.IsPlayer())
                         {
                             E.Actor.Think(blinkThink);

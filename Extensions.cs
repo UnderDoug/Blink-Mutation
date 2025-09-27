@@ -1,28 +1,28 @@
-﻿using System;
-using System.Text;
-using System.Text.RegularExpressions;
+﻿using Genkit;
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
-using Genkit;
+using System.Text;
+using System.Text.RegularExpressions;
 
 using XRL;
-using XRL.UI;
-using XRL.Rules;
+using XRL.CharacterBuilds;
+using XRL.CharacterBuilds.Qud;
 using XRL.Language;
+using XRL.Rules;
+using XRL.UI;
 using XRL.World;
+using XRL.World.Anatomy;
+using XRL.World.Capabilities;
+using XRL.World.Effects;
+using XRL.World.ObjectBuilders;
 using XRL.World.Parts;
 using XRL.World.Parts.Mutation;
 using XRL.World.Parts.Skill;
-using XRL.World.Effects;
-using XRL.World.Anatomy;
-using XRL.World.ObjectBuilders;
-using XRL.World.Capabilities;
 using XRL.World.Tinkering;
-using XRL.CharacterBuilds;
-using XRL.CharacterBuilds.Qud;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Utils;
@@ -2251,8 +2251,6 @@ namespace UD_Blink_Mutation
 
                 Debug.Entry(4, $"Overriding reason...", Indent: indent + 1, Toggle: doDebug);
 
-                string deathReason = $"{Killer.t()}'s {UD_ColdSteel.DamageType} personnely...";
-
                 E.Reason = GameText.VariableReplace(DeathReason, Dying, Killer);
                 E.ThirdPersonReason = GameText.VariableReplace(ThirdPersonDeathReason, Dying, Killer);
 
@@ -2325,6 +2323,53 @@ namespace UD_Blink_Mutation
 
             Debug.LastIndent = indent;
             return primaryLimb != null && primaryWeapon != null;
+        }
+
+        public static IEnumerable<GameObject> GetObjectsWithEffect<T>(this Cell Cell, Predicate<T> Filter = null)
+            where T : Effect
+        {
+            if (Cell != null)
+            {
+                foreach (GameObject objectInCell in Cell.Objects)
+                {
+                    if (objectInCell.HasEffect<T>() && (Filter == null || Filter(objectInCell.GetEffect<T>())))
+                    {
+                        yield return objectInCell;
+                    }
+                }
+            }
+        }
+
+        public static bool TryGetHookedCreature(this GameObject Hooker, out GameObject Hookee, out GameObject HookingWeapon)
+        {
+            Hookee = null;
+            HookingWeapon = null;
+            if (Hooker != null)
+            {
+                foreach (Cell adjacentCell in Hooker.CurrentCell.GetAdjacentCells())
+                {
+                    List<GameObject> hookedObjects = Event.NewGameObjectList(adjacentCell.GetObjectsWithEffect<Hooked>());
+                    if (!hookedObjects.IsNullOrEmpty())
+                    {
+                        foreach (GameObject hookedObject in hookedObjects)
+                        {
+                            if (hookedObject.GetEffect<Hooked>() is Hooked hookedEffect
+                                && hookedEffect.HookingWeapon?.DefaultOrEquipper() == Hooker)
+                            {
+                                Hooker = hookedEffect.HookingWeapon.DefaultOrEquipper();
+                                HookingWeapon = hookedEffect.HookingWeapon;
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        public static GameObject DefaultOrEquipper(this GameObject Equipment)
+        {
+            return Equipment?.DefaultOrEquippedPart()?.ParentBody?.ParentObject;
         }
     }
 }

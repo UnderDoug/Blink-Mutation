@@ -4,6 +4,7 @@ using System.Text;
 using UD_Blink_Mutation;
 using UnityEngine.UIElements;
 using XRL.World;
+using XRL.World.Text;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using Debug = UD_Blink_Mutation.Debug;
@@ -200,8 +201,12 @@ namespace XRL.World.Parts
                     string attackOrType = describeAsFrom == null ? "attack" : DamageType;
                     string damageMessage = $"from %t {attackOrType}!";
 
-                    string deathReason = $"psssh...=subject.t= took =object.t's= {DamageType} personnely...";
-                    string thirdPersonDeathReason = deathReason.Replace(" took", "=verb:take:afterpronoun=");
+                    string replaceMessage = $"psssh...={nameof(kid)}.t= took ={nameof(blinker)}.t's= {DamageType} personnely...";
+                    ReplaceBuilder RB = GameText.StartReplace(replaceMessage);
+                    RB.AddObject(kid, nameof(kid));
+                    RB.AddObject(blinker, nameof(blinker));
+                    string deathReason = RB.ToString();
+                    string thirdPersonDeathReason = deathReason;
 
                     if (kid.TakeDamage(
                         Amount: ref amount,

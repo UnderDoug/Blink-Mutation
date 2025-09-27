@@ -125,7 +125,7 @@
     <builder Name="Roboticized" ChanceOneIn="1" />
     <tag Name="Gender" Value="neuter" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b"
-              Shouts="true" Shout="TARGET: =object.Name=" ShoutColor="b"
+              Shouts="true" Shout="TARGET: =object.name=" ShoutColor="b"
               DoNani="false" PhysicalFeatures="false" />
     <intproperty Name="RapidLevel_UD_Blink" Value="9" />
     <intproperty Name="RapidLevel_Blink" Value="9" />

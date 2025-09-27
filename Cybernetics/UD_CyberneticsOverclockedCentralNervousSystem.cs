@@ -58,6 +58,14 @@ namespace XRL.World.Parts
         public static readonly string COMMAND_UD_FLICKER_ABILITY = "Command_UD_Flicker_Ability";
         public static readonly string COMMAND_UD_FLICKER = "Command_UD_Flicker";
 
+        public static List<int> ImplanteeEvents => new()
+        {
+            GetShortDescriptionEvent.ID,
+            GetDebugInternalsEvent.ID,
+            KilledEvent.ID,
+            KilledPlayerEvent.ID,
+        };
+
         public bool IsNothinPersonnelKid
         {
             get => IsMyActivatedAbilityToggledOn(ColdSteelActivatedAbilityID, Implantee);
@@ -125,6 +133,7 @@ namespace XRL.World.Parts
             WorksOnImplantee = true;
             IsBootSensitive = false;
             IsPowerSwitchSensitive = false;
+            IsEMPSensitive = true;
             ChargeUse = 0;
 
             WeGoAgain = false;
@@ -149,9 +158,24 @@ namespace XRL.World.Parts
 
         public static int GetCooldownTurns()
         {
-            if (The.Core.IDKFA) return 5;
             return 100;
-            // return 90 - Math.Min(40, Level * 5);
+        }
+
+        public static int GetAdjustedCooldownTurns(GameObject Blinker)
+        {
+            if (The.Core.IDKFA && Blinker.IsPlayer())
+            {
+                return 5;
+            }
+            return GetAvailableComputePowerEvent.AdjustDown(Blinker, GetCooldownTurns(), 0.5f, 4);
+        }
+        public static int GetAdjustedCooldownTurns(CommandEvent E)
+        {
+            return GetAdjustedCooldownTurns(E.Actor);
+        }
+        public int GetAdjustedCooldownTurns()
+        {
+            return GetAdjustedCooldownTurns(Implantee);
         }
 
         public static UD_CyberneticsOverclockedCentralNervousSystem GetInstalledCybernetic(GameObject Implantee)
@@ -160,8 +184,14 @@ namespace XRL.World.Parts
             {
                 return null;
             }
-            return Implantee.Body.GetInstalledCybernetics(go => go.HasPart<UD_CyberneticsOverclockedCentralNervousSystem>())
-                ?.FirstOrDefault()?.GetPart< UD_CyberneticsOverclockedCentralNervousSystem>();
+            foreach (GameObject installedCybernetic in Implantee.Body.GetInstalledCybernetics())
+            {
+                if (installedCybernetic.TryGetPart(out UD_CyberneticsOverclockedCentralNervousSystem oC_CNSPart))
+                {
+                    return oC_CNSPart;
+                }
+            }
+            return null;
         }
 
         public virtual Guid AddActivatedAbilityBlink(GameObject GO, bool Force = false, bool Silent = false)
@@ -348,24 +378,27 @@ namespace XRL.World.Parts
 
         public static void OverrideDeathReason(GameObject Blinker, GameObject Kid, ref bool IsSteelCold, IDeathEvent E)
         {
-            string reason = $"Omae Wa Mou Shindeiru...";
-            string thirdPersonReason = $"=subject.t= was already dead...";
+            string reason = "{{W|=object.refname=: Omae Wa Mou Shindeiru...}}";
+            string thirdPersonReason = "{{W|=subject.t= was already dead...}}";
             E.OverrideDeathReason(Blinker, Kid, ref IsSteelCold, reason, thirdPersonReason);
         }
 
         public bool CheckEMPed()
         {
-            if (IsEMPed())
+            if (ForeachActivePartSubjectWhile(delegate (GameObject GO)
             {
-                DisableMyActivatedAbility(BlinkActivatedAbilityID, Implantee);
-                DisableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
-                return true;
-            }
-            else
+                return !GO.IsEMPed();
+            }))
             {
                 EnableMyActivatedAbility(BlinkActivatedAbilityID, Implantee);
                 EnableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
                 return false;
+            }
+            else
+            {
+                DisableMyActivatedAbility(BlinkActivatedAbilityID, Implantee);
+                DisableMyActivatedAbility(FlickerActivatedAbilityID, Implantee);
+                return true;
             }
         }
 
@@ -414,6 +447,16 @@ namespace XRL.World.Parts
                 Debug.LastIndent = indent;
                 return false;
             }
+            Debug.Entry(2, $"Checking is currently Hooking...", Indent: indent + 1, Toggle: getDoDebug());
+            if (Flickerer.TryGetHookedCreature(out GameObject hookee, out GameObject hookingWeapon))
+            {
+                if (!Silent)
+                {
+                    Flickerer.Fail($"You cannot {Verb} while {hookee.t()} is hooked with {hookingWeapon?.t() ?? "your weapon"}.");
+                }
+                Debug.LastIndent = indent;
+                return false;
+            }
             Debug.Entry(2, $"Checking can change movement mode...", Indent: indent + 2, Toggle: getDoDebug());
             if (!Flickerer.CanChangeMovementMode("Blinking", ShowMessage: !Silent))
             {
@@ -428,7 +471,6 @@ namespace XRL.World.Parts
                 Debug.LastIndent = indent;
                 return false;
             }
-
             Debug.Entry(2, $"Checking for currently flying...", Indent: indent + 2, Toggle: getDoDebug());
             if (Flickerer.IsFlying)
             {
@@ -588,7 +630,15 @@ namespace XRL.World.Parts
             return false;
         }
 
-        public static bool Flicker(GameObject Flickerer, int FlickerRadius, int BlinkRange, ref int FlickerCharges, int EnergyPerFlickerCharge, UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = null, GameObject FlickerTargetOverride = null, bool Silent = false)
+        public static bool Flicker(
+            GameObject Flickerer,
+            int FlickerRadius,
+            int BlinkRange,
+            ref int FlickerCharges,
+            int EnergyPerFlickerCharge,
+            UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = null,
+            GameObject FlickerTargetOverride = null,
+            bool Silent = false)
         {
             string verb = "flicker";
             int indent = Debug.LastIndent;
@@ -712,13 +762,16 @@ namespace XRL.World.Parts
                 int flickers = 0;
                 int flickerEnergyCost = 0;
                 int maxAttempts = 65;
-
                 Debug.Entry(2, $"Performing Flicker ({nameof(maxAttempts)}: {maxAttempts})...", Indent: indent + 2, Toggle: getDoDebug());
                 while (FlickerCharges > 0 && attempts < maxAttempts && !flickerTargets.IsNullOrEmpty())
                 {
                     Debug.LoopItem(2, $"{attempts++}] {nameof(attempts)}", Indent: indent + 3, Toggle: getDoDebug());
                     try
                     {
+                        if (OC_CNS != null)
+                        {
+                            OC_CNS.IsSteelCold = true;
+                        }
                         Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 4, Toggle: getDoDebug());
                         SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
 
@@ -953,6 +1006,13 @@ namespace XRL.World.Parts
                         FlickerTargetOverride = null;
                         MetricsManager.LogException($"{nameof(UD_CyberneticsOverclockedCentralNervousSystem)}.{nameof(Flicker)}, while loop", x, "game_mod_exception");
                     }
+                    finally
+                    {
+                        if (OC_CNS != null)
+                        {
+                            OC_CNS.IsSteelCold = true;
+                        }
+                    }
                 }
 
                 if (flickerTargets.IsNullOrEmpty() && flickers > 0 && didFlicker)
@@ -1090,6 +1150,27 @@ namespace XRL.World.Parts
             return pickedTarget;
         }
 
+        public void ImplanteeRegisterEvent()
+        {
+            if (!ImplanteeEvents.IsNullOrEmpty())
+            {
+                foreach (int eventID in ImplanteeEvents)
+                {
+                    Implantee.RegisterEvent(this, eventID, Serialize: true);
+                }
+            }
+        }
+        public void ImplanteeUnregisterEvent()
+        {
+            if (!ImplanteeEvents.IsNullOrEmpty())
+            {
+                foreach (int eventID in ImplanteeEvents)
+                {
+                    Implantee.UnregisterEvent(this, eventID);
+                }
+            }
+        }
+
         public override void Register(GameObject Object, IEventRegistrar Registrar)
         {
             Registrar.Register(GetAttackerMeleePenetrationEvent.ID, EventOrder.EXTREMELY_EARLY);
@@ -1106,8 +1187,6 @@ namespace XRL.World.Parts
                 || ID == GetItemElementsEvent.ID
                 || ID == BeforeAbilityManagerOpenEvent.ID
                 || ID == GetMovementCapabilitiesEvent.ID
-                || ID == KilledEvent.ID
-                || ID == KilledPlayerEvent.ID
                 || ID == AIGetOffensiveAbilityListEvent.ID
                 || ID == AIGetRetreatAbilityListEvent.ID
                 || ID == AIGetMovementAbilityListEvent.ID
@@ -1230,8 +1309,7 @@ namespace XRL.World.Parts
             AddActivatedAbilityBlink(E.Implantee);
             AddActivatedAbilityColdSteel(E.Implantee);
             AddActivatedAbilityFlicker(E.Implantee);
-            E.Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
-            E.Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
+            ImplanteeRegisterEvent();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(UnimplantedEvent E)
@@ -1239,8 +1317,7 @@ namespace XRL.World.Parts
             RemoveActivatedAbilityBlink(E.Implantee, true);
             RemoveActivatedAbilityColdSteel(E.Implantee, true);
             RemoveActivatedAbilityFlicker(E.Implantee, true);
-            E.Implantee.UnregisterEvent(this, GetShortDescriptionEvent.ID);
-            E.Implantee.UnregisterEvent(this, GetDebugInternalsEvent.ID);
+            ImplanteeUnregisterEvent();
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(EndTurnEvent E)
@@ -1341,52 +1418,28 @@ namespace XRL.World.Parts
                         MidBlink = true;
                         int indent = Debug.LastIndent;
 
-                        bool isRetreat = !E.Actor.IsPlayer() && E.Actor.Brain.IsFleeing() && E.Target == null;
-                        bool isMovement = !isRetreat && E.TargetCell != null;
-
-                        string Direction = null;
-                        string blinkThink = "hurr durr, i blinking";
-                        if (!E.Actor.IsPlayer())
-                        {
-                            Direction = UD_Blink.GetBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target, isRetreat);
-
-                            Debug.LoopItem(4, nameof(isRetreat), isRetreat.ToString(),
-                                Good: isRetreat, Indent: indent + 1, Toggle: doDebug);
-
-                            Debug.LoopItem(4, nameof(isMovement), isMovement.ToString(),
-                                Good: isMovement, Indent: indent + 1, Toggle: doDebug);
-
-                            Debug.LoopItem(4, nameof(IsNothinPersonnelKid), IsNothinPersonnelKid.ToString(),
-                                Good: !isRetreat && !isMovement, Indent: indent + 1, Toggle: doDebug);
-
-                            if (isRetreat)
-                            {
-                                blinkThink = $"I am going to try and blink away from {E.Target?.DebugName ?? E.Actor?.Target?.DebugName ?? NULL}";
-                            }
-                            else
-                            if (isMovement)
-                            {
-                                blinkThink = $"I don't think you have any idea how fast I really am";
-                            }
-                            else
-                            {
-                                blinkThink = $"psssh...nothin personnel...{E.Target?.DebugName ?? E.Actor?.Target?.DebugName ?? NULL}";
-                            }
-                            E.Actor.Think(blinkThink);
-                        }
+                        string direction = UD_Blink.GetAIBlinkDirection(
+                            Blinker: E.Actor,
+                            BlinkRange: BlinkRange,
+                            Destination: E.TargetCell,
+                            Kid: E.Target,
+                            IsNothinPersonnelKid: IsNothinPersonnelKid,
+                            IsRetreat: out bool isRetreat);
 
                         Cell originCell = E.Actor.CurrentCell;
                         bool blunk = UD_Blink.Blink(
                             Blinker: E.Actor,
-                            Direction: Direction,
+                            Direction: direction,
                             BlinkRange: BlinkRange,
                             Destination: E.TargetCell,
                             BlinkPaths: out PathCache,
                             IsNothinPersonnelKid: IsNothinPersonnelKid,
+                            CustomDeathMessage: $"=subject.t= was already dead...",
                             Kid: E.Target,
                             IsRetreat: isRetreat,
                             Silent: false);
 
+                        string blinkThink = null;
                         if (blunk)
                         {
                             blinkThink = $"I blunk and ";
@@ -1426,7 +1479,7 @@ namespace XRL.World.Parts
 
                                 Cell currentCell = E.Actor.CurrentCell;
                                 UD_Blink.Arrive(
-                                    From: currentCell.GetCellFromDirection(Direction),
+                                    From: currentCell.GetCellFromDirection(direction),
                                     To: currentCell,
                                     Life: 8,
                                     Color1: "C",
@@ -1439,8 +1492,7 @@ namespace XRL.World.Parts
                             }
                             else
                             {
-                                int cooldownTurns = GetAvailableComputePowerEvent.AdjustDown(E.Actor, GetCooldownTurns(), 0.5f, 4);
-                                CooldownMyActivatedAbility(BlinkActivatedAbilityID, cooldownTurns, E.Actor);
+                                CooldownMyActivatedAbility(BlinkActivatedAbilityID, GetAdjustedCooldownTurns(E), E.Actor);
                                 blinkThink += $"I am knackered";
                             }
 
@@ -1479,10 +1531,6 @@ namespace XRL.World.Parts
                         {
                             Flicker(E.Target, E.Silent);
                         }
-                        else
-                        {
-                            DisableMyActivatedAbility(FlickerActivatedAbilityID, E.Actor);
-                        }
                     }
                     catch (Exception x)
                     {
@@ -1495,6 +1543,7 @@ namespace XRL.World.Parts
                     finally
                     {
                         MidFlicker = false;
+                        SyncFlickerAbility();
                     }
                 }
             }
@@ -1547,7 +1596,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(KilledEvent E)
         {
-            if (E.Killer == ParentObject && IsSteelCold
+            if (E.Killer == Implantee && IsSteelCold
                 && E.Killer is GameObject blinker
                 && E.Dying is GameObject kid)
             {
@@ -1557,7 +1606,7 @@ namespace XRL.World.Parts
         }
         public override bool HandleEvent(KilledPlayerEvent E)
         {
-            if (E.Killer == ParentObject && IsSteelCold
+            if (E.Killer == Implantee && IsSteelCold
                 && E.Killer is GameObject blinker
                 && E.Dying is GameObject kid)
             {
@@ -1738,8 +1787,7 @@ namespace XRL.World.Parts
         {
             if (Implantee != null && Implantee != Source)
             {
-                Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
-                Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
+                ImplanteeRegisterEvent();
 
                 if (BlinkActivatedAbilityID == Guid.Empty)
                 {
@@ -1761,8 +1809,7 @@ namespace XRL.World.Parts
             base.FinalizeRead(Reader);
             if (Implantee != null)
             {
-                Implantee.RegisterEvent(this, GetShortDescriptionEvent.ID, Serialize: true);
-                Implantee.RegisterEvent(this, GetDebugInternalsEvent.ID, Serialize: true);
+                ImplanteeRegisterEvent();
                 SyncFlickerAbility();
             }
         }
@@ -1908,6 +1955,43 @@ namespace XRL.World.Parts
         public static void CNS_TestKit_WishHandler()
         {
             CNS_TestKit_WishHandler(null);
+        }
+
+        [WishCommand(Command = "restore flicker charges")]
+        public static void RestoreFlickerCharges_WishHandler()
+        {
+            if (PickTarget.ShowPicker(
+                Style: PickTarget.PickStyle.EmptyCell,
+                StartX: The.Player.CurrentCell.X,
+                StartY: The.Player.CurrentCell.Y,
+                ObjectTest: go => GetInstalledCybernetic(go) != null || go.HasPart<AI_UD_Flickerer>(),
+                Label: "Restore whose flicker charges?")
+                .GetFirstObject(go => GetInstalledCybernetic(go) != null || go.HasPart<AI_UD_Flickerer>())
+                is GameObject target)
+            {
+                UD_CyberneticsOverclockedCentralNervousSystem OC_CNS = GetInstalledCybernetic(target);
+                AI_UD_Flickerer flickerer = target.GetPart<AI_UD_Flickerer>();
+
+                if (Popup.AskNumber($"How many charges for {target?.DebugName ?? NULL}?\n\nEnter 0 to cancel.") is int charges
+                    && charges != 0)
+                {
+                    if (OC_CNS != null)
+                    {
+                        OC_CNS.FlickerCharges += charges;
+                        OC_CNS.FlickerCharges = Math.Max(0, OC_CNS.FlickerCharges);
+                    }
+                    if (flickerer != null)
+                    {
+                        flickerer.FlickerCharges += charges;
+                        flickerer.FlickerCharges = Math.Max(0, flickerer.FlickerCharges);
+                    }
+                    Popup.Show($"Adjusted {nameof(charges)} by {charges.Signed()}!");
+                }
+            }
+            else
+            {
+                Popup.Show("Target needs to have an Overclocked Central Nervous System");
+            }
         }
 
         [WishCommand(Command = "OC_CNS borked")]
