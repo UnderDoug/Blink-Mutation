@@ -1,23 +1,19 @@
-﻿using System;
+﻿using Qud.UI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-
-using Qud.UI;
-
+using UD_Blink_Mutation;
 using UnityEngine;
-
 using XRL.Core;
 using XRL.Rules;
 using XRL.UI;
 using XRL.World.Capabilities;
 using XRL.World.Effects;
 using XRL.World.Parts.Mutation;
-
+using XRL.World.Text;
 using static XRL.World.Parts.Mutation.BaseMutation;
 using SerializeField = UnityEngine.SerializeField;
-
-using UD_Blink_Mutation;
 
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
