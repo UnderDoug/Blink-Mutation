@@ -1731,8 +1731,8 @@ namespace XRL.World.Parts.Mutation
 
                             Dictionary<string, int> echoes = new()
                             {
-                                { "n", 10 }, // none
-                                { "t", 4 },  // tile
+                                { "n", 12 }, // none
+                                { "t", 6 },  // tile
                                 { "s", 4 },  // string
                             };
                             switch (echoes.Sample())
