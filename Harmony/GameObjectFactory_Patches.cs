@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 
 using XRL;
+using XRL.Core;
 using XRL.Rules;
 using XRL.World;
 using XRL.World.Loaders;
@@ -28,9 +29,12 @@ namespace UD_Blink_Mutation.Harmony
         [HarmonyPostfix]
         public static void LoadBakedXML_MutationEntryIfSupplied_Postfix(ref GameObjectFactory __instance, ref GameObjectBlueprint __result, ObjectBlueprintLoader.ObjectBlueprintXMLData node)
         {
+            bool enableMetrics = Globals.EnableMetrics;
+            Globals.EnableMetrics = false;
             try
             {
-                if (HNPS_GigantismPlus != null && !HNPS_GigantismPlus.IsEnabled && Stat.Roll("1d2") < 3)
+                bool doThisPatch = true;
+                if (!(HNPS_GigantismPlus?.IsEnabled).GetValueOrDefault() && doThisPatch)
                 {
                     GameObjectBlueprint gameObjectBlueprint = __result;
                     if (gameObjectBlueprint.Mutations.IsNullOrEmpty())
@@ -143,7 +147,12 @@ namespace UD_Blink_Mutation.Harmony
             }
             catch (Exception x)
             {
-                MetricsManager.LogException($"[{MOD_ID}] {nameof(GameObjectFactory_Patches)}", x);
+                Globals.EnableMetrics = enableMetrics;
+                MetricsManager.LogModError(ThisMod, x);
+            }
+            finally
+            {
+                Globals.EnableMetrics = enableMetrics;
             }
         }
     }
