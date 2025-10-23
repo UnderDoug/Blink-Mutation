@@ -709,7 +709,6 @@ namespace XRL.World.Parts
                     SetIgnoreSameFaction(_IgnoreSameFactionCache);
                 }
             }
-            // ParentObject.RemovePart(this);
             return base.HandleEvent(E);
         }
         public override bool HandleEvent(BeginTakeActionEvent E)
@@ -725,14 +724,6 @@ namespace XRL.World.Parts
             {
                 SetIgnoreSameFaction(true, false);
             }
-            List<string> roles = new()
-            {
-                "Mayor",
-                "Warden",
-                "Tinker",
-                "Apothecary",
-                "Merchant",
-            };
             if (SquareUp())
             {
                 return false;

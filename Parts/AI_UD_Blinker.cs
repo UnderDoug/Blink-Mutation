@@ -354,6 +354,10 @@ namespace XRL.World.Parts
                 && 25.in100()
                 && GameObject.Validate(E.Target))
             {
+                if (!E.Actor.IsFleeing())
+                {
+                    IsNothinPersonnelKid = true;
+                }
                 string targetName = E.Target.DebugName ?? NULL;
                 E.Actor.Think($"I want to attack {targetName}");
                 string Direction = GetAggressiveBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target);

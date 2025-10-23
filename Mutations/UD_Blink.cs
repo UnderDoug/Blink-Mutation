@@ -1658,12 +1658,12 @@ namespace XRL.World.Parts.Mutation
             blinkDuration = Blinker.IsPlayer() ? blinkDuration : (blinkDuration / 3);
 
             int maxMilliseconds = Math.Max(1, Math.Min(blinkDuration, MaxMilliseconds));
+
             CombatJuice.BlockUntilFinished(
                 Entry: blinkPunch,
                 Hide: null, // new List<GameObject>() { Blinker },
                 MaxMilliseconds: maxMilliseconds,
-                Interruptible: false
-                );
+                Interruptible: !Blinker.IsPlayer());
 
             int pathStepsCount = 0;
             if (Path != null && !Path.Steps.IsNullOrEmpty())
