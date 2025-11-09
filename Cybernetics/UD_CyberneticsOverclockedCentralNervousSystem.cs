@@ -1156,7 +1156,7 @@ namespace XRL.World.Parts
             {
                 foreach (int eventID in ImplanteeEvents)
                 {
-                    Implantee.RegisterEvent(this, eventID, Serialize: true);
+                    Implantee?.RegisterEvent(this, eventID, Serialize: true);
                 }
             }
         }
@@ -1166,7 +1166,7 @@ namespace XRL.World.Parts
             {
                 foreach (int eventID in ImplanteeEvents)
                 {
-                    Implantee.UnregisterEvent(this, eventID);
+                    Implantee?.UnregisterEvent(this, eventID);
                 }
             }
         }
