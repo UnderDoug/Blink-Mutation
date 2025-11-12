@@ -151,6 +151,9 @@ namespace XRL.World.WorldBuilders
             string zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ);
             string secretID = null;
 
+            string secretAttributesString = "artifact,chaosemerald";
+            string[] secretAttributes = secretAttributesString.Split(',');
+
             foreach ((string color, GameObject emeraldObject) in chaosEmeralds)
             {
                 Debug.LoopItem(4, $"{nameof(color)}", $"[{color}] ({emeraldObject.ID}) {emeraldObject.DebugName}",
@@ -173,7 +176,6 @@ namespace XRL.World.WorldBuilders
 
                 Debug.LoopItem(4, $"{nameof(isPricklePigEmerald)}", $"{isPricklePigEmerald}",
                     Good: isPricklePigEmerald, Indent: indent + 4, Toggle: getDoDebug());
-
                 if (!superBoss)
                 {
                     zoneTier = !isMoonstairEmerald ? Stat.RollCached("2d4") : 8;
@@ -201,7 +203,7 @@ namespace XRL.World.WorldBuilders
 
                     if (isPricklePigEmerald)
                     {
-                        secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying {emeraldName}", new string[1] { "artifact" }, "Artifacts", emeraldSecret);
+                        secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying {emeraldName}", secretAttributes, "Artifacts", emeraldSecret);
 
                         SecretRevealer secretRevealer = pricklePig.RequirePart<SecretRevealer>();
                         secretRevealer.id = secretID;
@@ -217,7 +219,7 @@ namespace XRL.World.WorldBuilders
                     {
                         The.ZoneManager.AddZonePostBuilder(zoneID, nameof(PlaceRelicBuilder), "Relic", The.ZoneManager.CacheObject(emeraldObject));
 
-                        secretID = Builder.AddSecret(zoneID, emeraldName, new string[1] { "artifact" }, "Artifacts", emeraldSecret);
+                        secretID = Builder.AddSecret(zoneID, emeraldName, secretAttributes, "Artifacts", emeraldSecret);
 
                         if (isTombTopEmerald)
                         {
@@ -226,7 +228,7 @@ namespace XRL.World.WorldBuilders
                             secretRevealer.text = $"the location of {emeraldName}";
                             secretRevealer.message = $"You have discovered {secretRevealer.text}!";
                             secretRevealer.category = "Artifacts";
-                            secretRevealer.adjectives = "artifact";
+                            secretRevealer.adjectives = secretAttributesString;
                         }
                     }
                 }
@@ -253,14 +255,14 @@ namespace XRL.World.WorldBuilders
             }
             if (superBoss)
             {
-                secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying all 7 of The Chaos Emeralds", new string[1] { "artifact" }, "Artifacts", $"${ChaosEmeraldSuperBoss}");
+                secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying all 7 of The Chaos Emeralds", secretAttributes, "Artifacts", $"${ChaosEmeraldSuperBoss}");
 
                 SecretRevealer secretRevealer = pricklePig.RequirePart<SecretRevealer>();
                 secretRevealer.id = secretID;
                 secretRevealer.text = $"the location of the prickle pig carrying all 7 of The Chaos Emeralds";
                 secretRevealer.message = $"You have discovered {secretRevealer.text}!";
                 secretRevealer.category = "Artifacts";
-                secretRevealer.adjectives = "artifact";
+                secretRevealer.adjectives = secretAttributesString;
 
                 The.Game.SetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{ChaosEmeraldSuperBoss}", int.Parse(pricklePig.ID));
                 The.Game.SetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{ChaosEmeraldSuperBoss}", zoneID);
