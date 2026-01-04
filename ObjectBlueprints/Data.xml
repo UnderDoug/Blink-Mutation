@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<objects>
+  <object Name="UD_Blink_Mutation_TileMappings" Inherits="UD_FleshGolems_BaseTileMappings">
+    <!--tag Name="UD_FleshGolems_AlternateTileFor:Blueprint:Argyve" Value="FleshGolems/ud_flesh_golem_human.png" /-->
+    <!--tag Name="UD_FleshGolems_AlternateTileFor:Taxon:Morphology:kraken" Value="FleshGolems/ud_flesh_golem_kraken.png" /-->
+    <!--tag Name="UD_FleshGolems_AlternateTileFor:Species:human" Value="FleshGolems/ud_flesh_golem_human.png" /-->
+    <tag Name="UD_FleshGolems_AlternateTileFor:Golem:Prickle Pig" Value="Creatures/UD_flesh_golem_prickle_pig.png" />
+  </object>
+</objects>

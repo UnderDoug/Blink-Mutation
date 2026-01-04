@@ -23,7 +23,7 @@
     <part Name="Render" DisplayName="[Prickle Pig]"
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
-    <part Name="Physics" Weight="150" />
+    <part Name="Physics" Weight="80" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="5" Shouts="false" PhysicalFeatures="false" />
     <mutation Name="Quills" DisplayName="Quills" Level="5" />
     <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="2" />
@@ -40,8 +40,8 @@
     <skill Name="Acrobatics_Jump" />
     <skill Name="Tactics" />
     <skill Name="Tactics_Hurdle" />
-    <part Name="AISelfPreservation" Threshold="30" />
     <skill Name="ShortBlades_Expertise" />
+    <part Name="AISelfPreservation" Threshold="30" />
     <tag Name="Species" Value="prickle pig" />
     <tag Name="Genotype" Value="Prickle Pig" />
     <tag Name="BaseObject" Value="*noinherit" />
@@ -60,6 +60,31 @@
   <object Name="Prickle Pig Corpse" Inherits="Pig Corpse">
     <part Name="Render" DisplayName="prickle pig corpse" />
     <part Name="Food" Message="What little of it there was went down rough." />
+  </object>
+  
+  <object Name="Prickle Pig Player" Inherits="BasePricklePig">
+    <!-- part Name="AI_UD_Flickerer" IdleFlickerTurnThreshold="10" / -->
+    <removemutation Name="UD_Blink" />
+    <removemutation Name="Quills" />
+    <removemutation Name="HeightenedSpeed" />
+    <stat Name="Level" Value="1" />
+    <stat Name="Speed" Value="100" />
+    <removepart Name="Swarmer" />
+    <removeskill Name="Acrobatics" />
+    <removeskill Name="Acrobatics_Dodge" />
+    <removeskill Name="Acrobatics_Jump" />
+    <removeskill Name="Tactics" />
+    <removeskill Name="Tactics_Hurdle" />
+    <removeskill Name="ShortBlades_Expertise" />
+    <removepart Name="AISelfPreservation" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <removetag Name="customMeleeOrder" />
+    <removetag Name="Role" />
+    <removetag Name="InventoryPopulationTable" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <removeinventoryobject Blueprint="Gold Ring" />
+    <removeinventoryobject Blueprint="Waterskin" />
   </object>
   
   <object Name="Prickle Pig" Inherits="BasePricklePig">
@@ -122,6 +147,7 @@
           RenderString="x" Tile="Creatures/Prickle_Pig.png" 
           ColorString="&amp;b" TileColor="&amp;b" DetailColor="C" />
     <part Name="Description" Short="A small jittery spheroid =verb:whir:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{w|fleshier}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{r|{{W|m}}arv{{Y|e}}l}} of {{r|{{W|e}}ngin{{Y|e}}ering}}- Yosh! Those blue prickle pigs had better watch out, lest they find themselves equally {{c|mechanized}}." />
+    <part Name="Physics" Weight="220" />
     <builder Name="Roboticized" ChanceOneIn="1" />
     <tag Name="Gender" Value="neuter" />
     <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b"
@@ -182,6 +208,12 @@
     <tag Name="NoDefaultBehavior" />
     <tag Name="NoSparkingQuest" />
     <tag Name="Mods" Value="None" />
+  </object>
+
+  <object Name="Prickle Pig Golem" Inherits="BasePricklePig">
+    <mixin Name="BaseVehicleGolem" />
+    <part Name="Render" DisplayName="prickle pig golem" RenderString="x" Tile="Creatures/sw_golem_swine.png" />
+    <mutation Name="UD_Blink" ColorChange="false" Shouts="true" />
   </object>
   
 </objects>
