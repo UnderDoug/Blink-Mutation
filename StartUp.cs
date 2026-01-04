@@ -14,6 +14,7 @@ using static UD_Blink_Mutation.Options;
 using static UD_Blink_Mutation.Utils;
 using Debug = UD_Blink_Mutation.Debug;
 using SerializeField = UnityEngine.SerializeField;
+using XRL.World.Parts;
 
 namespace UD_Blink_Mutation
 {
@@ -22,59 +23,62 @@ namespace UD_Blink_Mutation
     {
         public void mutate(GameObject player)
         {
-            bool playerExists = player != null;
-
-            bool playerIsColdSteel =
-                playerExists
-             && player.GetStartingPregen() != null
-             && player.GetStartingPregen() == "Cold Steel";
-
-            bool playerStartedWithBlink =
-                playerExists
-             && (player.GetStartingMutations().Contains("Blink") || player.GetStartingMutationClasses().Contains(nameof(UD_Blink)));
-
-            bool playerStartedWithQuills =
-                playerExists
-             && (player.GetStartingMutations().Contains("Quills")
-                || player.GetStartingMutationClasses().Contains("UD_QuillsPlus")
-                || player.GetStartingMutationClasses().Contains("Quills"));
-
             WorldCreationProgress.StepProgress("Quenching carbide...");
+
+            if (player == null)
+                return;
+
+            if (player.GetStartingPregen() is not string startingPregen
+                || startingPregen != "Cold Steel")
+            {
+                Debug.Entry(3, $"NO COLD STEEL DETECTED...", Indent: 1);
+                Debug.Entry(3, $"LAME. ABORTING...", Indent: 1);
+                return;
+            }
+
+            if ((!player.TryGetPart(out Mutations playerMutationsPart)
+                    || !playerMutationsPart.HasMutation("Blink")
+                    || !playerMutationsPart.HasMutation("Quills"))
+                && (player.GetStartingMutations() is not List<string> startingMutations
+                    || player.GetStartingMutationClasses() is not List<string> startingMutationClasses
+                    || (!startingMutations.Contains("Blink")
+                        && !startingMutationClasses.Contains(nameof(UD_Blink)))
+                    || (!startingMutations.Contains("Quills")
+                        && !startingMutationClasses.Contains("UD_QuillsPlus")
+                        && !startingMutationClasses.Contains("Quills"))))
+            {
+                Debug.Entry(3, $"NO COLD STEEL DETECTED...", Indent: 1);
+                Debug.Entry(3, $"LAME. ABORTING...", Indent: 1);
+                return;
+            }
 
             Debug.Header(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
 
-            if (playerIsColdSteel && playerStartedWithBlink && playerStartedWithQuills)
+            Debug.Entry(3, $"COLD STEEL DETECTED, PERFORMING PREPARATIONS...", Indent: 1);
+
+            bool didSetSpecies = SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass(player);
+            if (!didSetSpecies)
             {
-                Debug.Entry(3, $"COLD STEEL DETECTED, PERFORMING PREPARATIONS...", Indent: 1);
-
-                bool didSetSpecies = SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass(player);
-                if (!didSetSpecies)
-                {
-                    Debug.Warn(4,
-                        nameof(PrepareColdSteelPreset),
-                        nameof(SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass),
-                        $"Failed to set Coldsteel Genotype and/or Subtype",
-                        Indent: 0);
-                }
-
-                Debug.Entry(3, $"WARNING!! APPROACHING CRITICAL LEVELS OF BADASS...", Indent: 1);
-
-                bool didPierceEars = GiveColdSteelGoldEarrings(player);
-                if (!didSetSpecies)
-                {
-                    Debug.Warn(4,
-                        nameof(PrepareColdSteelPreset),
-                        nameof(GiveColdSteelGoldEarrings),
-                        $"Failed to pierce Coldsteel's ears, must be built different",
-                        Indent: 0);
-                }
-
-                Debug.Entry(3, $"ALERT!! CRITICAL BADASS ACHIEVED! DIVERTING CONTROL TO PLAYER!", Indent: 1);
+                Debug.Warn(4,
+                    nameof(PrepareColdSteelPreset),
+                    nameof(SetColdSteelGenotypeSubtypeSpeciesPricklePigBadass),
+                    $"Failed to set Coldsteel Genotype and/or Subtype",
+                    Indent: 0);
             }
-            else
+
+            Debug.Entry(3, $"WARNING!! APPROACHING CRITICAL LEVELS OF BADASS...", Indent: 1);
+
+            bool didPierceEars = GiveColdSteelGoldEarrings(player);
+            if (!didSetSpecies)
             {
-                Debug.Entry(3, $"NO COLD STEEL DETECTED, LAME. ABORTING...", Indent: 1);
+                Debug.Warn(4,
+                    nameof(PrepareColdSteelPreset),
+                    nameof(GiveColdSteelGoldEarrings),
+                    $"Failed to pierce Coldsteel's ears, must be built different",
+                    Indent: 0);
             }
+
+            Debug.Entry(3, $"ALERT!! CRITICAL BADASS ACHIEVED! DIVERTING CONTROL TO PLAYER!", Indent: 1);
 
             Debug.Footer(3, $"{nameof(PrepareColdSteelPreset)}", $"{nameof(mutate)}(GameObject player: {player.DebugName})");
         }
