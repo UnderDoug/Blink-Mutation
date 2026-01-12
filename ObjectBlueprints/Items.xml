@@ -149,7 +149,7 @@
           RenderString="]" ColorString="&amp;W" 
           TileColor="&amp;W" DetailColor="Y" />
     <part Name="Commerce" Value="50" />
-    <part Name="Description" Short="Some internal force imposes uprightedness on this toroid, although its manner of construction appears otherwise mundane." />
+    <part Name="Description" Short="Some internal force imposes uprightedness on this torus, although its manner of construction appears otherwise mundane." />
     <part Name="Physics" Weight="-1" />
     <part Name="ItemElements" Elements="jewels::6" />
     <part Name="Metal" />
