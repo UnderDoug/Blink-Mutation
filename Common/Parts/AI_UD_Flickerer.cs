@@ -17,6 +17,8 @@ using UD_Blink_Mutation;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using Debug = UD_Blink_Mutation.Debug;
+using XRL.Collections;
+using System.Linq;
 
 namespace XRL.World.Parts
 {
@@ -52,6 +54,28 @@ namespace XRL.World.Parts
 
         public static readonly string COMMAND_AI_UD_FLICKER_ABILITY = "Command_AI_UD_Flicker_Ability";
         public static readonly string COMMAND_AI_UD_FLICKER = "Command_AI_UD_Flicker";
+
+        public static List<string> EffortSounds = new()
+        {
+            "hup!",
+            "hya!",
+            "hyap!",
+            "hrup!",
+            "haya!",
+            "aya!",
+            "ayap!",
+            "ayup!",
+            "hur!",
+            "rup!",
+            "rya!",
+            "rhup!",
+            "ruh!",
+            "rah!",
+            "uhr!",
+            "urr!",
+            "ahr!",
+            "arr!",
+        };
 
         public Guid FlickerActivatedAbilityID = Guid.Empty;
 
@@ -117,34 +141,33 @@ namespace XRL.World.Parts
         {
             base.Attach();
             if (FlickerActivatedAbilityID == Guid.Empty && ParentObject != null)
-            {
                 AddActivatedAbilityFlicker(ParentObject);
-            }
+
             FlickerCharges = MaxFlickerCharges;
         }
 
         public static int GetBlinkRange(int BaseRange, UD_Blink BlinkMutation = null)
         {
             if (BlinkMutation != null)
-            {
                 BaseRange += BlinkMutation.GetBlinkRange();
-            }
+
             return BaseRange;
         }
+
         public int GetBlinkRange(int BaseRange)
-        {
-            return GetBlinkRange(BaseRange, ParentObject?.GetPart<UD_Blink>());
-        }
+            => GetBlinkRange(BaseRange, ParentObject?.GetPart<UD_Blink>())
+            ;
+
         public int GetBlinkRange()
-        {
-            return GetBlinkRange(BaseBlinkRange);
-        }
+            => GetBlinkRange(BaseBlinkRange)
+            ;
 
         public virtual Guid AddActivatedAbilityFlicker(GameObject GO, bool Force = false, bool Silent = false)
         {
             bool removed = RemoveActivatedAbilityFlicker(GO);
-            if (GO != null && FlickerActivatedAbilityID == Guid.Empty || Force)
-            {
+            if (GO != null
+                && (FlickerActivatedAbilityID == Guid.Empty
+                    || Force))
                 FlickerActivatedAbilityID =
                     AddMyActivatedAbility(
                         Name: "Flicker Strike",
@@ -153,50 +176,45 @@ namespace XRL.World.Parts
                         Icon: "K",
                         IsAttack: true,
                         Silent: removed || Silent,
-                        who: GO
-                        );
-            }
+                        who: GO);
+
             SyncFlickerAbilityName();
             return FlickerActivatedAbilityID;
         }
+
         public Guid AddActivatedAbilityFlicker(bool Force = false, bool Silent = false)
-        {
-            return AddActivatedAbilityFlicker(ParentObject, Force, Silent);
-        }
+            => AddActivatedAbilityFlicker(ParentObject, Force, Silent)
+            ;
+
         public virtual bool RemoveActivatedAbilityFlicker(GameObject GO, bool Force = false)
         {
             bool removed = false;
-            if (FlickerActivatedAbilityID != Guid.Empty || Force)
-            {
-                if (removed = RemoveMyActivatedAbility(ref FlickerActivatedAbilityID, GO))
-                {
-                    FlickerActivatedAbilityID = Guid.Empty;
-                }
-            }
-            return removed && FlickerActivatedAbilityID == Guid.Empty;
+            if (FlickerActivatedAbilityID != Guid.Empty
+                || Force)
+                removed = RemoveMyActivatedAbility(ref FlickerActivatedAbilityID, GO);
+
+            return removed
+                && FlickerActivatedAbilityID == Guid.Empty
+                ;
         }
+
         public bool RemoveActivatedAbilityFlicker(bool Force = false)
-        {
-            return RemoveActivatedAbilityFlicker(ParentObject, Force);
-        }
+            => RemoveActivatedAbilityFlicker(ParentObject, Force)
+            ;
+
         public void SyncFlickerAbilityName()
         {
-            ActivatedAbilityEntry activatedAbilityEntry = MyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
-            if (activatedAbilityEntry != null)
-            {
+            if (MyActivatedAbility(FlickerActivatedAbilityID, ParentObject) is ActivatedAbilityEntry activatedAbilityEntry)
                 activatedAbilityEntry.DisplayName = $"Flicker Strike ({FlickerCharges})";
-            }
         }
+
         public void SyncFlickerAbility()
         {
             if (HaveFlickerCharges)
-            {
                 EnableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
-            }
             else
-            {
                 DisableMyActivatedAbility(FlickerActivatedAbilityID, ParentObject);
-            }
+
             if (RecentlyFlickered && WantsToIdleFlicker && IdleFlickerTurnCounter++ > IdleFlickerTurnThreshold)
             {
                 RecentlyFlickered = false;
@@ -218,22 +236,25 @@ namespace XRL.World.Parts
             Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
             base.Register(Object, Registrar);
         }
+
         public override bool WantEvent(int ID, int Cascade)
-        {
-            return base.WantEvent(ID, Cascade)
-                || ID == EndTurnEvent.ID
-                || ID == EnteredCellEvent.ID
-                || ID == GetItemElementsEvent.ID
-                || ID == BeforeAbilityManagerOpenEvent.ID
-                || ID == AIGetOffensiveAbilityListEvent.ID
-                || ID == AIBoredEvent.ID
-                || ID == CommandEvent.ID;
-        }
+            => base.WantEvent(ID, Cascade)
+            || ID == EndTurnEvent.ID
+            || ID == EnteredCellEvent.ID
+            || ID == GetItemElementsEvent.ID
+            || ID == BeforeAbilityManagerOpenEvent.ID
+            || ID == AIGetOffensiveAbilityListEvent.ID
+            || ID == AIBoredEvent.ID
+            || ID == CommandEvent.ID
+            ;
+
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions
+                && The.Player != null
+                && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
-                GameObject currentTarget = ParentObject?.Target;
+                var currentTarget = ParentObject?.Target;
 
                 string flickerChargColor = FlickerCharges == MaxFlickerCharges
                     ? "G"
@@ -242,58 +263,59 @@ namespace XRL.World.Parts
                         : "R"
                     ;
 
-                StringBuilder SB = Event.NewStringBuilder();
+                var sB = Event.NewStringBuilder();
 
-                SB.AppendColored("M", $"{nameof(AI_UD_Flickerer)}").Append(": ");
-                SB.AppendLine();
+                sB.AppendColored("M", $"{nameof(AI_UD_Flickerer)}").Append(": ")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"Flicker");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{FlickerRadius}").Append($"){HONLY}{nameof(FlickerRadius)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{CellsPerRange}").Append($"){HONLY}{nameof(CellsPerRange)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{EffectiveRange}").Append($"){HONLY}{nameof(EffectiveRange)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored(flickerChargColor, $"{FlickerCharges}")
-                    .Append($"/").AppendColored("Y", $"{MaxFlickerCharges}")
-                    .Append($"){HONLY}{nameof(FlickerCharges)}/{nameof(MaxFlickerCharges)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{FlickerChargeRechargeTurns}").Append($"){HONLY}{nameof(FlickerChargeRechargeTurns)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{FlickerChargesAtLeastToFlicker}").Append($"){HONLY}{nameof(FlickerChargesAtLeastToFlicker)}");
-                SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("G", $"{HealthThresholdToOverrideMinFlickerCharges}").Append($"){HONLY}{nameof(HealthThresholdToOverrideMinFlickerCharges)}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"Flicker")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{FlickerRadius}").Append($"){HONLY}{nameof(FlickerRadius)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{CellsPerRange}").Append($"){HONLY}{nameof(CellsPerRange)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{EffectiveRange}").Append($"){HONLY}{nameof(EffectiveRange)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored(flickerChargColor, $"{FlickerCharges}")
+                        .Append($"/").AppendColored("Y", $"{MaxFlickerCharges}")
+                        .Append($"){HONLY}{nameof(FlickerCharges)}/{nameof(MaxFlickerCharges)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{FlickerChargeRechargeTurns}").Append($"){HONLY}{nameof(FlickerChargeRechargeTurns)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{FlickerChargesAtLeastToFlicker}").Append($"){HONLY}{nameof(FlickerChargesAtLeastToFlicker)}")
+                    .AppendLine()
+                    .Append(TANDR).Append("(").AppendColored("G", $"{HealthThresholdToOverrideMinFlickerCharges}").Append($"){HONLY}{nameof(HealthThresholdToOverrideMinFlickerCharges)}")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"Target");
-                SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"Target")
+                    .AppendLine()
+                    .Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"State");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{RecentlyFlickered.YehNah()}]{HONLY}{nameof(RecentlyFlickered)}: ").AppendColored("B", $"{RecentlyFlickered}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{WantsToIdleFlicker.YehNah()}]{HONLY}{nameof(WantsToIdleFlicker)}: ").AppendColored("B", $"{WantsToIdleFlicker}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnThreshold}").Append($"){HONLY}{nameof(IdleFlickerTurnThreshold)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnCounter}").Append($"){HONLY}{nameof(IdleFlickerTurnCounter)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{WantsToFlicker.YehNah()}]{HONLY}{nameof(WantsToFlicker)}: ").AppendColored("B", $"{WantsToFlicker}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{OverrideMinFlickerCharges.YehNah()}]{HONLY}{nameof(OverrideMinFlickerCharges)}: ").AppendColored("B", $"{OverrideMinFlickerCharges}");
-                SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("C", $"{FlickerChargeTurnCounter}").Append($"){HONLY}{nameof(FlickerChargeTurnCounter)}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"State")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{RecentlyFlickered.YehNah()}]{HONLY}{nameof(RecentlyFlickered)}: ").AppendColored("B", $"{RecentlyFlickered}")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{WantsToIdleFlicker.YehNah()}]{HONLY}{nameof(WantsToIdleFlicker)}: ").AppendColored("B", $"{WantsToIdleFlicker}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnThreshold}").Append($"){HONLY}{nameof(IdleFlickerTurnThreshold)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("C", $"{IdleFlickerTurnCounter}").Append($"){HONLY}{nameof(IdleFlickerTurnCounter)}")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{WantsToFlicker.YehNah()}]{HONLY}{nameof(WantsToFlicker)}: ").AppendColored("B", $"{WantsToFlicker}")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{OverrideMinFlickerCharges.YehNah()}]{HONLY}{nameof(OverrideMinFlickerCharges)}: ").AppendColored("B", $"{OverrideMinFlickerCharges}")
+                    .AppendLine()
+                    .Append(TANDR).Append("(").AppendColored("C", $"{FlickerChargeTurnCounter}").Append($"){HONLY}{nameof(FlickerChargeTurnCounter)}")
+                    .AppendLine();
 
-                E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+                E.Infix.AppendLine().AppendRules(Event.FinalizeString(sB));
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(EndTurnEvent E)
         {
             if (ParentObject?.CurrentZone == The.ActiveZone)
@@ -305,99 +327,101 @@ namespace XRL.World.Parts
                     + $" For: {ParentObject?.DebugName ?? NULL}",
                     Indent: 0, Toggle: getDoDebug('X'));
 
-                if (FlickerCharges < MaxFlickerCharges && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
+                if (FlickerCharges < MaxFlickerCharges
+                    && FlickerChargeTurnCounter++ > FlickerChargeRechargeTurns)
                 {
                     FlickerCharges++;
                     FlickerChargeTurnCounter = 0;
                 }
-                if (FlickerChargeTurnCounter > 0 && FlickerCharges == MaxFlickerCharges)
-                {
+
+                if (FlickerChargeTurnCounter > 0
+                    && FlickerCharges == MaxFlickerCharges)
                     FlickerChargeTurnCounter = 0;
-                }
+
                 SyncFlickerAbility();
 
                 MidFlicker = false;
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(EnteredCellEvent E)
         {
             if (FlickerActivatedAbilityID == Guid.Empty 
                 && ParentObject != null 
                 && ParentObject?.CurrentZone == The.ActiveZone)
-            {
                 AddActivatedAbilityFlicker(ParentObject);
-            }
+
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
         {
             DescribeMyActivatedAbility(FlickerActivatedAbilityID, CollectFlickerStats, ParentObject);
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(GetItemElementsEvent E)
         {
             if (E.IsRelevantCreature(ParentObject))
-            {
                 E.Add("chance", MaxFlickerCharges);
-            }
+
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
             string targetName = E?.Target?.DebugName ?? NULL;
-            if ((WantsToFlicker || OverrideMinFlickerCharges)
+            if ((WantsToFlicker
+                    || OverrideMinFlickerCharges)
                 && !E.Actor.OnWorldMap()
                 && HaveFlickerCharges
-                && (FlickerCharges == MaxFlickerCharges || 25.in100())
+                && (FlickerCharges == MaxFlickerCharges
+                    || 25.in100())
                 && GameObject.Validate(E.Target))
             {
                 E.Actor.Think($"I want to attack {targetName}");
-                bool targetInRange = E.Actor.CurrentCell.CosmeticDistanceto(E.Target.CurrentCell.Location) < BlinkRange / 2;
-                if (targetInRange)
+
+                if (E.Actor.CurrentCell.CosmeticDistanceto(E.Target.CurrentCell.Location) >= BlinkRange / 2)
+                    E.Actor.Think($"I can't reach {targetName}");
+                else
                 {
                     E.Actor.Think($"{targetName} is superficially in range");
 
-                    List<Cell> cellsInBlinkRadius = Event.NewCellList(E.Actor.CurrentCell.GetAdjacentCells(BlinkRange / 2));
+                    using var cellsInBlinkRadius = ScopeDisposedList<Cell>.GetFromPoolFilledWith(E.Actor.CurrentCell.GetAdjacentCells(BlinkRange / 2));
                     if (!cellsInBlinkRadius.IsNullOrEmpty())
                     {
-                        GameObject flickerTarget = E.Target;
-                        List<Cell> flickerTargetAdjacentCells = Event.NewCellList(flickerTarget.CurrentCell.GetAdjacentCells());
-                        flickerTargetAdjacentCells.RemoveAll(c => !cellsInBlinkRadius.Contains(c) || c.IsSolidFor(E.Actor));
-                        if (!flickerTargetAdjacentCells.IsNullOrEmpty())
-                        {
-                            foreach (Cell possibleDestination in flickerTargetAdjacentCells)
-                            {
-                                FindPath posiblePath = new(
-                                    StartCell: E.Actor.CurrentCell,
-                                    EndCell: possibleDestination,
-                                    PathGlobal: true,
-                                    Looker: ParentObject,
-                                    MaxWeight: 10,
-                                    IgnoreCreatures: true);
+                        var flickerTarget = E.Target;
+                        using var flickerTargetAdjacentCells = ScopeDisposedList<Cell>.GetFromPoolFilledWith(flickerTarget.CurrentCell.GetAdjacentCells());
 
-                                if (posiblePath.Steps.Contains(E.Actor.CurrentCell))
-                                {
-                                    posiblePath.Steps.Remove(E.Actor.CurrentCell);
-                                }
-                                if (UD_Blink.IsValidDestinationCell(E.Actor, possibleDestination, BlinkRange, posiblePath.Steps.Count))
-                                {
-                                    E.Actor.Think($"I've found a path I could use to flicker strike {targetName}");
-                                    E.Actor.Think($"I might try and flicker strike {targetName}, omae wa mou shindeiru");
-                                    E.Add(COMMAND_AI_UD_FLICKER_ABILITY, 1, E.Actor, TargetOverride: E.Target);
-                                    break;
-                                }
+                        flickerTargetAdjacentCells.RemoveAll(c => !cellsInBlinkRadius.Contains(c) || c.IsSolidFor(E.Actor));
+
+                        foreach (var possibleDestination in flickerTargetAdjacentCells)
+                        {
+                            var posiblePath = new FindPath(
+                                StartCell: E.Actor.CurrentCell,
+                                EndCell: possibleDestination,
+                                PathGlobal: true,
+                                Looker: ParentObject,
+                                MaxWeight: 10,
+                                IgnoreCreatures: true);
+
+                            posiblePath.Steps.Remove(E.Actor.CurrentCell);
+
+                            if (UD_Blink.IsValidDestinationCell(E.Actor, possibleDestination, BlinkRange, posiblePath.Steps.Count))
+                            {
+                                E.Actor.Think($"I've found a path I could use to flicker strike {targetName}");
+                                E.Actor.Think($"I might try and flicker strike {targetName}, omae wa mou shindeiru");
+                                E.Add(COMMAND_AI_UD_FLICKER_ABILITY, 1, E.Actor, TargetOverride: E.Target);
+                                break;
                             }
                         }
                     }
                 }
-                else
-                {
-                    E.Actor.Think($"I can't reach {targetName}");
-                }
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(AIBoredEvent E)
         {
             if (WantsToIdleFlicker 
@@ -417,6 +441,7 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(CommandEvent E)
         {
             if (E.Actor == ParentObject)
@@ -425,11 +450,10 @@ namespace XRL.World.Parts
 
                 if (E.Command == COMMAND_AI_UD_FLICKER_ABILITY
                     && IsMyActivatedAbilityUsable(FlickerActivatedAbilityID, E.Actor))
-                {
                     CommandEvent.Send(
                         Actor: E.Actor,
                         Command: COMMAND_AI_UD_FLICKER);
-                }
+                else
                 if (E.Command == COMMAND_AI_UD_FLICKER
                     && !MidFlicker
                     && GameObject.Validate(ParentObject))
@@ -437,9 +461,8 @@ namespace XRL.World.Parts
                     try
                     {
                         MidFlicker = true;
-                        bool nearbyHostile = The.ActiveZone.GetFirstObject(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)) != null;
-                        bool haveTarget = E.Target != null || nearbyHostile;
-                        if (haveTarget)
+                        if (E.Target != null
+                            || The.ActiveZone.YieldObjects().Any(GO => GO.IsHostileTowardsInRadius(E.Actor, FlickerRadius)))
                         {
                             Flicker(
                                 Flickerer: E.Actor,
@@ -460,16 +483,16 @@ namespace XRL.World.Parts
                                 return false;
                             }
 
-                            Cell originCell = E.Actor.CurrentCell;
+                            var originCell = E.Actor.CurrentCell;
 
-                            List<Cell> cellsInFlickerRadius = Event.NewCellList(originCell.GetAdjacentCells(FlickerRadius));
+                            using var cellsInFlickerRadius = ScopeDisposedList<Cell>.GetFromPoolFilledWith(originCell.GetAdjacentCells(FlickerRadius));
                             cellsInFlickerRadius.RemoveAll(c => CellIsInvalidFlickerDestination(c, E.Actor));
 
                             if (!cellsInFlickerRadius.IsNullOrEmpty())
                             {
                                 int attempts = 0;
                                 int maxAttempts = 65;
-                                Cell currentOriginCell = originCell;
+                                var currentOriginCell = originCell;
                                 bool didFlicker = false;
                                 int flickers = 0;
                                 int flickerCharges = Stat.RandomCosmetic(1, FlickerCharges);
@@ -478,36 +501,18 @@ namespace XRL.World.Parts
                                 string message;
                                 string messageColor = "Y";
                                 char particleColor = 'y';
-                                List<string> effortSounds = new()
-                                {
-                                    "hup!",
-                                    "hya!",
-                                    "hyap!",
-                                    "hrup!",
-                                    "haya!",
-                                    "aya!",
-                                    "ayap!",
-                                    "ayup!",
-                                    "hur!",
-                                    "rup!",
-                                    "rya!",
-                                    "rhup!",
-                                    "ruh!",
-                                    "rah!",
-                                    "uhr!",
-                                    "urr!",
-                                    "ahr!",
-                                    "arr!",
-                                };
 
-                                while (flickerCharges > 0 && attempts < maxAttempts)
+                                using var effortSounds = ScopeDisposedList<string>.GetFromPoolFilledWith(EffortSounds);
+
+                                while (flickerCharges > 0
+                                    && attempts < maxAttempts)
                                 {
                                     attempts++;
 
                                     Debug.Entry(2, $"Preloading sound clip {UD_Blink.BLINK_SOUND.Quote()}...", Indent: indent + 1, Toggle: getDoDebug());
                                     SoundManager.PreloadClipSet(UD_Blink.BLINK_SOUND);
 
-                                    Cell destinationCell = cellsInFlickerRadius.GetRandomElementCosmetic();
+                                    var destinationCell = cellsInFlickerRadius.GetRandomElementCosmetic();
 
                                     if (!TryGetFlickerPath(
                                         Flickerer: E.Actor,
@@ -539,14 +544,18 @@ namespace XRL.World.Parts
                                     flickerCharges--;
                                     flickers++;
 
-                                    if (6.in10() && !ParentObject.IsInActiveZone() && !destinationCell.InActiveZone)
+                                    if (6.in10()
+                                        && (ParentObject.IsInActiveZone()
+                                            || destinationCell.InActiveZone))
                                     {
                                         message = effortSounds.DrawRandomToken();
                                         E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
+
                                         if (ObnoxiousYelling)
                                         {
                                             destinationCell.ParticleText(
                                                 Text: message,
+                                                IgnoreVisibility: false,
                                                 Color: particleColor,
                                                 juiceDuration: 1.5f,
                                                 floatLength: 8.0f);
@@ -592,6 +601,7 @@ namespace XRL.World.Parts
                                         message = "*sigh*";
                                         particleColor = 'w';
                                         E.Actor.EmitMessage($"{actorName}: {message.Color(particleColor)}", null, messageColor);
+
                                         if (ObnoxiousYelling)
                                         {
                                             E.Actor.ParticleText(
@@ -600,6 +610,7 @@ namespace XRL.World.Parts
                                                 juiceDuration: 1.5f,
                                                 floatLength: 8.0f);
                                         }
+
                                         E.Actor.Physics.DidX(Verb: verb, Extra: $"back to {E.Actor.its} original location", EndMark: "!");
                                         RecentlyFlickered = true;
                                         E.Actor.Think("I've calmed down a bit now!");
@@ -609,10 +620,9 @@ namespace XRL.World.Parts
                             }
                             else
                             {
-                                if (!E.Silent && E.Actor.IsPlayer())
-                                {
+                                if (!E.Silent
+                                    && E.Actor.IsPlayer())
                                     Popup.Show($"There's no room to {verb}!");
-                                }
                             }
                         }
                     }
@@ -637,12 +647,10 @@ namespace XRL.World.Parts
 
         public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
         {
-            AI_UD_Flickerer aI_UD_Flickerer = base.DeepCopy(Parent, MapInv) as AI_UD_Flickerer;
+            var aI_UD_Flickerer = base.DeepCopy(Parent, MapInv) as AI_UD_Flickerer;
 
             if (aI_UD_Flickerer.FlickerActivatedAbilityID != Guid.Empty)
-            {
                 aI_UD_Flickerer.AddActivatedAbilityFlicker(true);
-            }
 
             return aI_UD_Flickerer;
         }

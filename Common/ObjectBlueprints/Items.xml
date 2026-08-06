@@ -23,7 +23,7 @@
        1: Shoes
        
    -->
-  <object Name="Red Plastifer Runners" Inherits="Plastifer Sneakers">
+  <object Name="UD Red Plastifer Runners" Inherits="Plastifer Sneakers">
     <part Name="Armor" AV="0" DV="3" />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{R|red}} {{plastifer|plastifer}} {{R|runners}}" 
@@ -43,7 +43,7 @@
     <tag Name="EquipmentFrameColors" Value="RYRW" />
   </object>
   
-  <object Name="Spiked Climbers" Inherits="Magnetized Boots">
+  <object Name="UD Spiked Climbers" Inherits="Magnetized Boots">
     <part Name="Armor" AV="2" DV="0" />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{W|climbers}}" 
@@ -96,7 +96,7 @@
        2: Gloves
        
    -->
-  <object Name="Digging Gloves" Inherits="Plastifer Gloves">
+  <object Name="UD Digging Gloves" Inherits="Plastifer Gloves">
     <part Name="Armor" AV="2" DV="0" Elec="5" Cold="5" Heat="5" Acid="5" WornOn="Hands" />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{W|digging}} gloves" 
@@ -141,7 +141,7 @@
   </object>
   
   
-  <object Name="Gold Ring" Inherits="BaseBracelet">
+  <object Name="UD Gold Ring" Inherits="BaseBracelet">
     <part Name="Armor" DV="3" />
     <!-- TileColor is black pixels, DetailColor is white pixels -->
     <part Name="Render" DisplayName="{{W|gold ring}}" 
@@ -184,7 +184,7 @@ Compute power on the local lattice increases this implant's effectiveness." />
        5: Gems
        
    -->
-  <object Name="BaseChaosEmerald" Inherits="Polished Emerald">
+  <object Name="Base_UD_ChaosEmerald" Inherits="Polished Emerald">
     <part Name="Render" DisplayName="[chaos emerald]" ColorString="&amp;Y" TileColor="&amp;Y" DetailColor="y" Tile="Items/Chaos_Emerald.png" />
     <part Name="Physics" Category="Artifacts" SpecificHeat="0" FreezeTemperature="-9999" BrittleTemperature="-9999" FlameTemperature="99999" VaporTemperature="9999" Weight="5" />
     <part Name="Suspensor" PercentageForce="200" ChargeUse="0" IsEMPSensitive="false" />
@@ -219,6 +219,7 @@ Compute power on the local lattice increases this implant's effectiveness." />
     <part Name="NoBreak" />
     <part Name="Unreplicable" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
+    <tag Name="SecretAdjectives" Value="chaos emerald" />
     <part Name="TakenAccomplishment" Text="You =ud_spice:commonPhrases.retrieve.!random= a most =ud_spice:elements.!random.adjectives.!random= relic, =this.the= =this.refname=." Hagiograph="Recall how =name= hunted high and most low for =this.the= =this.refname=, finding it and preserving it from the grasp of would-be tyrants!" HagiographCategory="FindsObject" HagiographWeight="High" Gospel="In the ruins deep below =landmark.nearest|title=, =name= created a most &lt;spice.commonPhrases.prized.!random&gt; relic. =player.Subjective= took the &lt;spice.commonPhrases.strange.!random&gt; gossamer mesh of the great aetheric sea itself and shaped it into an emerald so &lt;spice.commonPhrases.epic.!random&gt; that it became forever known as =this.the= =this.refname=." />
     <stag Name="Floating" />
     <stag Name="Travel" />
@@ -228,62 +229,122 @@ Compute power on the local lattice increases this implant's effectiveness." />
     <tag Name="ExcludeFromDynamicEncounters" />
     <tag Name="NoSparkingQuest" />
   </object>
-  <object Name="ProjectileSuperTransformationBeam" Inherits="ProjectileIrisdualBeam">
+  <object Name="UD ProjectileSuperTransformationBeam" Inherits="ProjectileIrisdualBeam">
     <part Name="Render" DisplayName="{{supertransformation|flash of chaos}}" ColorString="&amp;W" />
     <part Name="Projectile" ColorString="&amp;W" PassByVerb="zoop" />
     <part Name="TreatAsSolid" Message="The chaos consumes =subject.t=!" />
   </object>
-  <object Name="Green Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Green Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{G|Green}} {{Y|Chaos}} {{G-Y-g-Y-G-y-G alternation|Emerald}}" 
           ColorString="&amp;G" TileColor="&amp;G" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of time itself." />
     <part Name="Examiner" Unknown="Rough Emerald" Alternate="Polished Emerald" />
     <part Name="UniqueWithAlternative" Alternative="Polished Emerald" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
   </object>
-  <object Name="Red Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Red Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{R|Red}} {{Y|Chaos}} {{R-Y-r-Y-R-y-R alternation|Emerald}}" 
           ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of power itself." />
     <part Name="Examiner" Unknown="Rough Jasper" Alternate="Polished Jasper" />
     <part Name="EquipIntProperties" Props="AllMutationLevelModifier:1;CyberneticsLicenses:6;FreeCyberneticsLicenses:6" IsEMPSensitive="false" />
     <part Name="RulesDescription" Text="+1 to all mutation levels&#10;+6 to cybernetics license tier" />
     <part Name="UniqueWithAlternative" Alternative="Polished Jasper" />
     <tag Name="EquipmentFrameColors" Value="yRYr" />
   </object>
-  <object Name="Blue Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Blue Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{B|Blue}} {{Y|Chaos}} {{B-Y-b-Y-B-y-B alternation|Emerald}}" 
           ColorString="&amp;B" TileColor="&amp;B" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of consciousness itself." />
     <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
     <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yBYb" />
   </object>
-  <object Name="Yellow Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Yellow Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{W|Yellow}} {{Y|Chaos}} {{W-Y-w-Y-W-y-W alternation|Emerald}}" 
           ColorString="&amp;W" TileColor="&amp;W" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of life itself." />
     <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
     <part Name="UniqueWithAlternative" Alternative="Polished Topaz" />
     <tag Name="EquipmentFrameColors" Value="yWYw" />
   </object>
-  <object Name="Cyan Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Cyan Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{C|Cyan}} {{Y|Chaos}} {{C-Y-c-Y-C-y-C alternation|Emerald}}" 
           ColorString="&amp;C" TileColor="&amp;C" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of reality itself." />
     <part Name="Examiner" Unknown="Rough Sapphire" Alternate="Polished Sapphire" />
     <part Name="UniqueWithAlternative" Alternative="Polished Sapphire" />
     <tag Name="EquipmentFrameColors" Value="yCYc" />
   </object>
-  <object Name="Pink Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Pink Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{M|Pink}} {{Y|Chaos}} {{M-Y-m-Y-M-y-M alternation|Emerald}}" 
           ColorString="&amp;M" TileColor="&amp;M" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by the underlying principles of existence itself." />
     <part Name="Examiner" Unknown="Rough Amethyst" Alternate="Polished Amethyst" />
     <part Name="UniqueWithAlternative" Alternative="Polished Amethyst" />
     <tag Name="EquipmentFrameColors" Value="yMYm" />
   </object>
-  <object Name="Orange Chaos Emerald" Inherits="BaseChaosEmerald">
+  <object Name="UD Orange Chaos Emerald" Inherits="Base_UD_ChaosEmerald">
     <part Name="Render" DisplayName="{{O|Orange}} {{Y|Chaos}} {{O-Y-o-Y-O-y-O alternation|Emerald}}" 
           ColorString="&amp;O" TileColor="&amp;O" DetailColor="Y" />
+    <part Name="Description" Short="Metaphysical power made manifest by inversion of the underlying principles of ontology itself." />
     <part Name="Examiner" Unknown="Rough Topaz" Alternate="Polished Topaz" />
     <part Name="ModExtradimensional" IsEMPSensitive="false" />
     <part Name="UniqueWithAlternative" Alternative="Polished Topaz" />
     <tag Name="EquipmentFrameColors" Value="yOYo" />
   </object>
   
+  <!-- 
+  
+       6: Sundry
+       
+   -->
+  <object Name="UD Full AutoCollect Biodynamic Cell" Inherits="Biodynamic Cell">
+    <part Name="TinkerItem" SubstituteBlueprint="Biodynamic Cell" />
+    <part Name="LiquidVolume" StartVolume="8" AutoCollectLiquidType="blood" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="UD Overloaded Wristcalc" Inherits="Wristcalc">
+    <part Name="TinkerItem" SubstituteBlueprint="Wristcalc" />
+    <part Name="ModOverloaded" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  
+  <object Name="UD SpringLoaded Steel Boots" Inherits="Steel Boots">
+    <part Name="ModSpringLoaded" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  
+  <object Name="UD SpringLoaded Slender Fullerite Boots" Inherits="Fullerite Boots">
+    <part Name="ModSpringLoaded" />
+    <part Name="ModSlender" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="UD Spiked Slender Fullerite Shield" Inherits="Fullerite Shield">
+    <part Name="ModSpiked" />
+    <part Name="ModSlender" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  
+  <object Name="UD SpringLoaded Crysteel Boots" Inherits="Crysteel Boots">
+    <part Name="ModSpringLoaded" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="UD Spiked Crysteel Shield" Inherits="Crysteel Shield">
+    <part Name="ModSpiked" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+  <object Name="UD Spiked Flawless Crysteel Shield" Inherits="Flawless Crysteel Shield">
+    <part Name="ModSpiked" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <tag Name="NoSparkingQuest" Value="*noinherit" />
+  </object>
+
 </objects>

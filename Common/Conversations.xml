@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<conversations>
+  
+  <conversation ID="Base_UD_PricklePig">
+    <start ID="Greeting">
+      <text>Gotta go fast!</text>
+      <choice Target="End">Live and drink.</choice>
+    </start>
+  </conversation>
+  
+  <conversation ID="UD_PricklePig" Inherits="Base_UD_PricklePig">
+    <start ID="Greeting">
+      <text>Gotta go fast!</text>
+      <text>No time for a lengthy chat!</text>
+      <text>Do you have any idea how fast I truly am?</text>
+      <text>Still fast!</text>
+      <choice Target="End">Live and drink.</choice>
+    </start>
+  </conversation>
+  
+  <conversation ID="UD_BurrowingPricklePig" Inherits="Base_UD_PricklePig">
+    <start ID="Greeting">
+      <text>Looking for relics!</text>
+      <text>Looking for a good fight!</text>
+      <text>Seen any shiny gems?</text>
+      <choice Target="End">Live and drink.</choice>
+    </start>
+  </conversation>
+  
+  <conversation ID="UD_DarkPricklePig" Inherits="Base_UD_PricklePig">
+    <start ID="Greeting">
+      <text>Psssh... maybe you {{Y|should}} take it personnel.</text>
+      <text>Out of my way, you're too slow!</text>
+      <text>Those gems are mine...</text>
+      <text>Try to keep up.</text>
+      <choice Target="End">Live and drink.</choice>
+    </start>
+  </conversation>
+  
+  <conversation ID="UD_MetalPricklePig" Inherits="Base_UD_PricklePig">
+    <start ID="Greeting">
+      <text>
+        {{C|TARGET:}} =object.name=
+        {{C|STATUS: acknowledged}}
+
+        {{C|OPERATION: awaiting additional input...}}
+      </text>
+      <choice Target="End">Live and drink.</choice>
+    </start>
+  </conversation>
+  
+</conversations>

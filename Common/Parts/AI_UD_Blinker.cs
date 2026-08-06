@@ -110,21 +110,21 @@ namespace XRL.World.Parts
         public override void Attach()
         {
             base.Attach();
-            if (BlinkActivatedAbilityID == Guid.Empty && ParentObject != null)
-            {
+            if (BlinkActivatedAbilityID == Guid.Empty
+                && ParentObject != null)
                 AddActivatedAbilityBlink(ParentObject);
-            }
-            if (ColdSteelActivatedAbilityID == Guid.Empty && ParentObject != null)
-            {
+
+            if (ColdSteelActivatedAbilityID == Guid.Empty
+                && ParentObject != null)
                 IsNothinPersonnelKid = true;
-            }
         }
 
         public virtual Guid AddActivatedAbilityBlink(GameObject GO, bool Force = false, bool Silent = false)
         {
             bool removed = RemoveActivatedAbilityBlink(GO);
-            if (GO != null && BlinkActivatedAbilityID == Guid.Empty || Force)
-            {
+            if (GO != null
+                && (BlinkActivatedAbilityID == Guid.Empty
+                    || Force))
                 BlinkActivatedAbilityID =
                     AddMyActivatedAbility(
                         Name: "Blink",
@@ -133,37 +133,37 @@ namespace XRL.World.Parts
                         Icon: "~",
                         IsAttack: IsNothinPersonnelKid,
                         Silent: removed || Silent,
-                        who: GO
-                        );
-            }
+                        who: GO);
+
             return BlinkActivatedAbilityID;
         }
+
         public Guid AddActivatedAbilityBlink(bool Force = false, bool Silent = false)
-        {
-            return AddActivatedAbilityBlink(ParentObject, Force, Silent);
-        }
-        public virtual bool RemoveActivatedAbilityBlink(GameObject GO, bool Force = false)
+            => AddActivatedAbilityBlink(ParentObject, Force, Silent)
+            ;
+
+        public virtual bool RemoveActivatedAbilityBlink(GameObject Who, bool Force = false)
         {
             bool removed = false;
-            if (BlinkActivatedAbilityID != Guid.Empty || Force)
-            {
-                if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO))
-                {
+            if (BlinkActivatedAbilityID != Guid.Empty
+                || Force)
+                if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, Who))
                     BlinkActivatedAbilityID = Guid.Empty;
-                }
-            }
-            return removed && BlinkActivatedAbilityID == Guid.Empty;
-        }
-        public bool RemoveActivatedAbilityBlink(bool Force = false)
-        {
-            return RemoveActivatedAbilityBlink(ParentObject, Force);
+
+            return removed
+                && BlinkActivatedAbilityID == Guid.Empty;
         }
 
-        public virtual Guid AddActivatedAbilityColdSteel(GameObject GO, bool Force = false, bool Silent = false)
+        public bool RemoveActivatedAbilityBlink(bool Force = false)
+            => RemoveActivatedAbilityBlink(ParentObject, Force)
+            ;
+
+        public virtual Guid AddActivatedAbilityColdSteel(GameObject Who, bool Force = false, bool Silent = false)
         {
             bool removed = RemoveActivatedAbilityColdSteel();
-            if (GO != null && ColdSteelActivatedAbilityID == Guid.Empty || Force)
-            {
+            if (Who != null
+                && (ColdSteelActivatedAbilityID == Guid.Empty
+                    || Force))
                 ColdSteelActivatedAbilityID =
                     AddMyActivatedAbility(
                         Name: "{{coldsteel|Cold Steel}}",
@@ -175,31 +175,30 @@ namespace XRL.World.Parts
                         IsWorldMapUsable: true,
                         Silent: removed || Silent,
                         AffectedByWillpower: false,
-                        who: GO
-                        );
-            }
+                        who: Who);
+
             return ColdSteelActivatedAbilityID;
         }
+
         public Guid AddActivatedAbilityColdSteel(bool Force = false, bool Silent = false)
-        {
-            return AddActivatedAbilityColdSteel(ParentObject, Force, Silent);
-        }
+            => AddActivatedAbilityColdSteel(ParentObject, Force, Silent)
+            ;
+
         public virtual bool RemoveActivatedAbilityColdSteel(GameObject GO, bool Force = false)
         {
             bool removed = false;
-            if (ColdSteelActivatedAbilityID != Guid.Empty || Force)
-            {
+            if (ColdSteelActivatedAbilityID != Guid.Empty
+                || Force)
                 if (removed = RemoveMyActivatedAbility(ref BlinkActivatedAbilityID, GO))
-                {
                     ColdSteelActivatedAbilityID = Guid.Empty;
-                }
-            }
-            return removed && ColdSteelActivatedAbilityID == Guid.Empty;
+
+            return removed
+                && ColdSteelActivatedAbilityID == Guid.Empty;
         }
+
         public bool RemoveActivatedAbilityColdSteel(bool Force = false)
-        {
-            return RemoveActivatedAbilityColdSteel(ParentObject, Force);
-        }
+            => RemoveActivatedAbilityColdSteel(ParentObject, Force)
+            ;
 
         public virtual void CollectStats(Templates.StatCollector stats)
         {
@@ -214,73 +213,78 @@ namespace XRL.World.Parts
             Registrar.Register(GetShortDescriptionEvent.ID, EventOrder.EXTREMELY_EARLY);
             base.Register(Object, Registrar);
         }
+
         public override bool WantEvent(int ID, int Cascade)
-        {
-            return base.WantEvent(ID, Cascade)
-                || ID == EndTurnEvent.ID
-                || ID == EnteredCellEvent.ID
-                || ID == BeforeAbilityManagerOpenEvent.ID
-                || ID == GetItemElementsEvent.ID
-                || ID == ActorGetNavigationWeightEvent.ID
-                || ID == AIGetOffensiveAbilityListEvent.ID
-                || ID == AIGetRetreatAbilityListEvent.ID
-                || ID == AIGetMovementAbilityListEvent.ID
-                || (!RecentlyBlunk && ID == SingletonEvent<BeginTakeActionEvent>.ID)
-                || ID == CommandEvent.ID;
-        }
+            => base.WantEvent(ID, Cascade)
+            || ID == EndTurnEvent.ID
+            || ID == EnteredCellEvent.ID
+            || ID == BeforeAbilityManagerOpenEvent.ID
+            || ID == GetItemElementsEvent.ID
+            || ID == ActorGetNavigationWeightEvent.ID
+            || ID == AIGetOffensiveAbilityListEvent.ID
+            || ID == AIGetRetreatAbilityListEvent.ID
+            || ID == AIGetMovementAbilityListEvent.ID
+            || (!RecentlyBlunk && ID == SingletonEvent<BeginTakeActionEvent>.ID)
+            || ID == CommandEvent.ID
+            ;
+
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
-            if (DoDebugDescriptions && The.Player != null && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
+            if (DoDebugDescriptions
+                && The.Player != null
+                && ParentObject.CurrentZone == The.ZoneManager.ActiveZone)
             {
-                GameObject currentTarget = ParentObject?.Target;
+                var currentTarget = ParentObject?.Target;
 
-                StringBuilder SB = Event.NewStringBuilder();
+                var sB = Event.NewStringBuilder();
 
-                SB.AppendColored("M", $"{nameof(AI_UD_Blinker)}").Append(": ");
-                SB.AppendLine();
+                sB.AppendColored("M", $"{nameof(AI_UD_Blinker)}").Append(": ")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"Blink");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{HasBlink.YehNah()}]{HONLY}{nameof(HasBlink)}: ").AppendColored("B", $"{HasBlink}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{BlinkLevel}").Append($"){HONLY}{nameof(BlinkLevel)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseCooldown}").Append($"){HONLY}{nameof(BaseCooldown)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{CooldownFactor}").Append($"){HONLY}{nameof(CooldownFactor)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{BaseRange}").Append($"){HONLY}{nameof(BaseRange)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("G", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}");
-                SB.AppendLine();
-                SB.Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"Blink")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{HasBlink.YehNah()}]{HONLY}{nameof(HasBlink)}: ").AppendColored("B", $"{HasBlink}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{BlinkLevel}").Append($"){HONLY}{nameof(BlinkLevel)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{BaseCooldown}").Append($"){HONLY}{nameof(BaseCooldown)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{CooldownFactor}").Append($"){HONLY}{nameof(CooldownFactor)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{BaseRange}").Append($"){HONLY}{nameof(BaseRange)}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("G", $"{BlinkRange}").Append($"){HONLY}{nameof(BlinkRange)}")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{IsNothinPersonnelKid.YehNah()}]{HONLY}{nameof(IsNothinPersonnelKid)}: ").AppendColored("B", $"{IsNothinPersonnelKid}")
+                    .AppendLine()
+                    .Append(TANDR).Append($"[{WeGoAgain.YehNah()}]{HONLY}{nameof(WeGoAgain)}: ").AppendColored("B", $"{WeGoAgain}")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"Target");
-                SB.AppendLine();
-                SB.Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"Target")
+                    .AppendLine()
+                    .Append(TANDR).Append("(").AppendColored("o", $"{currentTarget?.DebugName ?? NULL}").Append($"){HONLY}{nameof(currentTarget)}")
+                    .AppendLine();
 
-                SB.AppendColored("W", $"State");
-                SB.AppendLine();
-                SB.Append(VANDR).Append($"[{RecentlyBlunk.YehNah()}]{HONLY}{nameof(RecentlyBlunk)}: ").AppendColored("B", $"{RecentlyBlunk}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append("(").AppendColored("C", $"{The.Game?.TimeTicks}").Append($"){HONLY}Current{nameof(The.Game.TimeTicks)}");
-                SB.AppendLine();
-                SB.Append(VANDR).Append(HONLY).Append("(").AppendColored("c", $"{BlunkTurnThreshold}").Append($"){HONLY}{nameof(BlunkTurnThreshold)}");
-                SB.AppendLine();
-                SB.Append(TANDR).Append(HONLY).Append("(").AppendColored("c", $"{StoredTurnsSinceBlunk}").Append($"){HONLY}{nameof(StoredTurnsSinceBlunk)}");
-                SB.AppendLine();
+                sB.AppendColored("W", $"State")
+                    .AppendLine()
+                    .Append(VANDR).Append($"[{RecentlyBlunk.YehNah()}]{HONLY}{nameof(RecentlyBlunk)}: ").AppendColored("B", $"{RecentlyBlunk}")
+                    .AppendLine()
+                    .Append(VANDR).Append("(").AppendColored("C", $"{The.Game?.TimeTicks}").Append($"){HONLY}Current{nameof(The.Game.TimeTicks)}")
+                    .AppendLine()
+                    .Append(VANDR).Append(HONLY).Append("(").AppendColored("c", $"{BlunkTurnThreshold}").Append($"){HONLY}{nameof(BlunkTurnThreshold)}")
+                    .AppendLine()
+                    .Append(TANDR).Append(HONLY).Append("(").AppendColored("c", $"{StoredTurnsSinceBlunk}").Append($"){HONLY}{nameof(StoredTurnsSinceBlunk)}")
+                    .AppendLine();
 
-                E.Infix.AppendLine().AppendRules(Event.FinalizeString(SB));
+                E.Infix.AppendLine().AppendRules(Event.FinalizeString(sB));
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(EndTurnEvent E)
         {
-            if (ParentObject.CurrentZone != null && ParentObject.CurrentZone == The.ActiveZone)
+            if (ParentObject.CurrentZone != null
+                && ParentObject.CurrentZone == The.ActiveZone)
             {
                 Debug.Entry(4,
                     $"~ {nameof(AI_UD_Blinker)}."
@@ -299,54 +303,60 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(EnteredCellEvent E)
         {
-            if (BlinkActivatedAbilityID == Guid.Empty && ParentObject != null && ParentObject?.CurrentZone == The.ActiveZone)
-            {
+            if (BlinkActivatedAbilityID == Guid.Empty
+                && ParentObject != null
+                && ParentObject?.CurrentZone == The.ActiveZone)
                 AddActivatedAbilityBlink(ParentObject);
-            }
-            if (ColdSteelActivatedAbilityID == Guid.Empty && ParentObject != null && ParentObject?.CurrentZone == The.ActiveZone)
-            {
+
+            if (ColdSteelActivatedAbilityID == Guid.Empty
+                && ParentObject != null
+                && ParentObject?.CurrentZone == The.ActiveZone)
                 IsNothinPersonnelKid = true;
-            }
+
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
         {
             DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectStats, ParentObject);
             DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectStats, ParentObject);
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(GetItemElementsEvent E)
         {
             if (E.IsRelevantCreature(ParentObject))
-            {
                 E.Add("travel", BlinkLevel / 2);
-            }
+
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(ActorGetNavigationWeightEvent E)
         {
-            if (E.Actor == ParentObject && E.Actor.IsPlayer() && !RecentlyBlunk && !E.Actor.IsFleeing() && E.Actor.HasGoal(nameof(Kill)))
+            if (E.Actor == ParentObject
+                && E.Actor.IsPlayer()
+                && !RecentlyBlunk
+                && !E.Actor.IsFleeing()
+                && E.Actor.HasGoal(nameof(Kill)))
             {
                 int penalty = 15;
-                Cell targetCell = E.Actor.Target.CurrentCell;
-                Cell navCell = E.Cell;
+                var targetCell = E.Actor.Target.CurrentCell;
+                var navCell = E.Cell;
                 if (targetCell.IsInOrthogonalDirectionWith(navCell))
-                {
                     penalty -= 15;
-                }
-                foreach (Cell navAdjacentCell in navCell.GetAdjacentCells())
-                {
+
+                foreach (var navAdjacentCell in navCell.GetAdjacentCells())
                     if (targetCell.IsInOrthogonalDirectionWith(navAdjacentCell))
-                    {
                         penalty -= 3;
-                    }
-                }
+
                 E.MinWeight(penalty);
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(AIGetOffensiveAbilityListEvent E)
         {
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
@@ -355,20 +365,17 @@ namespace XRL.World.Parts
                 && GameObject.Validate(E.Target))
             {
                 if (!E.Actor.IsFleeing())
-                {
                     IsNothinPersonnelKid = true;
-                }
+
                 string targetName = E.Target.DebugName ?? NULL;
                 E.Actor.Think($"I want to attack {targetName}");
                 string Direction = GetAggressiveBlinkDirection(E.Actor, BlinkRange, IsNothinPersonnelKid, E.Target);
+
                 if (!Direction.IsNullOrEmpty())
-                {
                     E.Actor.Think($"{targetName} is to the {Direction ?? NULL} of me");
-                }
                 else
-                {
                     E.Actor.Think($"I can't blink to {targetName}");
-                }
+
                 if (!Direction.IsNullOrEmpty() &&
                     TryGetBlinkDestination(
                         Blinker: E.Actor,
@@ -386,6 +393,7 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(AIGetRetreatAbilityListEvent E)
         {
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
@@ -394,20 +402,17 @@ namespace XRL.World.Parts
                 && GameObject.Validate(E.Target))
             {
                 if (E.Actor.IsFleeing())
-                {
                     IsNothinPersonnelKid = false;
-                }
+
                 string targetName = E.Target.DebugName ?? NULL;
                 E.Actor.Think($"I want to retreat from {targetName}");
                 string Direction = GetRetreatingBlinkDirection(E.Actor, BlinkRange, E.Target);
+
                 if (!Direction.IsNullOrEmpty())
-                {
                     E.Actor.Think($"Away from {targetName} is {Direction} of me");
-                }
                 else
-                {
                     E.Actor.Brain.Think($"I can't blink away from {targetName}");
-                }
+
                 if (!Direction.IsNullOrEmpty()
                     && TryGetBlinkDestination(
                         Blinker: E.Actor,
@@ -421,6 +426,7 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(AIGetMovementAbilityListEvent E)
         {
             if (IsMyActivatedAbilityAIUsable(BlinkActivatedAbilityID, E.Actor)
@@ -429,14 +435,12 @@ namespace XRL.World.Parts
             {
                 E.Actor.Think($"I gotta go fast");
                 string Direction = GetMovementBlinkDirection(E.Actor, BlinkRange, E.TargetCell);
+
                 if (!Direction.IsNullOrEmpty())
-                {
                     E.Actor.Think($"{Direction} of me would be fast");
-                }
                 else
-                {
                     E.Actor.Think($"My style is pretty cramped here");
-                }
+
                 if (!Direction.IsNullOrEmpty()
                     && TryGetBlinkDestination(
                         Blinker: E.Actor,
@@ -450,11 +454,13 @@ namespace XRL.World.Parts
             }
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(GetMovementCapabilitiesEvent E)
         {
             E.Add("Blink a short distance", COMMAND_AI_UD_BLINK, 5500, null, IsNothinPersonnelKid);
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(BeginTakeActionEvent E)
         {
             Debug.Entry(4,
@@ -466,18 +472,18 @@ namespace XRL.World.Parts
 
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(CommandEvent E)
         {
             if (E.Actor == ParentObject)
             {
                 if (E.Command == COMMAND_AI_UD_COLDSTEEL_ABILITY)
-                {
                     IsNothinPersonnelKid = !IsNothinPersonnelKid;
-                }
+
                 if (E.Command == COMMAND_AI_UD_BLINK_ABILITY
                     && !IsMyActivatedAbilityCoolingDown(BlinkActivatedAbilityID, E.Actor))
                 {
-                    GameObject Blinker = ParentObject;
+                    var Blinker = ParentObject;
 
                     CommandEvent.Send(
                         Actor: Blinker,
@@ -488,6 +494,7 @@ namespace XRL.World.Parts
                         Forced: false,
                         Silent: false);
                 }
+
                 if (E.Command == COMMAND_AI_UD_BLINK
                     && !MidBlink
                     && GameObject.Validate(E.Actor))
@@ -506,7 +513,6 @@ namespace XRL.World.Parts
 
                         bool blunk = false;
                         if (HasBlink)
-                        {
                             blunk = CommandEvent.Send(
                                 Actor: ParentObject,
                                 Command: COMMAND_UD_BLINK,
@@ -515,9 +521,9 @@ namespace XRL.World.Parts
                                 StandoffDistance: 0,
                                 Forced: false,
                                 Silent: false);
-                        }
-                        if (!HasBlink || !blunk)
-                        {
+
+                        if (!HasBlink
+                            || !blunk)
                             blunk = Blink(
                                 Blinker: E.Actor,
                                 Direction: direction,
@@ -528,10 +534,10 @@ namespace XRL.World.Parts
                                 Kid: E.Target,
                                 IsRetreat: isRetreat,
                                 Silent: false);
-                        }
 
                         string blinkThink = null;
-                        if (blunk && !HasBlink)
+                        if (blunk
+                            && !HasBlink)
                         {
                             blinkThink = $"I blunk and ";
                             int energyCost = 1000;
@@ -563,20 +569,17 @@ namespace XRL.World.Parts
                             ParentObject.UseEnergy(energyCost, "Physical AI Capability Blink");
                         }
                         else
-                        if (blunk && HasBlink)
+                        if (blunk
+                            && HasBlink)
                         {
                             RecentlyBlunk = !BlinkMutation.IsMyActivatedAbilityCoolingDown(BlinkMutation.BlinkActivatedAbilityID);
                             CooldownMyActivatedAbility(BlinkActivatedAbilityID, BlunkTurnThreshold);
                         }
                         else
-                        {
                             blinkThink = "I blunked out :(";
-                        }
 
                         if (!E.Actor.IsPlayer())
-                        {
                             E.Actor.Think(blinkThink);
-                        }
                     }
                     catch (Exception x)
                     {
@@ -597,16 +600,13 @@ namespace XRL.World.Parts
 
         public override IPart DeepCopy(GameObject Parent, Func<GameObject, GameObject> MapInv)
         {
-            AI_UD_Blinker aI_UD_Blinker = base.DeepCopy(Parent, MapInv) as AI_UD_Blinker;
+            var aI_UD_Blinker = base.DeepCopy(Parent, MapInv) as AI_UD_Blinker;
 
             if (aI_UD_Blinker.BlinkActivatedAbilityID != Guid.Empty)
-            {
                 aI_UD_Blinker.AddActivatedAbilityBlink(true);
-            }
+
             if (aI_UD_Blinker.ColdSteelActivatedAbilityID != Guid.Empty)
-            {
                 aI_UD_Blinker.AddActivatedAbilityColdSteel(true);
-            }
 
             return aI_UD_Blinker;
         }

@@ -5,5 +5,22 @@
     "version": "0.0.3",
     "author": "{{K-g-G-Y-G-g-K alternation|UnderDoug}}",
     "tags": "Mutation,Balance,Harmony,Meme",
-    "PreviewImage": "preview.png"
+    "PreviewImage": "preview.png",
+    "Directories": [
+        {
+            "Paths": [ "/Common/", "/Textures/" ]
+        },
+        {
+            "Paths": [ "/UD_FleshGolems/" ],
+            "Dependencies": {
+                "UD_FleshGolems": "*"
+            }
+        },
+        {
+            "Paths": [ "/CavesOfQudModJam2025/" ],
+            "Dependencies": {
+                "CavesOfQudModJam2025": "*"
+            }
+        }
+    ]
 }

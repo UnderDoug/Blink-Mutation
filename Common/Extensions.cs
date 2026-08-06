@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using XRL;
 using XRL.CharacterBuilds;
 using XRL.CharacterBuilds.Qud;
+using XRL.Collections;
 using XRL.Language;
 using XRL.Rules;
 using XRL.UI;
@@ -838,52 +839,65 @@ namespace UD_Blink_Mutation
         }
 
         public static List<GameObject> GetNaturalEquipment(this Body Body)
-        {
-            static bool filter(GameObject GO) { return GO.HasPart<NaturalEquipment>() || GO.HasTag("NaturalGear"); }
-            return Body.GetEquippedObjects(filter);
-        }
+            => Body.GetEquippedObjects(go => go.HasPart<NaturalEquipment>() || go.HasTag("NaturalGear"))
+            ;
 
-        public static T DrawRandomToken<T>(this List<T> Bag, T ExceptForToken = null, List<T> ExceptForTokens = null)
+        public static T DrawRandomToken<T>(
+            this IList<T> Bag,
+            T ExceptForToken = null,
+            IEnumerable<T> ExceptForTokens = null
+            )
+            where T : class
+            => Bag.DrawSeededToken((string)null, null, null, ExceptForToken, ExceptForTokens)
+            ;
+
+
+        public static T DrawSeededToken<T>(
+            this IList<T> Bag,
+            string Seed,
+            int? Stepper = null,
+            string Context = null,
+            T ExceptForToken = null,
+            IEnumerable<T> ExceptForTokens = null
+            )
             where T : class
         {
-            return Bag.DrawSeededToken((string)null, null, null, ExceptForToken, ExceptForTokens);
-        }
-        public static T DrawSeededToken<T>(this List<T> Bag, string Seed, int? Stepper = null, string Context = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
-            where T : class
-        {
-            if (Bag.IsNullOrEmpty()) return null;
-            List<T> drawBag = new();
-            drawBag.AddRange(Bag);
-            ExceptForTokens ??= new();
-            if (drawBag.Contains(ExceptForToken))
-            {
-                drawBag.Remove(ExceptForToken);
-            }
-            foreach (T exceptForToken in ExceptForTokens)
-            {
-                if (drawBag.Contains(exceptForToken))
-                {
-                    drawBag.Remove(exceptForToken);
-                }
-            }
-            if (drawBag.IsNullOrEmpty())
-            {
+            if (Bag.IsNullOrEmpty())
                 return null;
+
+            using var drawBag = ScopeDisposedList<T>.GetFromPool();
+            drawBag.AddRange(Bag);
+
+            using (var exceptForTokens = ScopeDisposedList<T>.GetFromPool())
+            {
+                if (!ExceptForTokens.IsNullOrEmpty())
+                    exceptForTokens.AddRange(ExceptForTokens);
+
+                if (drawBag.Contains(ExceptForToken))
+                    drawBag.Remove(ExceptForToken);
+
+                foreach (T exceptForToken in exceptForTokens)
+                    if (drawBag.Contains(exceptForToken))
+                        drawBag.Remove(exceptForToken);
             }
+
+            if (drawBag.IsNullOrEmpty())
+                return null;
+
             T token = null;
             if (!Seed.IsNullOrEmpty())
             {
                 string stepper = null;
                 string context = null;
+
                 if (!Context.IsNullOrEmpty())
-                {
                     context = $"-{Context}";
-                }
+
                 if (Stepper != null)
-                {
                     stepper = $"-{Stepper}";
-                }
+
                 string seed = $"{Seed}{context}{stepper}";
+
                 int low = 0;
                 int high = (drawBag.Count - 1) * 7;
                 int roll = Stat.SeededRandom(seed, low, high) % (drawBag.Count - 1);
@@ -903,16 +917,24 @@ namespace UD_Blink_Mutation
                 Debug.LastIndent = indent;
                 token = drawBag.ElementAt(roll);
             }
-            token ??= drawBag.GetRandomElement();
+            token ??= drawBag.GetRandomElementCosmetic();
             Bag.Remove(token);
             return token;
         }
-        public static T DrawSeededToken<T>(this List<T> Bag, Guid Seed, int? Stepper = null, string Context = null, T ExceptForToken = null, List<T> ExceptForTokens = null)
+
+        public static T DrawSeededToken<T>(
+            this IList<T> Bag,
+            Guid Seed,
+            int? Stepper = null,
+            string Context = null,
+            T ExceptForToken = null,
+            IEnumerable<T> ExceptForTokens = null
+            )
             where T : class
-        {
-            return Bag.DrawSeededToken(Seed.ToString(), Stepper, Context, ExceptForToken, ExceptForTokens);
-        }
-        public static T DrawToken<T>(this List<T> Bag, T Token)
+            => Bag.DrawSeededToken(Seed.ToString(), Stepper, Context, ExceptForToken, ExceptForTokens)
+            ;
+
+        public static T DrawToken<T>(this IList<T> Bag, T Token)
             where T : class
         {
             T token = (!Bag.IsNullOrEmpty() || Bag.Remove(Token)) ? Token : null;
@@ -1190,6 +1212,7 @@ namespace UD_Blink_Mutation
                 WeightedList.Remove(Output);
             return Output;
         }
+
         public static void AddTicket<T>(this Dictionary<T, int> WeightedList, T Ticket)
             where T : class
         {
@@ -2169,14 +2192,17 @@ namespace UD_Blink_Mutation
         
         public static double GetQuicknessFactor(this GameObject Speedster)
         {
-            if (Speedster != null && Speedster.TryGetStat("Speed", out Statistic QN))
+            if (Speedster != null
+                && Speedster.TryGetStat("Speed", out Statistic QN))
             {
                 int indent = Debug.LastIndent;
                 bool doDebug = getDoDebug(nameof(GetQuicknessFactor));
 
                 Debug.Entry(4, $"* {nameof(GameObject)}.{nameof(GetQuicknessFactor)}()",
                     Indent: indent, Toggle: doDebug);
+
                 int EQN = QN.Value;
+
                 Debug.Entry(4, $"{nameof(EQN)}", $"{EQN}",
                     Indent: indent + 1, Toggle: doDebug);
 
@@ -2186,83 +2212,84 @@ namespace UD_Blink_Mutation
         }
 
         public static string Pens(this string String)
-        {
-            return "\u001a".Color("c") + String;
-        }
+            => "\u001a".Color("c") + String
+            ;
+
         public static string Damage(this string String)
-        {
-            return "\u0003".Color("r") + String;
-        }
+            => "\u0003".Color("r") + String
+            ;
 
         public static bool IsHolographicDistractionOf(this GameObject Hologram, GameObject Object)
-        {
-            return Hologram != null
-                && Object != null
-                && Hologram != Object
-                && Hologram.HasPart<HologramMaterial>()
-                && Hologram.TryGetPart(out Distraction distraction)
-                && distraction.Original == Object;
-        }
+            => Hologram != null
+            && Object != null
+            && Hologram != Object
+            && Hologram.HasPart<HologramMaterial>()
+            && Hologram.TryGetPart(out Distraction distraction)
+            && distraction.Original == Object
+            ;
 
         public static bool IsHostileTowardsInRadius(this GameObject GO, GameObject Actor, int Radius)
-        {
-            return GO != null && Actor != null
-                && GO.IsHostileTowards(Actor)
-                && GO.CurrentCell.CosmeticDistanceto(Actor.CurrentCell.Location) < Radius + 1;
-        }
+            => GO != null && Actor != null
+            && GO.IsHostileTowards(Actor)
+            && GO.CurrentCell.CosmeticDistanceto(Actor.CurrentCell.Location) < Radius + 1
+            ;
 
         public static int GetStatisticPercent(this Statistic Statistic)
-        {
-            return Statistic == null ? -1 : (int)Math.Round(Statistic.Value / Statistic.BaseValue * 100.0);
-        }
+            => Statistic != null
+            ? (int)Math.Round((double)Statistic.Value / (double)Statistic.BaseValue * 100.0)
+            : -1
+            ;
+
         public static bool TryGetStatisticPercent(this Statistic Statistic, out int Percent)
-        {
-            Percent = GetStatisticPercent(Statistic);
-            return !(Percent < 0);
-        }
+            => (Percent = GetStatisticPercent(Statistic)) >= 0
+            ;
 
         public static int GetHitpointPercent(this GameObject GO)
-        {
-            return GetStatisticPercent(GO?.GetStat("Hitpoints"));
-        }
-        public static bool TryGetHitpointPercent(this GameObject GO, out int Percent)
-        {
-            return TryGetStatisticPercent(GO?.GetStat("Hitpoints"), out Percent);
-        }
+            => GetStatisticPercent(GO?.GetStat("Hitpoints"))
+            ;
 
-        public static bool OverrideDeathReason(this IDeathEvent E, GameObject Killer, GameObject Dying, ref bool ContingentOn, string DeathReason, string ThirdPersonDeathReason)
+        public static bool TryGetHitpointPercent(this GameObject GO, out int Percent)
+            => TryGetStatisticPercent(GO?.GetStat("Hitpoints"), out Percent)
+            ;
+
+        public static bool OverrideDeathReason(
+            this IDeathEvent E,
+            GameObject Killer,
+            GameObject Dying,
+            ref bool ContingentOn,
+            string DeathReason,
+            string ThirdPersonDeathReason
+            )
         {
             int indent = Debug.LastIndent;
             bool doDebug = getDoDebug(nameof(OverrideDeathReason));
-            if (ContingentOn)
-            {
-                Debug.Entry(4, 
-                    $"{nameof(OverrideDeathReason)}(" +
-                    $"{nameof(Killer)}: {Killer?.DebugName ?? NULL}, " +
-                    $"{nameof(Dying)}: {Dying?.DebugName ?? NULL}, " +
-                    $"{nameof(ContingentOn)}: {ContingentOn}, " +
-                    $"{nameof(DeathReason)}: {DeathReason ?? NULL}, " +
-                    $"{nameof(ThirdPersonDeathReason)}: {ThirdPersonDeathReason ?? NULL})", 
-                    Indent: indent + 1, Toggle: doDebug);
+            if (!ContingentOn)
+                return false;
 
-                Debug.LoopItem(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 2, Toggle: doDebug);
-                Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
-                Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+            Debug.Entry(4, 
+                $"{nameof(OverrideDeathReason)}(" +
+                $"{nameof(Killer)}: {Killer?.DebugName ?? NULL}, " +
+                $"{nameof(Dying)}: {Dying?.DebugName ?? NULL}, " +
+                $"{nameof(ContingentOn)}: {ContingentOn}, " +
+                $"{nameof(DeathReason)}: {DeathReason ?? NULL}, " +
+                $"{nameof(ThirdPersonDeathReason)}: {ThirdPersonDeathReason ?? NULL})", 
+                Indent: indent + 1, Toggle: doDebug);
 
-                Debug.Entry(4, $"Overriding reason...", Indent: indent + 1, Toggle: doDebug);
+            Debug.LoopItem(4, $"{nameof(E.KillerText)}", E.KillerText ?? NULL, Indent: indent + 2, Toggle: doDebug);
+            Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+            Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
 
-                E.Reason = GameText.VariableReplace(DeathReason, Dying, Killer);
-                E.ThirdPersonReason = GameText.VariableReplace(ThirdPersonDeathReason, Dying, Killer);
+            Debug.Entry(4, $"Overriding reason...", Indent: indent + 1, Toggle: doDebug);
 
-                Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
-                Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+            E.Reason = GameText.VariableReplace(DeathReason, Dying, Killer);
+            E.ThirdPersonReason = GameText.VariableReplace(ThirdPersonDeathReason, Dying, Killer);
 
-                ContingentOn = false;
-                Debug.LastIndent = indent;
-                return true;
-            }
+            Debug.LoopItem(4, $"{nameof(E.Reason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+            Debug.LoopItem(4, $"{nameof(E.ThirdPersonReason)}", E.Reason ?? NULL, Indent: indent + 2, Toggle: doDebug);
+
+            ContingentOn = false;
             Debug.LastIndent = indent;
-            return false;
+            return true;
         }
 
         public static bool TryGetPrimaryLimbAndWeapon(this GameObject Creature, out BodyPart primaryLimb, out GameObject primaryWeapon, bool Fallback = true)
@@ -2371,5 +2398,34 @@ namespace UD_Blink_Mutation
         {
             return Equipment?.DefaultOrEquippedPart()?.ParentBody?.ParentObject;
         }
+
+        public static int RemoveAll<T>(this ScopeDisposedList<T> List, Predicate<T> Where)
+        {
+            if (List.IsNullOrEmpty())
+                return 0;
+
+            int count = List.Count;
+            for (int i = count - 1; i >= 0; i--)
+                if (Where?.Invoke(List[i]) is not false)
+                    List.RemoveAt(i);
+
+            return count - List.Count;
+        }
+
+        public static Mutations.MutationModifierTracker GetFirstMutationModTracker(this GameObject GameObject, Predicate<Mutations.MutationModifierTracker> Where)
+            => GameObject
+                ?.GetPart<Mutations>()
+                ?.MutationMods
+                ?.FirstOrDefault(m => Where?.Invoke(m) is true)
+            ;
+
+        public static bool HasElapsed(this long Threshold, long Test, long? CurrentTurn = null)
+            => (CurrentTurn ?? The.CurrentTurn) - Test > Threshold
+            ;
+
+        public static IEnumerable<T> IteratorSafe<T>(this IEnumerable<T> Source)
+            => Source
+            ?? Enumerable.Empty<T>()
+            ;
     }
 }

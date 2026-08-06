@@ -93,9 +93,9 @@ namespace UD_Blink_Mutation
             if (Anatomies.GetAnatomy("TailedBiped") is Anatomy tailedBipedAnatomy)
             {
                 player.Body.Anatomy = tailedBipedAnatomy.Name;
-                player.ReceiveObject("PricklePig_Bite");
+                player.ReceiveObject("UD_PricklePig_Bite");
             }
-            player.Blueprint = "Prickle Pig Player";
+            player.Blueprint = "UD Prickle Pig Player";
             Debug.Entry(3, $"ONTOLOGICAL ALTERATION PROCESSED...", Indent: 2);
 
             Debug.Entry(3, $"TURNING TO DARKNESS...", Indent: 2);

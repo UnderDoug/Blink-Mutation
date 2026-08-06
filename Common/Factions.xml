@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<factions>
+
+  <faction
+      Name="UD_PricklePigs"
+      DisplayName="Prickle Pigs"
+      Parent="Swine"
+      Pettable="true"
+      InitialPlayerReputation="100"
+      InterestedInSultans="true"
+      PositiveSound="Sounds/Reputation/sfx_reputation_unshelledReptiles_positive"
+      NegativeSound="Sounds/Reputation/sfx_reputation_unshelledReptiles_negative"
+      EmblemTile="Creatures/Prickle_Pig.png"
+      EmblemTileColor="B"
+      EmblemDetailColor="w">
+    <partreputation About="UD_Blink" Value="200" />
+    <partreputation About="Quills" Value="100" />
+    <partreputation About="UD_QuillsPlus" Value="100" />
+    <feeling About="*" Value="0" />
+    <feeling About="UD_DarkPricklePigs" Value="-250" />
+    <factionworshipattitudes>
+      <factionworshipattitude Name="Barathrumites" Attitude="100" />
+      <factionworshipattitude Name="Urchins" Attitude="50" />
+      <factionworshipattitude Name="DarkPricklePigs" Attitude="-100" />
+      <factionworshipattitude Name="Templar" Attitude="-100" />
+      <factionworshipattitude Name="SultanCult1" Attitude="50" />
+      <factionworshipattitude Name="SultanCult2" Attitude="50" />
+      <factionworshipattitude Name="SultanCult3" Attitude="50" />
+      <factionworshipattitude Name="SultanCult4" Attitude="50" />
+      <factionworshipattitude Name="SultanCult5" Attitude="50" />
+      <factionworshipattitude Name="Resheph" Attitude="50" />
+      <!--factionworshipattitude Name="GiantTemplar" Attitude="-100" /-->
+    </factionworshipattitudes>
+    <waterritual
+      Join="false"
+      Skill="Tactics_Juke"
+      BuyMostValuableItem="true"
+      />
+    <interests
+      BuyDescription=" interested in "
+      SellDescription=" interested in "
+      >
+      <interest
+        Tags="chaos emerald,artifact,ruins,historic,prickle pig,trolls,gossip" 
+        WillBuy="true" WillSell="true"
+        MatchAny="true"
+        Description="ancient places of importance, the relics hidden within them, and the whereabouts of anyone who can assist with locating either" />
+    </interests>
+  </faction>
+
+  <faction
+      Name="UD_DarkPricklePigs"
+      DisplayName="Dark Prickle Pigs"
+      Parent="UD_PricklePigs"
+      InitialPlayerReputation="-800"
+      PositiveSound="Sounds/Reputation/sfx_reputation_unshelledReptiles_positive"
+      NegativeSound="Sounds/Reputation/sfx_reputation_unshelledReptiles_negative"
+      EmblemTile="Creatures/Prickle_Pig_Shadow.png"
+      EmblemTileColor="K"
+      EmblemDetailColor="r">
+    <partreputation About="UD_Blink" Value="-200" />
+    <partreputation About="Quills" Value="50" />
+    <partreputation About="UD_QuillsPlus" Value="50" />
+    <feeling About="*" Value="-450" />
+    <feeling About="UD_PricklePigs" Value="-1200" />
+    <feeling About="UD_DarkPricklePigs" Value="-450" />
+    <factionworshipattitudes>
+      <factionworshipattitude Name="UD_DarkPricklePigs" Attitude="100" />
+      <factionworshipattitude Name="UD_PricklePigs" Attitude="-100" />
+      <factionworshipattitude Name="Barathrumites" Attitude="-50" />
+      <factionworshipattitude Name="Urchins" Attitude="50" />
+      <factionworshipattitude Name="Templar" Attitude="-100" />
+      <factionworshipattitude Name="SultanCult1" Attitude="50" />
+      <factionworshipattitude Name="SultanCult2" Attitude="50" />
+      <factionworshipattitude Name="SultanCult3" Attitude="50" />
+      <factionworshipattitude Name="SultanCult4" Attitude="50" />
+      <factionworshipattitude Name="SultanCult5" Attitude="50" />
+      <factionworshipattitude Name="Resheph" Attitude="50" />
+      <!--factionworshipattitude Name="GiantTemplar" Attitude="-100" /-->
+    </factionworshipattitudes>
+    <waterritual
+      Join="false"
+      BuyMostValuableItem="false"
+      />
+    <interests
+      BuyDescription=" desparate for "
+      SellDescription=" hoping "
+      >
+      <interest
+        Tags="rusty,dark prickle pig"
+        WillBuy="false" WillSell="true"
+        MatchAny="true"
+        Description="you'll get lost, faker" />
+      <interest
+        Tags="chaos emerald,artifact,prickle pig"
+        WillBuy="true" WillSell="false"
+        MatchAny="true"
+        Description="powerful relics and fakers to defeat" />
+    </interests>
+  </faction>
+  
+</factions>

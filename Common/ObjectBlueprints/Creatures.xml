@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects>
+  
+  <!-- 
+      Give select creatures UD_Blink or AIBlinker.
+      Specific creatures will need to have the color change turned off.
+   -->
+  <object Name="Troll King 3" Load="Merge">
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" ColorChange="false" PhysicalFeatures="false" />
+    <intproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <part Name="AI_UD_Blinker" />
+  </object>
+  
+  <object Name="Warden Esthers" Load="Merge">
+    <part Name="AI_UD_Flickerer" BaseMaxFlickerCharges="5" BaseBlinkRange="12" FlickerChargesAtLeastToFlicker="3" IdleFlickerTurnThreshold="60" />
+  </object>
+  
+  <!-- 
+      Prickle-Pigs
+   -->
+  <object Name="Base_UD_PricklePig" Inherits="BaseAnimal">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="[Prickle Pig]"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
+    <part Name="Physics" Weight="80" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="5" Shouts="false" PhysicalFeatures="false" ShoutsAreThirdPerson="true" />
+    <mutation Name="Quills" DisplayName="Quills" Level="5" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="2" />
+    <part Name="Brain" Wanders="true" Factions="UD_PricklePigs-100" />
+    <part Name="Body" Anatomy="TailedBiped" />
+    <part Name="Description" Short="A small trembling spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for fear, =pronouns.possessive= incessant vibration indicates an other simple fact: =pronouns.Subjective==verb:'ve:afterpronoun= gotta go {{B|fast}}." />
+    <part Name="ConversationScript" ConversationID="Base_UD_PricklePig" />
+    <part Name="Corpse" CorpseChance="80" CorpseBlueprint="UD Prickle Pig Corpse" />
+    <part Name="AISelfPreservation" Threshold="30" />
+    <part Name="Swarmer" />
+    <stat Name="Hitpoints" sValue="5,2d4,(t-1)d10,(v)" />
+    <stat Name="Level" Value="8" />
+    <stat Name="Speed" Value="110" />
+    <skill Name="Acrobatics" />
+    <skill Name="Acrobatics_Dodge" />
+    <skill Name="Acrobatics_Jump" />
+    <skill Name="Endurance" />
+    <skill Name="Endurance_Weathered" />
+    <skill Name="Tactics" />
+    <skill Name="Tactics_Run" />
+    <skill Name="Tactics_Hurdle" />
+    <skill Name="Tactics_Juke" />
+    <skill Name="ShortBlades" />
+    <skill Name="ShortBlades_Expertise" />
+    <tag Name="Prickle Pig" />
+    <tag Name="Species" Value="prickle pig" />
+    <tag Name="Genotype" Value="Prickle Pig" />
+    <tag Name="Class" Value="prickle pig" />
+    <tag Name="Culture" Value="Prickle Pig" />
+    <tag Name="Role" Value="Skirmisher" />
+    <tag Name="customMeleeOrder" Value="abilities,defensiveAbilities,items,defensiveItems,missile" />
+    <tag Name="HeroNameTitleWiseDescriptor" Value="Knowledgeable,Learned,Experienced,Well-Travelled,Speedy,Quick,Fast,Blurry" />
+    <tag Name="HeroNameTitleMayorSyn" Value="prickle-sultan,prickle-monarch,prickle-mayor,prickle-elder" />
+    <tag Name="HeroNameTitleMayorSynCap" Value="Prickle-Sultan,Prickle-Monarch,Prickle-Mayor,Prickle-Elder" />
+    <tag Name="HeroNameColor" Value="W" />
+    <tag Name="HeroColorString" Value="&amp;W" />
+    <tag Name="HeroTileColor" Value="&amp;W" />
+    <tag Name="HeroDetailColor" Value="same" />
+    <tag Name="HeroHPBoost" Value="2" />
+    <tag Name="HeroAgiBoost" Value="2" />
+    <tag Name="HeroTouBoost" Value="2" />
+    <tag Name="SecretAdjectives" Value="prickle pig" />
+    <tag Name="LairName" Value="base of operations" />
+    <tag Name="LairNameContext" Value="%p base of operations" />
+    <tag Name="LairPulldownMessage" Value="You discover a hidden %l. Do you want to investigate?" />
+    <tag Name="LairDiscoveredMessage" Value="You discover %p relic hunting %l." />
+    <tag Name="LairAmbientBed" Value="Sounds/Ambiences/amb_creature_pig" />
+    <tag Name="DeathSounds" Value="Sounds/Creatures/VO/sfx_creature_animal_swine_vo_die" />
+    <tag Name="TakeDamageSound" Value="Sounds/Creatures/VO/sfx_creature_animal_swine_vo_hurt"/>
+    <tag Name="AmbientIdleSound" Value="Sounds/Creatures/VO/sfx_creature_animal_swine_vo_idle"/>
+    <tag Name="PunchSound" Value="Sounds/Creatures/VO/sfx_creature_animal_swine_vo_attack"/>
+    <tag Name="SimpleConversation" Value="Gotta go fast!" />
+    <tag Name="PetResponse" Value="=subject.T= =verb:vibrate= restlessly." />
+    <xtagTextFragments
+      Skin="prickles"
+      PoeticFeatures="odd hue,prickly fur,needle-point quills,ball-like shape,ability to go fast"
+      YounglingNoise="*mew*,*squeek*"
+      Activity="sprinting around idly,going really fast,being quick,admiring jewelry,hunting relics"
+      VillageActivity="being fast,hoarding our jewelry,looking for relics,curling into a ball and bouncing off things"
+      GuestActivity="hunting relics,running in circles,racing,curling into a ball and bouncing off things"
+      NeedsItemFor="to go fast,to help me find relics,because it would be really cool"
+      SacredThing="relics,gems,jewelry,long stretches of uninterupted grassland,a good pair of running shoes"
+      ArableLand="long stretches of uninterupted grassland"
+      ValuedOre="relics,gems,jewelry"
+      />
+    <inventoryobject Blueprint="UD_PricklePig_Bite" Number="1" />
+    <!--inventoryobject Blueprint="Chaos Emerald" Number="1" IntProperties="AlwaysEquipAsArmor:1" /-->
+    <inventoryobject Blueprint="Plastifer Gloves" Number="1" Chance="75" IntProperties="AlwaysEquipAsArmor:1" />
+    <tag Name="InventoryPopulationTable" Value="UD Prickle Pig Equipment Broad" />
+    <inventoryobject Blueprint="UD Gold Ring" IntProperties="AlwaysEquipAsArmor:1" Number="0-4" />
+    <inventoryobject Blueprint="Waterskin" Number="0-2" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+  <object Name="UD_PricklePig_Bite" Inherits="Bite">
+    <part Name="MeleeWeapon" BaseDamage="1d3+1" />
+  </object>
+  <object Name="UD Prickle Pig Corpse" Inherits="Pig Corpse">
+    <part Name="Render" DisplayName="prickle pig corpse" />
+    <part Name="Food" Message="What little of it there was went down rough." />
+  </object>
+  
+  <object Name="UD Prickle Pig Player" Inherits="Base_UD_PricklePig">
+    <!-- part Name="AI_UD_Flickerer" IdleFlickerTurnThreshold="10" / -->
+    <removemutation Name="UD_Blink" />
+    <removemutation Name="Quills" />
+    <removemutation Name="HeightenedSpeed" />
+    <stat Name="Level" Value="1" />
+    <stat Name="Speed" Value="100" />
+    <removepart Name="Swarmer" />
+    <removeskill Name="Acrobatics" />
+    <removeskill Name="Acrobatics_Dodge" />
+    <removeskill Name="Acrobatics_Jump" />
+    <removeskill Name="Endurance" />
+    <removeskill Name="Endurance_Weathered" />
+    <removeskill Name="Tactics" />
+    <removeskill Name="Tactics_Hurdle" />
+    <removeskill Name="Tactics_Juke" />
+    <removeskill Name="ShortBlades" />
+    <removeskill Name="ShortBlades_Expertise" />
+    <removepart Name="AISelfPreservation" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+    <removetag Name="customMeleeOrder" />
+    <removetag Name="Role" />
+    <removetag Name="InventoryPopulationTable" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <removeinventoryobject Blueprint="UD Gold Ring" />
+    <removeinventoryobject Blueprint="Waterskin" />
+  </object>
+  
+  <object Name="UD Prickle Pig" Inherits="Base_UD_PricklePig">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;B" TileColor="&amp;B" DetailColor="w" />
+    <tag Name="Subtype" Value="Speed Ball" />
+    <tag Name="HeroNameTitleSubtype" Value="{{B|Speed Ball}}" />
+    <part Name="ConversationScript" ConversationID="UD_PricklePig" />
+    <tag Name="SimpleConversation" Value="Gotta go fast!~No time for a lengthy chat!~Do you have any idea how fast I truly am?~Still fast!" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="5" BaseRange="5" TileColor="B" Shouts="false" DoNani="false" PhysicalFeatures="false" />
+    <part Name="AI_UD_Flickerer" IdleFlickerTurnThreshold="10" />
+    <tag Name="DynamicObjectsTable:Saltdunes_Creatures" />
+    <tag Name="DynamicObjectsTable:Saltmarsh_Creatures" />
+    <tag Name="DynamicObjectsTable:Hills_Creatures" />
+    <tag Name="DynamicObjectsTable:Flowerfields_Creatures" />
+    <tag Name="DynamicObjectsTable:Ruins_Creatures" />
+    <tag Name="DynamicObjectsTable:Ruins_Creatures:Weight" Value="2" />
+    <inventoryobject Blueprint="UD Red Plastifer Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
+    <tag Name="DynamicObjectsTable:PricklePigs" />
+    <tag Name="DynamicObjectsTable:MinionPricklePigs" />
+    <tag Name="LairMinions" Value="DynamicObjectsTable:MinionPricklePigs" />
+  </object>
+  
+  <object Name="UD Super Prickle Pig" Inherits="UD Prickle Pig">
+    <part Name="Uplift"
+          AdditionalBaseTemplate="BaseFactionHeroTemplate_UD_PricklePigs"
+          AdditionalSpecializationTemplate="SpecialFactionHeroTemplate_UD_PricklePigs" />
+    <removetag Name="DynamicObjectsTable:MinionPricklePigs" />
+    <tag Name="DynamicObjectsTable:BananaGrove_Creatures" />
+    <tag Name="NoLibrarian" />
+    <tag Name="ExcludeFromVillagePopulations" />
+    <tag Name="AggregateWith" Value="UD Super Prickle Pig" />
+  </object>
+  
+  <object Name="UD Super Leader Prickle Pig" Inherits="UD Super Prickle Pig">
+    <part Name="Followers" Table="UD Prickle Pig Relic Hunters" />
+  </object>
+  
+  <object Name="UD Burrowing Prickle Pig" Inherits="Base_UD_PricklePig">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="burrowing prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;R" TileColor="&amp;R" DetailColor="Y" />
+    <part Name="Description" Short="A small stout spheroid =verb:scratch:afterpronoun= around =pronouns.possessive= surroundings seemingly searching for something... {{G|valuable}}. Possessed of =pronouns.reflexive=, =pronouns.subjective= =verb:pay:afterpronoun= little mind to would-be threats, unless, of course, they would serve as a perfect opportunity to show off =pronouns.possessive= {{R|martial}} {{Y|prowess}}." />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="8" TileColor="R" Shouts="false" DoNani="false" PhysicalFeatures="false" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="4" />
+    <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="8" PathAsBurrower ="true" />
+    <part Name="AISelfPreservation" Threshold="20" />
+    <part Name="AI_UD_SquareUp" IgnoreSameCreatureType="true" IgnoreCreatures="Prickle Pig" IsMerciful="true" MercyThreshold="25" />
+    <stat Name="Level" Value="16" />
+    <stat Name="Hitpoints" Value="34" />
+    <skill Name="Discipline" />
+    <skill Name="Discipline_Lionheart" />
+    <tag Name="Role" Value="Tank" />
+    <tag Name="Subtype" Value="Relic Hunter" />
+    <tag Name="HeroNameTitleSubtype" Value="{{R|Relic}} {{Y|Hunter}}" />
+    <part Name="ConversationScript" ConversationID="UD_BurrowingPricklePig" />
+    <tag Name="SimpleConversation" Value="Looking for relics!~Looking for a good fight!~Seen any shiny gems?" />
+    <xtagTextFragments
+      PoeticFeatures="odd hue,prickly fur,needle-point quills,ball-like shape,pointed knuckles"
+      Activity="burrowing around idly,climbing on things,scouting out relics,admiring jewelry,hunting relics"
+      VillageActivity="climbing things,digging holes,hoarding our jewelry,looking for relics,curling into a ball and bouncing off things"
+      GuestActivity="hunting relics,curling into a ball and bouncing off things,squaring up fighting,hosting competitions of strength"
+      NeedsItemFor="to help me find relics,because I might fight you otherwise"
+      SacredThing="relics,gems,jewelry,ruins of an ancient civilization,a good pair of climbing boots"
+      ArableLand="ruins of an ancient civilization"
+      />
+    <tag Name="DynamicObjectsTable:DesertCanyon_Creatures" />
+    <tag Name="DynamicObjectsTable:Flowerfields_Creatures" />
+    <tag Name="DynamicObjectsTable:Jungle_Creatures" />
+    <tag Name="DynamicObjectsTable:BananaGrove_Creatures" />
+    <tag Name="DynamicObjectsTable:Ruins_Creatures" />
+    <tag Name="DynamicObjectsTable:Ruins_Creatures:Weight" Value="2" />
+    <inventoryobject Blueprint="UD Spiked Climbers" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <inventoryobject Blueprint="UD Digging Gloves" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
+    <inventoryobject Blueprint="@Junk 6" Number="1d4-1" />
+    <tag Name="DynamicObjectsTable:PricklePigs" />
+    <tag Name="DynamicObjectsTable:MinionPricklePigs" />
+    <tag Name="LairMinions" Value="DynamicObjectsTable:MinionPricklePigs" />
+  </object>
+
+  <object Name="UD Super Burrowing Prickle Pig" Inherits="UD Burrowing Prickle Pig">
+    <part Name="Uplift"
+          AdditionalBaseTemplate="BaseFactionHeroTemplate_UD_PricklePigs"
+          AdditionalSpecializationTemplate="SpecialFactionHeroTemplate_UD_PricklePigs" />
+    <tag Name="DynamicObjectsTable:DeepJungle_Creatures" />
+    <removetag Name="DynamicObjectsTable:MinionPricklePigs" />
+    <tag Name="NoLibrarian" />
+    <tag Name="ExcludeFromVillagePopulations" />
+  </object>
+
+  <object Name="UD Super Leader Burrowing Prickle Pig" Inherits="UD Super Burrowing Prickle Pig">
+    <part Name="Followers" Table="UD Prickle Pig Relic Hunters" />
+    <tag Name="AggregateWith" Value="UD Super Burrowing Prickle Pig" />
+  </object>
+  
+  <object Name="UD Dark Prickle Pig" Inherits="Base_UD_PricklePig">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="dark prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig_Shadow.png" 
+          ColorString="&amp;K" TileColor="&amp;K" DetailColor="r" />
+    <part Name="Description" Short="A small disaffected spheroid =verb:tumble:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{B|bluer}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{K|su{{R|p}}erior li{{R|f}}eform}}. Those blue prickle pigs aren't even good enough to be =pronouns.possessive= fakes." />
+    <mutation Name="UD_Blink" DisplayName="Blink" 
+              Level="10" TileColor="K"
+              Shouts="true" Shout="You're not even good enough to be my fake!" ShoutColor="r"
+              PhysicalFeatures="false" />
+    <!-- Shout="=object.t= =verb:aren't:afterpronoun= even good enough to be my fake!" -->
+    <intproperty Name="RapidLevel_UD_Blink" Value="6" />
+    <intproperty Name="RapidLevel_Blink" Value="6" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="6" />
+    <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
+    <part Name="Brain" Wanders="true" Hostile="true" Factions="UD_DarkPricklePigs-100,UD_PricklePigs-25" />
+    <stat Name="Level" Value="32" />
+    <stat Name="Hitpoints" Value="165" />
+    <skill Name="Discipline" />
+    <skill Name="Discipline_Lionheart" />
+    <skill Name="Discipline_Conatus" />
+    <tag Name="Dark Prickle Pig" />
+    <tag Name="Class" Value="dark prickle pig" />
+    <tag Name="Culture" Value="Dark Prickle Pig" />
+    <tag Name="Role" Value="Brute" />
+    <tag Name="Subtype" Value="Imposter" />
+    <tag Name="HeroNameTitleSubtype" Value="{{K|Ul{{R|t}}imate Li{{R|f}}eform}}" />
+    <part Name="ConversationScript" ConversationID="UD_DarkPricklePig" />
+    <tag Name="SimpleConversation" Value="Psssh... maybe you {{Y|should}} take it personnel.~Out of my way, you're too slow!~Those gems are mine..." />
+    <tag Name="SecretAdjectives" Value="dark prickle pig" />
+    <tag Name="LairName" Value="hideout" />
+    <tag Name="LairNameContext" Value="%p hidden hideout" />
+    <tag Name="LairPulldownMessage" Value="You discover a hidden %l. Do you want to investigate?" />
+    <tag Name="LairDiscoveredMessage" Value="You discover %p hidden %l." />
+    <xtagTextFragments
+      PoeticFeatures="odd hue,prickly fur,needle-point quills,ball-like shape,unlimited power,air of edginess"
+      Activity="brooding around idly,going really fast,being better than others,finding and defeating imposters,hunting relics"
+      VillageActivity="brooding nearby,accusing us of being imposters,hoarding our jewelry,looking for relics,curling into a ball and bouncing off things"
+      GuestActivity="hunting relics,curling into a ball and bouncing off things,disavowing fakers"
+      NeedsItemFor="to help me find relics,because I am a superior lifeform,because I told you to"
+      SacredThing="relics,gems,jewelry,being the best,the end of that blue prickle pig"
+      ArableLand="somewhere to actually belong"
+      />
+    <tag Name="DynamicObjectsTable:DarkPricklePigs" />
+    <tag Name="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="LairMinions" Value="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="DynamicObjectsTable:DeepJungle_Creatures" />
+    <tag Name="DynamicObjectsTable:BaroqueRuins_Creatures" />
+    <tag Name="DynamicObjectsTable:BaroqueRuins_Creatures:Weight" Value="2" />
+    <tag Name="DynamicObjectsTable:PalladiumReef_Creatures" />
+    <tag Name="DynamicObjectsTable:MoonStair_Creatures" />
+    <inventoryobject Blueprint="Rocket Runners" Number="1" Chance="25" IntProperties="AlwaysEquipAsArmor:1" />
+    <inventoryobject Blueprint="@Junk 6" Number="1d2-1" />
+  </object>
+
+  <object Name="UD Super Dark Prickle Pig" Inherits="UD Dark Prickle Pig">
+    <part Name="Uplift"
+          AdditionalBaseTemplate="BaseFactionHeroTemplate_UD_DarkPricklePigs"
+          AdditionalSpecializationTemplate="SpecialFactionHeroTemplate_UD_DarkPricklePigs" />
+    <removetag Name="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="NoLibrarian" />
+    <tag Name="ExcludeFromVillagePopulations" />
+  </object>
+  
+  <object Name="UD Metal Prickle Pig" Inherits="Base_UD_PricklePig">
+    <!-- TileColor is white pixels, DetailColor is black pixels -->
+    <part Name="Render" DisplayName="prickle pig"
+          RenderString="x" Tile="Creatures/Prickle_Pig.png" 
+          ColorString="&amp;b" TileColor="&amp;b" DetailColor="C" />
+    <part Name="Description" Short="A small jittery spheroid =verb:whir:afterpronoun= unimpeded by friction through =pronouns.possessive= surroundings. Easily misconstrued for an other, {{w|fleshier}} spheroid, =pronouns.subjective= =verb:are:afterpronoun=, in fact, a {{r|{{W|m}}arv{{Y|e}}l}} of {{r|{{W|e}}ngin{{Y|e}}ering}}- Yosh! Those blue prickle pigs had better watch out, lest they find themselves equally {{c|mechanized}}." />
+    <part Name="Physics" Weight="220" />
+    <builder Name="Roboticized" ChanceOneIn="1" />
+    <tag Name="Gender" Value="neuter" />
+    <mutation Name="UD_Blink" DisplayName="Blink" Level="10" TileColor="b"
+              Shouts="true" Shout="TARGET: =object.name=" ShoutColor="b"
+              DoNani="false" PhysicalFeatures="false" />
+    <intproperty Name="RapidLevel_UD_Blink" Value="9" />
+    <intproperty Name="RapidLevel_Blink" Value="9" />
+    <mutation Name="HeightenedSpeed" DisplayName="Heightened Quickness" Level="8" />
+    <mutation Name="TemporalFugue" DisplayName="Temporal Fugue" Level="5" />
+    <mutation Name="BurrowingClaws" DisplayName="Burrowing Claws" Level="5" PathAsBurrower ="true" />
+    <part Name="AI_UD_Flickerer" BaseMaxFlickerCharges="6" BaseBlinkRange="4" FlickerChargesAtLeastToFlicker="3" IdleFlickerTurnThreshold="30" />
+    <part Name="Brain" Wanders="true" Hostile="true" Factions="UD_DarkPricklePigs-100,Robots-50,UD_PricklePigs-10" />
+    <stat Name="Strength" sValue="20,1d4,(t-1)d3" />
+    <stat Name="Agility" sValue="10,1d3,(t-1)d1" />
+    <stat Name="Toughness" sValue="20,1d4,(t-1)d3" />
+    <stat Name="Intelligence" sValue="9,1d3,(t-1)d1" />
+    <stat Name="Willpower" sValue="20,1d4,(t-1)d3" />
+    <stat Name="Ego" sValue="5,1d2,(t-1)d2-1" />
+    <removepart Name="AISelfPreservation" />
+    <stat Name="Level" Value="40" />
+    <stat Name="Hitpoints" Value="385" />
+    <skill Name="Discipline" />
+    <skill Name="Discipline_Lionheart" />
+    <skill Name="Discipline_Conatus" />
+    <tag Name="Dark Prickle Pig" />
+    <tag Name="Class" Value="dark prickle pig" />
+    <tag Name="Culture" Value="UD Metal Prickle Pig" />
+    <tag Name="Role" Value="Specialist" />
+    <tag Name="Subtype" Value="Imposter" />
+    <tag Name="HeroNameTitleSubtype" Value="{{r|{{W|M}}arv{{Y|e}}l}} of {{r|{{W|E}}ngin{{Y|e}}ering}}" />
+    <part Name="ConversationScript" ConversationID="UD_MetalPricklePig" />
+    <tag Name="SimpleConversation" Value="{{C|TARGET:}} =object.name=\n{{C|STATUS: acknowledged}}\n\n{{C|OPERATION: awaiting additional input...}}" />
+    <tag Name="SecretAdjectives" Value="dark prickle pig" />
+    <tag Name="LairName" Value="hideout" />
+    <tag Name="LairNameContext" Value="%p hidden hideout" />
+    <tag Name="LairPulldownMessage" Value="You discover a hidden hideout. Do you want to investigate?" />
+    <tag Name="LairDiscoveredMessage" Value="You discover %p hidden %l." />
+    <xtagTextFragments
+      Skin="chassis"
+      YounglingNoise="*beep*,*boop*"
+      PoeticFeatures="odd hue,angular chassis,indefatigable dedication,ball-like shape,glowing photoreceptors"
+      Activity="[ACTION: find target],[ACTION: go fast],[ACTION: persue target],[ACTION: destroy target],[ERROR: action not found]"
+      VillageActivity="acquiring targets,accusing us of being targets,destroying things,existing ominously nearby"
+      GuestActivity="[ACTION: acquiring target],[ACTION: persuing target],[ACTION: rebuild; OBJECT: unknown; STATUS: destroyed in error]"
+      NeedsItemFor="to [TARGET: acquire],to [TARGET: persue],to [DESTROY: object] it,-[ERROR: missing aquisition reason] -,-[ERROR: authentication failed] -,-[ERROR: null reference exception] -"
+      SacredThing="[STATUS: target destroyed]"
+      ArableLand="[LOCATION: current target; TARGET: unknown],[LOCATION: current target; TARGET: acquiring...]"
+      ValuedOre="[OBJECT: target]"
+      />
+    <tag Name="DynamicObjectsTable:DarkPricklePigs" />
+    <tag Name="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="LairMinions" Value="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="DynamicObjectsTable:BaroqueRuins_Creatures" />
+    <tag Name="DynamicObjectsTable:BaroqueRuins_Creatures:Weight" Value="2" />
+    <tag Name="DynamicObjectsTable:PalladiumReef_Creatures" />
+    <tag Name="DynamicObjectsTable:MoonStair_Creatures" />
+    <removeinventoryobject Blueprint="Plastifer Gloves" />
+    <inventoryobject Blueprint="@Junk 6" Number="1d3-1" />
+    <inventoryobject Blueprint="@Junk 7" Number="1d2-1" />
+    <inventoryobject Blueprint="UD_MetalPricklePig_Bite" Number="1" Chance="100" IntProperties="AlwaysEquipAsWeapon:1" />
+    <inventoryobject Blueprint="UD_MetalPricklePig_Claw" Number="2" Chance="100" IntProperties="AlwaysEquipAsWeapon:1" />
+    <inventoryobject Blueprint="UD Integrated Rocket Runners" Number="1" Chance="100" IntProperties="AlwaysEquipAsArmor:1" />
+  </object>
+  <object Name="UD_MetalPricklePig_Bite" Inherits="UD_PricklePig_Bite">
+    <part Name="Render" DisplayName="metal bite" ColorString="&amp;C" />
+    <part Name="MeleeWeapon" BaseDamage="3d3+3" />
+    <part Name="Metal" />
+  </object>
+  <object Name="UD_MetalPricklePig_Claw" Inherits="NaturalWeapon">
+    <part Name="Render" DisplayName="metal claw" Tile="Creatures/natural-weapon-claw.bmp" ColorString="&amp;C" />
+    <part Name="MeleeWeapon" BaseDamage="3d3+3" Skill="ShortBlades" Stat="Strength" Slot="Hand" />
+    <part Name="Metal" />
+  </object>
+  <object Name="UD Integrated Rocket Runners" Inherits="Rocket Runners">
+    <!-- TileColor is black pixels, DetailColor is white pixels -->
+    <part Name="Render" DisplayName="{{c|in{{r|}}tegr{{W|}}{{Y|a}}ted}} {{rocket|rocket}} {{Y|runners}}"
+          TileColor="&amp;R" DetailColor="c" />
+    <part Name="ModSturdy" />
+    <part Name="NoDamage" />
+    <part Name="NoRust" />
+    <part Name="NaturalEquipment" />
+    <part Name="Metal" />
+    <part Name="Physics" Category="Natural Armor" IsReal="false" />
+    <property Name="ShowAsPhysicalFeature" Value="Much whir! Very zoom!" />
+    <tag Name="EquipmentFrameColors" Value="cRCK" />
+    <part Name="TinkerItem" Bits="0" CanDisassemble="false" CanBuild="false" />
+    <part Name="Examiner" EpistemicStatus="2" Complexity="0" />
+    <intproperty Name="Natural" Value="1" />
+    <tag Name="NoEffects" />
+    <tag Name="ExcludeFromDynamicEncounters" />
+    <tag Name="NaturalGear" />
+    <tag Name="NoDefaultBehavior" />
+    <tag Name="NoSparkingQuest" />
+    <tag Name="Mods" Value="None" />
+  </object>
+
+  <object Name="UD Super Metal Prickle Pig" Inherits="UD Metal Prickle Pig">
+    <part Name="Uplift"
+          AdditionalBaseTemplate="BaseFactionHeroTemplate_UD_DarkPricklePigs"
+          AdditionalSpecializationTemplate="SpecialFactionHeroTemplate_UD_DarkPricklePigs" />
+    <removetag Name="DynamicObjectsTable:MinionDarkPricklePigs" />
+    <tag Name="NoLibrarian" />
+    <tag Name="ExcludeFromVillagePopulations" />
+  </object>
+
+  <object Name="UD Prickle Pig Golem" Inherits="Base_UD_PricklePig">
+    <mixin Name="BaseVehicleGolem" />
+    <part Name="Render" DisplayName="prickle pig golem" RenderString="x" Tile="Creatures/sw_golem_swine.png" />
+    <mutation Name="UD_Blink" ColorChange="false" Shouts="true" />
+  </object>
+
+  <!-- 
+      Putus Templar: Giant-Slayers
+  -->
+  <object Name="UD_TemplarBloodhoundBase" Inherits="Templar">
+    <part Name="Render" DisplayName="Templar Bloodhound"
+          RenderString="t" Tile="Creatures/lymphious_templarspeedy1.png"
+          ColorString="&amp;Y" TileColor="&amp;g" DetailColor="Y" />
+    <part Name="Description" Short="A taut whip of a =pronouns.personTerm= shifts =pronouns.possessive= weight 'twixt =pronouns.possessive= feet to a soundless metronome. =pronouns.Possessive= monochrome eyes lead an unusually angular face, twitch by subtle twitch, from one visual datum to the next; =pronouns.possessive= movements jitter with the impatient agitation of someone whose destination mightn't be certain yet, but needs be arrived at quickly nonetheless." />
+    <removeskill Name="LongBlades" />
+    <removeskill Name="LongBladesProficiency" />
+    <skill Name="Tactics" />
+    <skill Name="Tactics_Run" />
+    <skill Name="Tactics_Hurdle" />
+    <skill Name="ShortBlades" />
+    <skill Name="ShortBlades_Expertise" />
+    <part Name="CyberneticsHasImplants" Implants="UD_OverclockedCentralNervousSystem@back" />
+    <tag Name="InventoryPopulationTable" Value="UD Templar Bloodhound Equipment Pool" />
+    <tag Name="BaseObject" Value="*noinherit" />
+    <tag Name="ExcludeFromDynamicEncounters" Value="*noinherit" />
+  </object>
+
+  <object Name="UD Templar Squire Bloodhound" Inherits="UD_TemplarBloodhoundBase">
+    <part Name="Render" DisplayName="Templar squire bloodhound" />
+    <part Name="Description" Short="A body already bent to passive discomfort stands like a struck nerve. =pronouns.Subjective= =pronouns.verb:flinch:afterpronoun= sporadically, before recollecting =pronouns.reflexive=. =pronouns.Possessive= every deliberate action is that of a =pronouns.personTerm= whose eagerness to prove =pronouns.possessive= worth =pronouns.subjective= can barely contain." />
+    <stat Name="Level" Value="10" />
+    <stat Name="Hitpoints" Value="20" />
+    <stat Name="Agility" Boost="2" />
+    <inventoryobject Blueprint="Dagger3" />
+    <inventoryobject Blueprint="Steel Shield" />
+    <inventoryobject Blueprint="Flexivest" />
+    <inventoryobject Blueprint="UD SpringLoaded Steel Boots" />
+    <inventoryobject Blueprint="Wristcalc" Number="1" CellChance="100" CellFullChance="100" CellType="Solar Cell" />
+    <tag Name="InventoryPopulationTable" Value="UD Templar Squire Bloodhound Extra Gear" />
+  </object>
+
+  <object Name="UD Templar Bloodhound" Inherits="UD_TemplarBloodhoundBase">
+    <part Name="Render" DisplayName="Templar bloodhound" />
+    <part Name="Description" Short="A taut whip of a =pronouns.personTerm= shifts =pronouns.possessive= weight 'twixt =pronouns.possessive= feet to a soundless metronome. =pronouns.Possessive= monochrome eyes lead an unusually angular face, twitch by subtle twitch, from one visual datum to the next; =pronouns.possessive= movements jitter with the impatient agitation of someone whose destination mightn't be certain yet, but requires prompt arrival nonetheless." />
+    <stat Name="Level" Value="23" />
+    <stat Name="Hitpoints" Value="75" />
+    <stat Name="Agility" Boost="3" />
+    <stat Name="Willpower" Boost="1" />
+    <skill Name="Discipline" />
+    <skill Name="Discipline_Lionheart" />
+    <skill Name="Tactics" />
+    <skill Name="Tactics_Charge" />
+    <skill Name="Tactics_Juke" />
+    <skill Name="ShortBlades_Bloodletter" />
+    <skill Name="ShortBlades_Jab" />
+    <skill Name="SingleWeaponFighting" />
+    <skill Name="SingleWeaponFighting_OpportuneAttacks" />
+    <inventoryobject Blueprint="Dagger5" />
+    <inventoryobject Blueprint="UD Spiked Slender Fullerite Shield" />
+    <inventoryobject Blueprint="Flexivest" />
+    <inventoryobject Blueprint="UD SpringLoaded Slender Fullerite Boots" />
+    <inventoryobject Blueprint="UD Overloaded Wristcalc" Number="2" CellChance="100" CellFullChance="100" CellType="UD Full AutoCollect Biodynamic Cell" />
+    <tag Name="InventoryPopulationTable" Value="UD Templar Bloodhound Extra Gear" />
+    <part Name="CyberneticsHasImplants" Implants="UD_OverclockedCentralNervousSystem@back,InflatableAxons@head,PalladiumElectrodeposits@body" />
+    <part Name="CyberneticsHasRandomImplants" ImplantChance="25" ChangeColor="false" ImplantTable="Cybernetics4" LicensesAtLeast="6" />
+  </object>
+
+  <object Name="UD Bloodhound Commander" Inherits="UD_TemplarBloodhoundBase">
+    <part Name="Render" DisplayName="bloodhound commander" Tile="Creatures/lymphious_templarspeedy2.png" />
+    <part Name="Description" Short="Spring-steel in =pronouns.species= form is carried atop a lithe, albeit uncanny, gait that makes no attempt to hide =pronouns.possessive= crooked spine. Every step is a promise =pronouns.subjective='s making; every flicker of =pronouns.possessive= colourless eyes cracks =pronouns.possessive= otherwise calm countenance. A thin veneer barely disguises the catastophic violence desperate to reveal =pronouns.reflexive=." />
+    <stat Name="Level" Value="29" />
+    <stat Name="Hitpoints" Value="75" />
+    <stat Name="Agility" Boost="4" />
+    <stat Name="Willpower" Boost="2" />
+    <stat Name="Toughness" Boost="1" />
+    <skill Name="Discipline" />
+    <skill Name="Discipline_Lionheart" />
+    <skill Name="Discipline_Conatus" />
+    <skill Name="Tactics" />
+    <skill Name="Tactics_Charge" />
+    <skill Name="Tactics_Juke" />
+    <skill Name="ShortBlades_Bloodletter" />
+    <skill Name="ShortBlades_Jab" />
+    <skill Name="ShortBlades_PointedCircle" />
+    <skill Name="ShortBlades_Rejoinder" />
+    <skill Name="SingleWeaponFighting" />
+    <skill Name="SingleWeaponFighting_OpportuneAttacks" />
+    <skill Name="SingleWeaponFighting_WeaponExpertise" />
+    <inventoryobject Blueprint="Dagger6" />
+    <inventoryobject Blueprint="UD Spiked Crysteel Shield" />
+    <inventoryobject Blueprint="Nanoweave Vest" />
+    <inventoryobject Blueprint="UD SpringLoaded Crysteel Boots" />
+    <inventoryobject Blueprint="UD Overloaded Wristcalc" Number="2" CellChance="100" CellFullChance="100" CellType="UD Full AutoCollect Biodynamic Cell" />
+    <inventoryobject Blueprint="Palladium Mesh Tabard" CellChance="100" CellFullChance="100" CellType="UD Full AutoCollect Biodynamic Cell" />
+    <tag Name="InventoryPopulationTable" Value="UD Bloodhound Commander Extra Gear" />
+    <part Name="CyberneticsHasImplants" Implants="UD_OverclockedCentralNervousSystem@back,NocturnalApex@head,PalladiumElectrodeposits@body,PalladiumElectrodeposits@arm,PalladiumElectrodeposits@arm" />
+    <part Name="CyberneticsHasRandomImplants" ImplantChance="45" ChangeColor="false" ImplantTable="Cybernetics5" LicensesAtLeast="8" />
+  </object>
+
+  <object Name="UD Uplifted Bloodhound Commander" Inherits="UD Bloodhound Commander">
+    <part Name="Uplift" AdditionalSpecializationTemplate="SpecialFactionHeroTemplate_TemplarKnightCommander" />
+    <removeinventoryobject Blueprint="Dagger6" />
+    <removeinventoryobject Blueprint="UD Spiked Crysteel Shield" />
+    <inventoryobject Blueprint="Dagger7" />
+    <inventoryobject Blueprint="UD Spiked Flawless Crysteel Shield" />
+    <tag Name="NamingTag" Value="KnightCommander" />
+    <tag Name="NoLibrarian" />
+    <tag Name="ExcludeFromVillagePopulations" />
+  </object>
+  
+</objects>

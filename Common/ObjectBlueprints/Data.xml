@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<objects>
+  <object Name="BaseFactionHeroTemplate_UD_PricklePigs" Inherits="BaseFactionHeroTemplate">
+    <tag Name="HeroLevelMultiplier" Value="1.5" />
+    <tag Name="HeroIntBoost" Value="3" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,Tactics_Charge" />
+  </object>
+  <object Name="SpecialFactionHeroTemplate_UD_PricklePigs" Inherits="SpecialFactionHeroTemplate">
+    <tag Name="HeroIntBoost" Value="6" />
+    <tag Name="HeroEgoBoost" Value="3" />
+    <tag Name="HeroHPBoost" Value="1.5" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Acrobatics_Tumble,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Axe_Decapitate,Axe_Berserk,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,SingleWeaponFighting_PenetratingStrikes,SingleWeaponFighting_WeaponMastery,Tactics_Charge,Endurance_ShakeItOff,Endurance_Longstrider,Discipline,Discipline_Lionheart,Discipline_Conatus,ShortBlades_Rejoinder,ShortBlades_Shank" />
+  </object>
+  
+  <object Name="BaseFactionHeroTemplate_UD_DarkPricklePigs" Inherits="BaseFactionHeroTemplate">
+    <tag Name="HeroLevelMultiplier" Value="1.5" />
+    <tag Name="HeroIntBoost" Value="3" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,Tactics_Charge" />
+  </object>
+  <object Name="SpecialFactionHeroTemplate_UD_DarkPricklePigs" Inherits="SpecialFactionHeroTemplate">
+    <tag Name="HeroIntBoost" Value="6" />
+    <tag Name="HeroEgoBoost" Value="3" />
+    <tag Name="HeroHPBoost" Value="1.5" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Acrobatics_Tumble,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Axe_Decapitate,Axe_Berserk,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,SingleWeaponFighting_PenetratingStrikes,SingleWeaponFighting_WeaponMastery,Tactics_Charge,Endurance_ShakeItOff,Endurance_Longstrider,Discipline,Discipline_Lionheart,Discipline_Conatus,ShortBlades_Rejoinder,ShortBlades_Shank" />
+  </object>
+  
+  <object Name="UD_ChaosEmerald_HeroTemplate" Inherits="DataBucket">
+    <tag Name="HeroNoWaterRitual" Value="true" />
+    <tag Name="HeroMinLevel" Value="40" />
+    <tag Name="HeroFactionHeirloomChance" Value="100" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,Tactics_Charge" />
+  </object>
+  <object Name="UD_ChaosEmerald_SuperBoss_HeroTemplate" Inherits="UD_ChaosEmerald_HeroTemplate">
+    <tag Name="HeroMinLevel" Value="60" />
+    <tag Name="HeroSkills" Value="Acrobatics_SwiftReflexes,Acrobatics_Tumble,Axe,Axe_Expertise,Axe_Cleave,Axe_Dismember,Axe_Decapitate,Axe_Berserk,Cudgel_ChargingStrike,ShortBlades_Bloodletter,ShortBlades_Jab,ShortBlades_Hobble,SingleWeaponFighting,SingleWeaponFighting_OpportuneAttacks,SingleWeaponFighting_WeaponExpertise,SingleWeaponFighting_PenetratingStrikes,SingleWeaponFighting_WeaponMastery,Tactics_Charge,Endurance_ShakeItOff,Endurance_Longstrider,Discipline,Discipline_Lionheart,Discipline_Conatus,ShortBlades_Rejoinder,ShortBlades_Shank" />
+  </object>
+  
+  <object Name="UD_ChaosEmerald Prickle Pig" Inherits="UD_ChaosEmerald_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="8" />
+  </object>
+  <object Name="UD_ChaosEmerald_SuperBoss Prickle Pig" Inherits="UD_ChaosEmerald_SuperBoss_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="12" />
+  </object>
+  
+  <object Name="UD_ChaosEmerald Burrowing Prickle Pig" Inherits="UD_ChaosEmerald_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="2" />
+  </object>
+  <object Name="UD_ChaosEmerald_SuperBoss Burrowing Prickle Pig" Inherits="UD_ChaosEmerald_SuperBoss_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="4" />
+  </object>
+  
+  <object Name="UD_ChaosEmerald Dark Prickle Pig" Inherits="UD_ChaosEmerald_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="1.3" />
+  </object>
+  <object Name="UD_ChaosEmerald_SuperBoss Dark Prickle Pig" Inherits="UD_ChaosEmerald_SuperBoss_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="2.5" />
+  </object>
+  
+  <object Name="UD_ChaosEmerald Metal Prickle Pig" Inherits="UD_ChaosEmerald_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="1.2" />
+  </object>
+  <object Name="UD_ChaosEmerald_SuperBoss Metal Prickle Pig" Inherits="UD_ChaosEmerald_SuperBoss_HeroTemplate">
+    <tag Name="HeroHPBoost" Value="1.5" />
+  </object>
+</objects>

@@ -15,6 +15,8 @@ using UD_Blink_Mutation;
 using static UD_Blink_Mutation.Const;
 using static UD_Blink_Mutation.Options;
 using Debug = UD_Blink_Mutation.Debug;
+using XRL.Collections;
+using System.Linq;
 
 namespace XRL.World.WorldBuilders
 {
@@ -111,25 +113,30 @@ namespace XRL.World.WorldBuilders
 
             WorldCreationProgress.StepProgress("Hiding Chaos Emeralds...");
 
-            Dictionary<string, GameObject> chaosEmeralds = new()
+            var chaosEmeralds = new Dictionary<string, GameObject>()
             {
-                { "Green", GameObject.Create("Green Chaos Emerald") },
-                { "Red", GameObject.Create("Red Chaos Emerald") },
-                { "Blue", GameObject.Create("Blue Chaos Emerald") },
-                { "Yellow", GameObject.Create("Yellow Chaos Emerald") },
-                { "Cyan", GameObject.Create("Cyan Chaos Emerald") },
-                { "Pink", GameObject.Create("Pink Chaos Emerald") },
-                { "Orange", GameObject.Create("Orange Chaos Emerald") },
+                { "Green", GameObject.Create("UD Green Chaos Emerald") },
+                { "Red", GameObject.Create("UD Red Chaos Emerald") },
+                { "Blue", GameObject.Create("UD Blue Chaos Emerald") },
+                { "Yellow", GameObject.Create("UD Yellow Chaos Emerald") },
+                { "Cyan", GameObject.Create("UD Cyan Chaos Emerald") },
+                { "Pink", GameObject.Create("UD Pink Chaos Emerald") },
+                { "Orange", GameObject.Create("UD Orange Chaos Emerald") },
             };
 
-            List<string> emeraldColors = new(EmeraldColors);
+            foreach ((var color, var chaosEmerald) in chaosEmeralds)
+                The.Game.SetObjectGameState($"UD_BlinkMutation_{color}_ChaosEmerald", chaosEmerald);
 
-            string tombTopEmerald = emeraldColors.DrawRandomToken(ExceptForToken: "Orange");
             string tombLocation = "JoppaWorld.53.3.0.1.0";
-
-            string moonstairEmerald = emeraldColors.DrawRandomToken();
-
-            string pricklePigEmerald = emeraldColors.DrawRandomToken();
+            string tombTopEmerald = null;
+            string moonstairEmerald = null;
+            string pricklePigEmerald = null;
+            using (var emeraldColors = ScopeDisposedList<string>.GetFromPoolFilledWith(EmeraldColors))
+            {
+                tombTopEmerald = emeraldColors.DrawRandomToken(ExceptForToken: "Orange");
+                moonstairEmerald = emeraldColors.DrawRandomToken();
+                pricklePigEmerald = emeraldColors.DrawRandomToken();
+            }
 
             bool superBoss = 2.in1000();
 
@@ -138,23 +145,36 @@ namespace XRL.World.WorldBuilders
 
             The.Game.SetBooleanGameState($"ChaosEmeraldSuperBoss", superBoss);
 
-            GameObject pricklePig = GameObjectFactory.Factory.CreateObject(
-                ObjectBlueprint: "Metal Prickle Pig",
-                BeforeObjectCreated: delegate (GameObject GO) { HeroMaker.MakeHero(GO); });
+            var weightedPricklePigs = new Dictionary<string, int>(4)
+            {
+                { "UD Prickle Pig", 2 },
+                { "UD Burrowing Prickle Pig", 5 },
+                { "UD Dark Prickle Pig", 5 },
+                { "UD UD Metal Prickle Pig", 3 },
+            };
+
+            string blueprint = superBoss
+                ? "UD Dark Prickle Pig"
+                : weightedPricklePigs.GetRandomElement(Stat.Rnd)
+                ;
+
+            var pricklePig = GameObjectFactory.Factory.CreateObject(
+                ObjectBlueprint: blueprint,
+                BeforeObjectCreated: GO => HeroMaker.MakeHero(GO, superBoss ? $"UD_ChaosEmerald_SuperBoss {blueprint}" : $"UD_ChaosEmerald {blueprint}"));
 
             int zoneTier = 8;
             int zMin = 11;
             int zMax = 15;
-            Location2D parasang = parasang = Builder.getLocationOfTier(zoneTier);
+            var parasang = Builder.getLocationOfTier(zoneTier);
             parasang = Location2D.Get(parasang.X * 3 + 1, parasang.Y * 3 + 1);
             int locationZ = Stat.Random(zMin, zMax);
             string zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ);
             string secretID = null;
 
-            string secretAttributesString = "artifact,chaosemerald";
-            string[] secretAttributes = secretAttributesString.Split(',');
+            string secretAttributesString = "artifact,chaos emerald";
+            var secretAttributes = secretAttributesString.Split(',');
 
-            foreach ((string color, GameObject emeraldObject) in chaosEmeralds)
+            foreach ((var color, var emeraldObject) in chaosEmeralds)
             {
                 Debug.LoopItem(4, $"{nameof(color)}", $"[{color}] ({emeraldObject.ID}) {emeraldObject.DebugName}",
                     Indent: indent + 2, Toggle: getDoDebug());
@@ -164,7 +184,7 @@ namespace XRL.World.WorldBuilders
 
                 bool isTombTopEmerald = color == tombTopEmerald;
                 bool isMoonstairEmerald = color == moonstairEmerald;
-                bool isPricklePigEmerald = color == pricklePigEmerald;
+                bool isPricklePigEmerald = color == pricklePigEmerald && pricklePig != null;
 
                 Debug.LoopItem(4, $"Special Flags", Indent: indent + 2, Toggle: getDoDebug());
 
@@ -176,15 +196,16 @@ namespace XRL.World.WorldBuilders
 
                 Debug.LoopItem(4, $"{nameof(isPricklePigEmerald)}", $"{isPricklePigEmerald}",
                     Good: isPricklePigEmerald, Indent: indent + 4, Toggle: getDoDebug());
+
                 if (!superBoss)
                 {
                     zoneTier = !isMoonstairEmerald ? Stat.RollCached("2d4") : 8;
 
                     zMin = Math.Abs(50 - (zoneTier * 5));
-                    if (zMin < 11 && !1.in10())
-                    {
+                    if (zMin < 11
+                        && !1.in10())
                         zMin = 11;
-                    }
+
                     zMax = Math.Abs(zMin + (23 - (zoneTier * 2)));
 
                     parasang = Builder.getLocationOfTier(zoneTier);
@@ -192,10 +213,10 @@ namespace XRL.World.WorldBuilders
 
                     locationZ = Stat.Random(zMin, zMax);
                     zoneID = Zone.XYToID("JoppaWorld", parasang.X, parasang.Y, locationZ);
+
                     if (isTombTopEmerald)
-                    {
                         zoneID = tombLocation;
-                    }
+
                     Debug.LoopItem(4, $"{nameof(zoneID)}", $"{zoneID}",
                         Indent: indent + 3, Toggle: getDoDebug());
 
@@ -205,7 +226,7 @@ namespace XRL.World.WorldBuilders
                     {
                         secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying {emeraldName}", secretAttributes, "Artifacts", emeraldSecret);
 
-                        SecretRevealer secretRevealer = pricklePig.RequirePart<SecretRevealer>();
+                        var secretRevealer = pricklePig.RequirePart<SecretRevealer>();
                         secretRevealer.id = secretID;
                         secretRevealer.text = $"the location of the prickle pig carrying {emeraldName}";
                         secretRevealer.message = $"You have discovered {secretRevealer.text}!";
@@ -223,7 +244,7 @@ namespace XRL.World.WorldBuilders
 
                         if (isTombTopEmerald)
                         {
-                            SecretRevealer secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
+                            var secretRevealer = emeraldObject.RequirePart<SecretRevealer>();
                             secretRevealer.id = secretID;
                             secretRevealer.text = $"the location of {emeraldName}";
                             secretRevealer.message = $"You have discovered {secretRevealer.text}!";
@@ -249,15 +270,13 @@ namespace XRL.World.WorldBuilders
                     Indent: indent + 3, Toggle: getDoDebug());
 
                 if (ChaosEmeraldLocations.ContainsKey(color))
-                {
                     ChaosEmeraldLocations[color] = zoneID;
-                }
             }
             if (superBoss)
             {
                 secretID = Builder.AddSecret(zoneID, $"the prickle pig carrying all 7 of The Chaos Emeralds", secretAttributes, "Artifacts", $"${ChaosEmeraldSuperBoss}");
 
-                SecretRevealer secretRevealer = pricklePig.RequirePart<SecretRevealer>();
+                var secretRevealer = pricklePig.RequirePart<SecretRevealer>();
                 secretRevealer.id = secretID;
                 secretRevealer.text = $"the location of the prickle pig carrying all 7 of The Chaos Emeralds";
                 secretRevealer.message = $"You have discovered {secretRevealer.text}!";
@@ -290,29 +309,25 @@ namespace XRL.World.WorldBuilders
                 string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}");
                 if (!zoneID.IsNullOrEmpty())
                 {
-                    Zone Z = The.ZoneManager.GetZone(zoneID);
-                    Cell landingCell = Z.GetFirstObjectWithPart(nameof(ChaosEmeraldSetPiece))?.CurrentCell;
+                    var Z = The.ZoneManager.GetZone(zoneID);
+                    var landingCell = Z.GetFirstObjectWithPart(nameof(ChaosEmeraldSetPiece))?.CurrentCell;
                     if (landingCell != null)
                     {
-                        List<Cell> nearbyCells = Event.NewCellList(landingCell.GetAdjacentCells(5));
+                        var nearbyCells = Event.NewCellList(landingCell.GetAdjacentCells(5));
                         nearbyCells.RemoveAll(c => c.IsSolidFor(The.Player));
                         if (!nearbyCells.IsNullOrEmpty())
-                        {
                             landingCell = nearbyCells.GetRandomElementCosmetic();
-                        }
                     }
                     landingCell ??= Z.GetEmptyCells().GetRandomElement();
                     if (landingCell != null)
                     {
-                        The.Player.Physics.CurrentCell.RemoveObject(The.Player.Physics.ParentObject);
+                        The.Player.CurrentCell.RemoveObject(The.Player);
                         landingCell.AddObject(The.Player);
                         The.ZoneManager.SetActiveZone(Z);
                         The.ZoneManager.ProcessGoToPartyLeader();
                     }
                     else
-                    {
                         Popup.Show("Something went very wrong trying that! Check Player.log!", "Big Oops!");
-                    }
                 }
                 else
                 {
@@ -320,9 +335,8 @@ namespace XRL.World.WorldBuilders
                     foreach (string validColor in EmeraldColors)
                     {
                         if (!validColors.IsNullOrEmpty())
-                        {
                             validColors += ", ";
-                        }
+
                         validColors += validColor;
                     }
                     Popup.Show($"{color} doesn't seem to match any Emerald locations! Valid colors are (case-insensitive): {validColors}", "Uh-Oh!");
@@ -335,19 +349,33 @@ namespace XRL.World.WorldBuilders
         {
             if (!EmeraldColors.IsNullOrEmpty())
             {
+                using var takenEmeralds = ScopeDisposedList<string>.GetFromPool();
                 foreach (string color in EmeraldColors)
                 {
                     if (!TakeChaosEmerald(color))
-                    {
                         break;
-                    }
+                    else
+                        takenEmeralds.Add(color);
                 }
+
+                if (takenEmeralds.IsNullOrEmpty())
+                    takenEmeralds.Add("None!?");
+
+                Popup.Show(takenEmeralds
+                    .Select(s
+                        => (The.Game?.GetObjectGameState($"UD_BlinkMutation_{s}_ChaosEmerald") as GameObject)?.ShortDisplayName
+                        ?? GameObjectFactory.Factory?.GetBlueprintIfExists($"UD {s} Chaos Emerald")?.DisplayName()
+                        ?? s
+                    )
+                    .Aggregate(
+                        seed: $"=subject.T= had the following Chaos Emeralds materialize in =subject.possessive= inventory:".StartReplace().AddObject(The.Player).ToString(),
+                        func: (a, n) => a + (!a.IsNullOrEmpty() ? "\n" : null) + $"\xff\xff:\xff{n}"),
+                        Title: $"Emeralds Acquired!");
             }
             else
-            {
                 Popup.Show($"Something went very wrong trying that! {nameof(EmeraldColors)} is {NULL} for some reason...", "Big Oops!");
-            }
         }
+
         [WishCommand(Command = "take chaos emerald")]
         public static bool TakeChaosEmerald(string color)
         {
@@ -358,41 +386,36 @@ namespace XRL.World.WorldBuilders
                     color = Grammar.MakeTitleCase(color);
                     int chaosEmeraldID = The.Game.GetIntGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(GameObject.ID)}:{color}");
                     string zoneID = The.Game.GetStringGameState($"UD_{nameof(ChaosEmeralds)}:{nameof(Zone)}:{color}");
-                    if (chaosEmeraldID != 0 && !zoneID.IsNullOrEmpty())
+                    if (chaosEmeraldID != 0
+                        && !zoneID.IsNullOrEmpty())
                     {
-                        Zone emeraldZone = The.ZoneManager.GetZone(zoneID);
+                        var emeraldZone = The.ZoneManager.GetZone(zoneID);
 
-                        GameObject chaosEmeraldObject = emeraldZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString())
+                        var chaosEmeraldObject = emeraldZone.GetFirstObject(GO => GO.ID == chaosEmeraldID.ToString())
                             ?? emeraldZone.FindObjectByID(chaosEmeraldID);
 
                         if (chaosEmeraldObject != null)
                         {
-                            if (chaosEmeraldObject.Holder == null || chaosEmeraldObject.Holder != The.Player)
+                            if (chaosEmeraldObject.Holder == null
+                                || chaosEmeraldObject.Holder != The.Player)
                             {
                                 The.Player.ReceiveObject(chaosEmeraldObject);
                                 chaosEmeraldObject.MakeUnderstood();
                                 if (chaosEmeraldObject.TryGetPart(out SecretRevealer secretRevealer))
-                                {
                                     chaosEmeraldObject.RemovePart(secretRevealer);
-                                }
                             }
                             else
-                            {
                                 Popup.Show($"You are already holding {chaosEmeraldObject.T(AsIfKnown: true)}!");
-                            }
                         }
                         else
                         {
-                            if (The.Player.Inventory == null || !The.Player.Inventory.HasObject(GO => GO.ID == chaosEmeraldID.ToString()))
-                            {
+                            if (The.Player.Inventory == null
+                                || !The.Player.Inventory.HasObject(GO => GO.ID == chaosEmeraldID.ToString()))
                                 Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldObject)} is {NULL}!");
-                            }
                         }
                     }
                     else
-                    {
                         Popup.Show($"Something went very wrong with {color}, {nameof(chaosEmeraldID)} is {chaosEmeraldID}!");
-                    }
                 }
                 else
                 {
@@ -401,23 +424,21 @@ namespace XRL.World.WorldBuilders
 
                     if (pricklePigID != 0 && !zoneID.IsNullOrEmpty())
                     {
-                        Zone pricklePigZone = The.ZoneManager.GetZone(zoneID);
+                        var pricklePigZone = The.ZoneManager.GetZone(zoneID);
 
-                        GameObject pricklePigObject = pricklePigZone.GetFirstObject(GO => GO.ID == pricklePigID.ToString())
+                        var pricklePigObject = pricklePigZone.GetFirstObject(GO => GO.ID == pricklePigID.ToString())
                             ?? pricklePigZone.FindObjectByID(pricklePigID);
 
                         if (pricklePigObject != null)
                         {
-                            Zone Z = The.Player.CurrentZone;
-                            Cell landingCell = The.Player.CurrentCell;
+                            var Z = The.Player.CurrentZone;
+                            var landingCell = The.Player.CurrentCell;
                             if (landingCell != null)
                             {
-                                List<Cell> nearbyCells = Event.NewCellList(landingCell.GetAdjacentCells(5));
+                                var nearbyCells = Event.NewCellList(landingCell.GetAdjacentCells(5));
                                 nearbyCells.RemoveAll(c => c.IsSolidFor(pricklePigObject));
                                 if (!nearbyCells.IsNullOrEmpty())
-                                {
                                     landingCell = nearbyCells.GetRandomElementCosmetic();
-                                }
                             }
                             landingCell ??= Z.GetEmptyCells().GetRandomElement();
                             if (landingCell != null)
@@ -429,14 +450,12 @@ namespace XRL.World.WorldBuilders
                                 }
                                 // pricklePigObject.Physics.CurrentCell.RemoveObject(pricklePigObject.Physics.ParentObject);
                                 // landingCell.AddObject(pricklePigObject);
-                                GlobalLocation landingGlobalLocation = new(Z.ZoneWorld, Z.wX, Z.wY, Z.X, Z.Y, Z.Z, landingCell.X, landingCell.Y);
+                                var landingGlobalLocation = new GlobalLocation(Z.ZoneWorld, Z.wX, Z.wY, Z.X, Z.Y, Z.Z, landingCell.X, landingCell.Y);
                                 pricklePigObject.DirectMoveTo(landingGlobalLocation, Forced: true, IgnoreCombat: true);
                                 return false;
                             }
                             else
-                            {
                                 Popup.Show("Something went very wrong trying that! Check Player.log!", "Big Oops!");
-                            }
                         }
                         else
                         {

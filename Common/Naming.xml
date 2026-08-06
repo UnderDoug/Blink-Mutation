@@ -1,0 +1,105 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<naming>
+  <namestyles>
+    <namestyle Name="UD_PricklePig" HyphenationChance="5" TwoNameChance="25" Format="TitleCase">
+      <scopes>
+        <scope Name="Main" Faction="UD_PricklePigs" Priority="100" Weight="100" Combine="true" />
+        <scope Name="Culture" Culture="Prickle Pig" Priority="50" Weight="100" Combine="true" />
+        <scope Name="Species" Species="prickle pig" Priority="50" Weight="100" Combine="true" />
+      </scopes>
+      <templates>
+        <template Name="*Name*" />
+      </templates>
+      <prefixes Amount="1">
+        <prefix Name="s" Weight="8" />
+        <prefix Name="so" Weight="3" />
+        <prefix Name="kn" Weight="8" />
+        <prefix Name="knu" Weight="3" />
+        <prefix Name="t" Weight="6" />
+        <prefix Name="ta" Weight="3" />
+        <prefix Name="tai" Weight="2" />
+      </prefixes>
+      <infixes Amount="1-2">
+        <infix Name="o" Weight="8" />
+        <infix Name="on" Weight="3" />
+        <infix Name="u" Weight="6" />
+        <infix Name="uc" Weight="3" />
+        <infix Name="uck" Weight="2" />
+        <infix Name="a" Weight="3" />
+        <infix Name="ai" Weight="6" />
+        <infix Name="ail" Weight="2" />
+      </infixes>
+      <postfixes Amount="1">
+        <postfix Name="ni" Weight="3" />
+        <postfix Name="nic" Weight="8" />
+        <postfix Name="kle" Weight="3" />
+        <postfix Name="kles" Weight="8" />
+        <postfix Name="ils" Weight="3" />
+        <postfix Name="ls" Weight="8" />
+        <postfix Name="s" Weight="2" />
+      </postfixes>
+    </namestyle>
+
+    <namestyle Name="UD_DarkPricklePig" HyphenationChance="5" TwoNameChance="25" Format="TitleCase">
+      <scopes>
+        <scope Name="Main" Faction="UD_DarkPricklePigs" Priority="100" Weight="100" Combine="true" />
+        <scope Name="Culture" Culture="Dark Prickle Pig" Priority="50" Weight="100" Combine="true" />
+      </scopes>
+      <templates>
+        <template Name="*Name*" />
+      </templates>
+      <prefixes Amount="1">
+        <prefix Name="sh" Weight="8" />
+        <prefix Name="sha" Weight="3" />
+        <prefix Name="s" Weight="8" />
+        <prefix Name="so" Weight="3" />
+      </prefixes>
+      <infixes Amount="1-2">
+        <infix Name="ad" Weight="8" />
+        <infix Name="ado" Weight="3" />
+        <infix Name="o" Weight="8" />
+        <infix Name="on" Weight="3" />
+      </infixes>
+      <postfixes Amount="1">
+        <postfix Name="ow" Weight="3" />
+        <postfix Name="w" Weight="8" />
+        <postfix Name="ni" Weight="3" />
+        <postfix Name="nic" Weight="8" />
+      </postfixes>
+    </namestyle>
+
+    <namestyle Name="UD_PricklePig Hero Honorific">
+      <scopes>
+        <scope Name="Main" Type="Honorific" Special="Hero" Species="prickle pig" Priority="400" Combine="true" Chance="100" />
+        <scope Name="Culture" Type="Honorific" Special="Hero" Culture="Prickle Pig" Priority="200" Combine="true" Chance="100" />
+        <scope Name="Culture" Type="Honorific" Special="Hero" Culture="Dark Prickle Pig" Priority="200" Combine="true" Chance="100" />
+      </scopes>
+      <templates>
+        <template Name="{{W|Super}}" />
+      </templates>
+    </namestyle>
+
+    <namestyle Name="UD_PricklePig Hero Title">
+      <scopes>
+        <scope Name="Main" Type="Title" Special="Hero" Species="prickle pig" Priority="300" Combine="true" Chance="50" />
+        <scope Name="Culture" Type="Title" Special="Hero" Culture="Prickle Pig" Priority="200" Combine="true" Chance="50" />
+        <scope Name="Culture" Type="Title" Special="Hero" Culture="Dark Prickle Pig" Priority="200" Combine="true" Chance="50" />
+      </scopes>
+      <templates>
+        <template Name="the *CreatureType*" />
+      </templates>
+    </namestyle>
+
+    <namestyle Name="UD_PricklePig Hero Extra Title">
+      <scopes>
+        <scope Name="Main" Type="ExtraTitle" Special="Hero" Species="prickle pig" Priority="300" Combine="true" Chance="50" />
+        <scope Name="Culture" Type="ExtraTitle" Special="Hero" Culture="Prickle Pig" Priority="200" Combine="true" Chance="50" />
+        <scope Name="Culture" Type="ExtraTitle" Special="Hero" Culture="Dark Prickle Pig" Priority="200" Combine="true" Chance="50" />
+      </scopes>
+      <templates>
+        <template Name="*Subtype*" />
+      </templates>
+    </namestyle>
+    
+  </namestyles>
+</naming>

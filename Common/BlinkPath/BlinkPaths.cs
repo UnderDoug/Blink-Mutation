@@ -46,27 +46,22 @@ namespace UD_Blink_Mutation
                 {
                     _Selected = 0;
                     for (int i = 0; i < Count; i++)
-                    {
                         if (this[i].Selected)
-                        {
                             return _Selected = i;
-                        }
-                    }
                 }
                 return _Selected;
             }
             set
             {
-                if (value > Count - 1 || value < 0)
-                {
+                if (value > Count - 1
+                    || value < 0)
                     MetricsManager.LogModWarning(ThisMod,
                         $"Attempted to set {nameof(BlinkPaths)}.{nameof(Selected)} to an index outside the bounds of list ({value}).");
-                }
+
                 _Selected = Math.Max(0, Math.Min(value, Count - 1));
+
                 for (int i = 0; i < Count; i++)
-                {
                     this[i].Selected = value == i;
-                }
             }
         }
 
@@ -88,15 +83,10 @@ namespace UD_Blink_Mutation
             get
             {
                 if (Count > 0)
-                {
-                    foreach (BlinkPath path in this)
-                    {
+                    foreach (var path in this)
                         if (path.Destination != null)
-                        {
                             return true;
-                        }
-                    }
-                }
+
                 return false;
             }
         }
@@ -106,15 +96,10 @@ namespace UD_Blink_Mutation
             get
             {
                 if (Count > 0)
-                {
-                    foreach (BlinkPath path in this)
-                    {
+                    foreach (var path in this)
                         if (path.Kid != null)
-                        {
                             return true;
-                        }
-                    }
-                }
+
                 return false;
             }
         }
@@ -124,15 +109,10 @@ namespace UD_Blink_Mutation
             get
             {
                 if (Count > 0)
-                {
-                    foreach (BlinkPath path in this)
-                    {
+                    foreach (var path in this)
                         if (path.KidDestination != null)
-                        {
                             return true;
-                        }
-                    }
-                }
+
                 return false;
             }
         }
@@ -142,15 +122,10 @@ namespace UD_Blink_Mutation
             get
             {
                 if (Count > 0)
-                {
-                    foreach (BlinkPath path in this)
-                    {
+                    foreach (var path in this)
                         if (path.KidCell != null)
-                        {
                             return true;
-                        }
-                    }
-                }
+
                 return false;
             }
         }
@@ -180,8 +155,7 @@ namespace UD_Blink_Mutation
 
         public BlinkPaths(BlinkPaths Source)
             : this(Source.EnumeratePaths())
-        {
-        }
+        { }
 
         public virtual void Reset()
         {
@@ -197,20 +171,20 @@ namespace UD_Blink_Mutation
 
         public IEnumerable<BlinkPath> EnumeratePaths()
         {
-            foreach (BlinkPath path in this)
-            {
+            foreach (var path in this)
                 yield return path;
-            }
         }
 
         public override string ToString()
         {
             return ToString();
         }
+
         public string ToString(int Index, bool ShowSelected = false)
         {
             return this[Index].ToString(ShowSelected);
         }
+
         public string ToString(bool ShowSelected = false)
         {
             return Path.ToString(ShowSelected);
@@ -219,47 +193,47 @@ namespace UD_Blink_Mutation
         private bool TryGetIndexOrSelected(int? Index, out int Result)
         {
             Result = -1;
-            if (Count < 1 || (int)Index < 0 || (int)Index >= Count)
-            {
+            if (Count < 1
+                || (int)Index < 0
+                || (int)Index >= Count)
                 return false;
-            }
-            Result = Index != null ? (int)Index : Selected;
+
+            Result = Index != null
+                ? (int)Index
+                : Selected
+                ;
             return true;
         }
 
         public Cell GetDestination(int? Index = null)
         {
             if (!TryGetIndexOrSelected(Index, out int index))
-            {
                 return null;
-            }
+
             return this[index].Destination;
         }
 
         public GameObject GeKid(int? Index = null)
         {
             if (!TryGetIndexOrSelected(Index, out int index))
-            {
                 return null;
-            }
+
             return this[index].Kid;
         }
 
         public Cell GetKidDestination(int? Index = null)
         {
             if (!TryGetIndexOrSelected(Index, out int index))
-            {
                 return null;
-            }
+
             return this[index].KidDestination;
         }
 
         public Cell GetKidCell(int? Index = null)
         {
             if (!TryGetIndexOrSelected(Index, out int index))
-            {
                 return null;
-            }
+
             return this[index].KidCell;
         }
 
@@ -267,9 +241,7 @@ namespace UD_Blink_Mutation
         {
             Add(Path);
             if (SetSelected)
-            {
                 Selected = IndexOf(Path);
-            }
         }
 
         public void InitializePaths(GameObject Blinker, int BlinkRange, out bool PathsContainNonHostileTarget)
@@ -284,6 +256,7 @@ namespace UD_Blink_Mutation
                 $"{nameof(BlinkRange)}: {BlinkRange}," +
                 $" EffectiveRange: {BlinkRange * Blinker.GetMovementsPerTurn(true)}",
                 Indent: indent + 2, Toggle: getDoDebug());
+
 
             for (int i = 0; i < Count; i++)
             {

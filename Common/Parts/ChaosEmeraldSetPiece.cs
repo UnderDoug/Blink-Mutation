@@ -42,14 +42,15 @@ namespace XRL.World.Parts
         {
             base.Register(Object, Registrar);
         }
+
         public override bool WantEvent(int ID, int Cascade)
-        {
-            return base.WantEvent(ID, Cascade)
-                || ID == EquippedEvent.ID
-                || ID == UnequippedEvent.ID
-                || ID == PartSupportEvent.ID
-                || ID == GetShortDescriptionEvent.ID;
-        }
+            => base.WantEvent(ID, Cascade)
+            || ID == EquippedEvent.ID
+            || ID == UnequippedEvent.ID
+            || ID == PartSupportEvent.ID
+            || ID == GetShortDescriptionEvent.ID
+            ;
+
         public override bool HandleEvent(EquippedEvent E)
         {
             int indent = Debug.LastIndent;
@@ -61,12 +62,15 @@ namespace XRL.World.Parts
 
             if (E.Item == ParentObject)
             {
-                ChaosEmeraldSetBonus = E.Actor.RequirePart<ChaosEmeraldSetBonus>();
-                ChaosEmeraldSetBonus.SyncBonuses();
+                ChaosEmeraldSetBonus = E.Actor
+                    .RequirePart<ChaosEmeraldSetBonus>()
+                    .SyncBonuses();
             }
+
             Debug.LastIndent = indent;
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(UnequippedEvent E)
         {
             int indent = Debug.LastIndent;
@@ -76,26 +80,25 @@ namespace XRL.World.Parts
                 $"{nameof(UnequippedEvent)} E)",
                 Indent: indent + 1, Toggle: getDoDebug());
 
-            if (E.Item == ParentObject && ChaosEmeraldSetBonus != null)
+            if (E.Item == ParentObject
+                && ChaosEmeraldSetBonus != null)
             {
                 Debug.CheckYeh(4, $"{nameof(ChaosEmeraldSetBonus)} not null", Indent: indent + 1, Toggle: getDoDebug());
 
                 NeedPartSupportEvent.Send(E.Actor, nameof(ChaosEmeraldSetBonus), this);
-                ChaosEmeraldSetBonus.SyncBonuses(ParentObject);
                 ChaosEmeraldSetBonus = null;
             }
 
             Debug.LastIndent = indent;
             return base.HandleEvent(E);
         }
+
         public override bool HandleEvent(PartSupportEvent E)
-        {
-            if (E.Skip != this && E.Type == nameof(ChaosEmeraldSetBonus))
-            {
-                return false;
-            }
-            return base.HandleEvent(E);
-        }
+            => (E.Skip == this
+                || E.Type != nameof(ChaosEmeraldSetBonus))
+            && base.HandleEvent(E)
+            ;
+        
         public override bool HandleEvent(GetShortDescriptionEvent E)
         {
             E.Infix.AppendRules(ChaosEmeraldSetBonus != null

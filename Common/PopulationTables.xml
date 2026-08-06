@@ -1,0 +1,728 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<populations>
+  <!--
+
+  Some example tables
+
+  <population Name="Things">
+    <object Blueprint="Thing" Chance="50" />
+    <object Blueprint="BigThing" Chance="30" />
+    <object Blueprint="HugeThing" Chance="30" />
+  </population>
+
+  <population Name="Widgets">
+    <group Name="Widgets" Style="pickone" Chance="100,100,100,100,100,100,100,100">
+      <object Blueprint="BrownWidget" Weight="70" />
+      <object Blueprint="GoldWidget" Weight="5" />
+      <object Blueprint="BlueWidget" Weight="10" />
+      <object Blueprint="RedWidget" Weight="10" />
+    </group>
+  </population>
+
+  <population Name="BoxOfThingsOrWidgets">
+    <group Name="ThingsOrWidgets" Style="pickone">
+      <group Name="Things" Style="pickone" Weight="1">
+        <table Name="Things" Weight="1" Number="1-6" />
+      </group>
+      <group Name="Widgets" Style="pickone" Weight="1">
+        <table Name="Widgets" Weight="1" Number="1-6" />
+      </group>
+    </group>
+  </population>
+
+  <population Name="BoxOfThingsAndWidgets">
+    <group Name="ThingsAndWidgets" Style="pickeach">
+      <object Blueprint="Things" Number="2" />
+      <object Blueprint="Widgets" Number="4-6" />
+    </group>
+  </population>
+  -->
+
+  <!-- 
+  
+  Loot additions
+  
+  -->
+  <population Name="UD Prickle Pig Equipment Broad">
+    <group Name="Items" Style="pickeach">
+      <table Name="DynamicInheritsTable:LightSource:Tier{ownertier}" Number="1" />
+      <table Name="DynamicInheritsTable:MeleeWeapon:Tier{ownertier}" Number="1" />
+      <table Name="UD Dynamic Head Equipment By Tier" Chance="35" Number="1" />
+      <table Name="DynamicInheritsTable:BaseCloak:Tier{ownertier}" Chance="35" Number="1" />
+      <table Name="DynamicObjectsTable:ToolsNotPhylacery:Tier{ownertier}" Chance="35" Number="1" />
+      <table Name="Junk {ownertier}" Chance="5,5,5,5,5,5" />
+    </group>
+  </population>
+  
+  <population Name="UD Dynamic Head Equipment By Tier">
+    <group Name="Items" Style="pickone">
+      <table Weight="1" Name="DynamicInheritsTable:BaseHelmet:Tier{ownertier}" Number="1" />
+      <table Weight="3" Name="DynamicInheritsTable:BaseHat:Tier{ownertier}" Number="1" />
+    </group>
+  </population>
+  
+  <population Name="Implants_4PlusPointers" Load="Merge">
+    <group Name="Items" Load="Merge">
+      <object Blueprint="UD_OverclockedCentralNervousSystem" Weight="10" Number="1" />
+    </group>
+  </population>
+  
+  <population Name="Implants_4PlusPointersWithCathedras" Load="Merge">
+    <group Name="Items" Load="Merge">
+      <object Blueprint="UD_OverclockedCentralNervousSystem" Weight="15" Number="1" />
+    </group>
+  </population>
+    
+  <!-- 
+  
+  Encounter changes
+  
+  -->
+  <population Name="LairOwners_Saltdunes" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <table Name="DynamicObjectsTable:PricklePigs" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_Saltmarsh" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <table Name="DynamicObjectsTable:PricklePigs" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_Hills" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <table Name="DynamicObjectsTable:PricklePigs" Weight="2" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_TheSpindle" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <object Blueprint="UD Burrowing Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_Flowerfields" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <table Name="DynamicObjectsTable:PricklePigs" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_Jungle" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <table Name="DynamicObjectsTable:PricklePigs" Weight="2" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_DeepJungle" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <object Blueprint="UD Burrowing Prickle Pig" />
+      <object Blueprint="UD Dark Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_Ruins" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <object Blueprint="UD Prickle Pig" />
+      <object Blueprint="UD Burrowing Prickle Pig" />
+      <object Blueprint="UD Dark Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_BaroqueRuins" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <object Blueprint="UD Burrowing Prickle Pig" />
+      <object Blueprint="UD Dark Prickle Pig" />
+      <object Blueprint="UD Metal Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="LairOwners_PalladiumReef" Load="Merge">
+    <group Name="Options" Style="pickone" Load="Merge">
+      <object Blueprint="UD Dark Prickle Pig" />
+      <object Blueprint="UD Metal Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="CryptCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Chance="100,25" Number="1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="1" Number="2-5" Blueprint="UD Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="RuinsZoneGlobals-Creatures" Load="Merge">
+    <object Chance="5" Number="1-3" Blueprint="UD Prickle Pig" />
+    <object Chance="8" Number="1-2" Blueprint="UD Burrowing Prickle Pig" />
+    <object Chance="2" Number="1-2" Blueprint="UD Dark Prickle Pig" />
+    <object Chance="1" Number="1" Blueprint="UD Metal Prickle Pig" />
+    <object Chance="1" Number="1" Blueprint="UD Super Prickle Pig" />
+  </population>
+
+  <population Name="RuinsPerSector" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <table Weight="150" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="150" Number="1" Name="UD Fighting Prickle Pigs" />
+      <group Weight="150" Name="Combined Prickle Pig Encounters" Style="pickeach">
+        <table Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+        <table Number="1" Name="UD Fighting Prickle Pigs" />
+        <object Chance="50" Number="1" Blueprint="UD Metal Prickle Pig" />
+      </group>
+      <object Weight="25" Number="1" Blueprint="UD Metal Prickle Pig" />
+      <table Weight="150" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="BaroqueRuinsZoneGlobals-Creatures" Load="Merge">
+    <object Chance="5" Number="2-4" Blueprint="UD Prickle Pig" />
+    <object Chance="8" Number="2-3" Blueprint="UD Burrowing Prickle Pig" />
+    <object Chance="2" Number="1-2" Blueprint="UD Dark Prickle Pig" />
+    <object Chance="1" Number="1" Blueprint="UD Metal Prickle Pig" />
+  </population>
+
+  <population Name="BaroqueRuinsPerSector" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <group Weight="500" Name="Combined Prickle Pig Encounters" Style="pickeach">
+        <object Chance="50" Number="1-3" Blueprint="UD Prickle Pig" />
+        <table Chance="50,25" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+        <table Number="1" Name="UD Fighting Prickle Pigs" />
+        <object Chance="1" Number="1" Blueprint="UD Metal Prickle Pig" />
+      </group>
+      <table Weight="150" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="CommonOddEncounters" Load="Merge">
+    <group Name="Types" Load="Merge">
+      <group Weight="100" Name="Combined Prickle Pig Encounters" Style="pickeach">
+        <table Chance="100,25" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+        <table Number="1" Name="UD Fighting Prickle Pigs" />
+        <object Chance="10" Number="1" Blueprint="UD Metal Prickle Pig" />
+      </group>
+    </group>
+  </population>
+
+  <population Name="FlowerFieldsPopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Chance="10" Number="1-2" Blueprint="UD Prickle Pig" />
+      <table Weight="5" Number="1-3" Name="DynamicInheritsTable:Base_UD_PricklePig:Tier{zonetier}" />
+    </group>
+  </population>
+
+  <population Name="DesertCanyonCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Chance="10" Number="1-2" Blueprint="UD Prickle Pig" />
+      <table Weight="5" Number="1-3" Name="DynamicInheritsTable:Base_UD_PricklePig:Tier{zonetier}" />
+    </group>
+  </population>
+
+  <population Name="SaltDuneCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <group Name="Prickle Pigs" Style="pickeach" Weight="5" >
+        <object Number="1-2" Blueprint="UD Prickle Pig" />
+        <table Chance="1" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      </group>
+    </group>
+  </population>
+
+  <population Name="HillCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-2" Blueprint="UD Prickle Pig" />
+      <table Weight="1" Number="1-2" Name="DynamicInheritsTable:Base_UD_PricklePig:Tier{zonetier}" />
+    </group>
+  </population>
+
+  <population Name="MountainCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-2" Blueprint="UD Prickle Pig" />
+      <table Weight="1" Number="1-2" Name="DynamicInheritsTable:Base_UD_PricklePig:Tier{zonetier}" />
+    </group>
+  </population>
+
+  <population Name="FlowerfieldCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-2" Blueprint="UD Prickle Pig" />
+    </group>
+  </population>
+
+  <population Name="JungleCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-2" Blueprint="UD Prickle Pig" />
+      <object Weight="1" Number="1" Blueprint="UD Burrowing Prickle Pig" />
+    </group>
+  </population>
+
+  <population Name="BananaGroveCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-3" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="2" Number="1-2" Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier2CaveCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1" Blueprint="UD Prickle Pig" />
+      <object Weight="1" Number="1-2" Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier5CaveCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="2-3" Blueprint="UD Prickle Pig" />
+      <object Weight="5" Number="1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="1" Number="1" Blueprint="UD Dark Prickle Pig" />
+      <object Weight="5" Number="1-3" Blueprint="UD Templar Bloodhound" />
+      <object Weight="1" Number="1" Blueprint="UD Bloodhound Commander" />
+      <table Weight="2" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier3CavePopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-2" Blueprint="UD Prickle Pig" />
+      <object Weight="1" Number="1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="1" Number="1-2" Blueprint="UD Templar Squire Bloodhound" />
+      <object Weight="1" Number="1" Blueprint="UD Templar Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier4CavePopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="2-4" Blueprint="UD Prickle Pig" />
+      <object Weight="10" Number="1-2" Blueprint="UD Burrowing Prickle Pig" />
+      <table Weight="1" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <object Weight="2" Number="2-3" Blueprint="UD Templar Squire Bloodhound" />
+      <object Weight="5" Number="1-2" Blueprint="UD Templar Bloodhound" />
+      <table Weight="1" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier6CavePopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-2" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="5" Number="1" Blueprint="UD Dark Prickle Pig" />
+      <table Weight="4" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="1" Chance="100,25" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="1" Number="1" Name="UD Fighting Prickle Pigs" />
+      <object Weight="5" Number="1-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="1" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier7CavePopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1" Blueprint="UD Dark Prickle Pig" />
+      <table Weight="9" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="1" Chance="100,25" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="4" Number="1" Name="UD Fighting Prickle Pigs" />
+      <table Weight="1" Chance="100,25" Number="1" Name="UD Fighting Prickle Pigs" />
+      <object Weight="10" Number="1" Blueprint="UD Metal Prickle Pig" />
+      <object Weight="5" Number="1-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="2" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="Tier8CavePopulation" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <table Weight="1" Number="1" Name="UD Metal Prickle Pig Slaughter" />
+      <object Weight="5" Number="1-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="2" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party" />
+      <table Weight="1" Number="1" Name="UD Templar Bloodhound Party Major" />
+    </group>
+  </population>
+
+  <population Name="Tier1RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-2" Blueprint="UD Prickle Pig" />
+      <object Weight="1" Number="0-1" Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier2RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-3" Blueprint="UD Prickle Pig" />
+      <object Weight="2" Number="0-2" Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier3RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1-4" Blueprint="UD Prickle Pig" />
+      <object Weight="1" Number="1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="1" Number="1" Blueprint="UD Super Prickle Pig" />
+      <object Weight="2" Number="0-2" Blueprint="UD Templar Squire Bloodhound" />
+      <object Weight="1" Number="1-3" Blueprint="UD Templar Squire Bloodhound" />
+      <object Weight="1" Number="1" Blueprint="UD Templar Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Tier4RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="2-4" Blueprint="UD Prickle Pig" />
+      <object Weight="10" Number="1-2" Blueprint="UD Burrowing Prickle Pig" />
+      <object Weight="2" Number="1" Blueprint="UD Super Burrowing Prickle Pig" />
+      <table Weight="1" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <object Weight="1" Number="1" Blueprint="UD Super Leader Burrowing Prickle Pig" />
+      <object Weight="2" Number="1-3" Blueprint="UD Templar Squire Bloodhound" />
+      <object Weight="5" Number="0-2" Blueprint="UD Templar Bloodhound" />
+      <table Weight="1" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier5RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-3" Blueprint="UD Burrowing Prickle Pig" />
+      <table Weight="10" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <object Weight="10" Number="1" Blueprint="UD Super Leader Burrowing Prickle Pig" />
+      <object Weight="5" Number="1-3" Blueprint="UD Templar Bloodhound" />
+      <object Weight="1" Number="0-2" Blueprint="UD Bloodhound Commander" />
+      <table Weight="2" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier6RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1-3" Blueprint="UD Burrowing Prickle Pig" />
+      <table Weight="10" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <object Weight="5" Number="0-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="1" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+
+  <population Name="Tier7RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1" Blueprint="UD Dark Prickle Pig" />
+      <table Weight="9" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="1" Chance="100,25" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="4" Number="1" Name="UD Fighting Prickle Pigs" />
+      <table Weight="1" Chance="100,25" Number="1" Name="UD Fighting Prickle Pigs" />
+      <object Weight="5" Number="1-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="2" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="Tier7RuinsRobots" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="10" Number="1" Blueprint="UD Metal Prickle Pig" />
+    </group>
+  </population>
+
+  <population Name="Tier8RuinsCreatures" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="2-3" Blueprint="UD Dark Prickle Pig" />
+      <table Weight="10" Number="1-2" Name="UD Prickle Pig Relic Hunting Party" />
+      <table Weight="5" Number="1-2" Name="UD Fighting Prickle Pigs" />
+      <object Weight="10" Number="1-2" Blueprint="UD Metal Prickle Pig" />
+      <object Weight="5" Number="1-2" Blueprint="UD Bloodhound Commander" />
+      <object Weight="2" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party" />
+      <table Weight="1" Number="1" Name="UD Templar Bloodhound Party Major" />
+    </group>
+  </population>
+
+  <population Name="Tier8RuinsRobots" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <object Weight="5" Number="1" Blueprint="UD Metal Prickle Pig" />
+    </group>
+  </population>
+
+  <population Name="Tier4BossEncounter" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <table Weight="4" Number="1" Name="UD Prickle Pig Relic Hunting Party" />
+      <object Weight="4" Number="1" Blueprint="UD Super Leader Burrowing Prickle Pig" />
+      <table Weight="4" Number="1" Name="UD Templar Bloodhound Party Minor" />
+      <table Weight="2" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="Tier5BossEncounter" Load="Merge">
+    <group Name="Creatures" Load="Merge">
+      <table Weight="4" Number="1" Name="UD Fighting Prickle Pigs" />
+      <table Weight="4" Number="1" Name="UD Templar Bloodhound Party" />
+    </group>
+  </population>
+
+  <population Name="Tier8BossEncounter" Load="Merge">
+    <table Chance="0" Number="0" Name="Tier5BossEncounter" Load="Merge" />
+    <group Name="Creatures" Style="pickone" Load="Merge">
+      <table Weight="10" Name="Tier5BossEncounter" />
+      <table Weight="5" Number="1" Name="UD Metal Prickle Pig Slaughter" />
+      <table Weight="5" Number="1" Name="UD Templar Bloodhound Party" />
+      <table Weight="2" Number="1" Name="UD Templar Bloodhound Party Major" />
+    </group>
+  </population>
+
+  <population Name="Aleksh_DeepCaves" Load="Merge">
+    <object Chance="1" Number="1" Blueprint="UD Super Leader Burrowing Prickle Pig" />
+    <object Chance="1" Number="1" Blueprint="UD Metal Prickle Pig" />
+    <table Chance="1" Number="0-1" Name="UD Metal Prickle Pig Slaughter" />
+    <table Chance="1" Number="1" Name="UD Templar Bloodhound Party" />
+    <table Chance="1" Number="0-1" Name="UD Templar Bloodhound Party Major" />
+  </population>
+  
+  <!-- 
+  
+  Encounter additions
+  
+  -->
+  
+  <population Name="UD Prickle Pig Leader">
+    <group Name="Contents" Style="pickone">
+      <object Number="1" Weight="95" Blueprint="UD Burrowing Prickle Pig" />
+      <object Number="1" Weight="4" Blueprint="UD Super Prickle Pig" />
+      <object Number="1" Weight="1" Blueprint="UD Super Burrowing Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="UD Prickle Pig Villain">
+    <group Name="Contents" Style="pickone">
+      <object Number="1" Weight="95" Blueprint="UD Dark Prickle Pig" />
+      <object Number="1" Weight="4" Blueprint="UD Super Dark Prickle Pig" />
+      <object Number="1" Weight="1" Blueprint="UD Metal Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="UD Prickle Pig Villain Tough">
+    <group Name="Contents" Style="pickone">
+      <object Number="1" Weight="95" Blueprint="UD Metal Prickle Pig" />
+      <object Number="1" Weight="4" Blueprint="UD Super Dark Prickle Pig" />
+      <object Number="1" Weight="1" Blueprint="UD Super Metal Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="UD Prickle Pig Relic Hunters">
+    <group Name="Contents" Style="pickeach">
+      <object Number="0-1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Number="2d2-2" Blueprint="UD Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="UD Prickle Pig Relic Hunters With Leader">
+    <group Name="Contents" Style="pickeach">
+      <table Number="1" Name="UD Prickle Pig Leader" />
+      <table Number="1" Name="UD Prickle Pig Relic Hunters" />
+    </group>
+  </population>
+  
+  <population Name="UD Prickle Pig Relic Hunting Party">
+    <group Name="Contents" Style="pickeach">
+      <table Number="2-4" Name="UD Prickle Pig Relic Hunters With Leader" />
+      <table Number="2-4" Name="Scrap {zonetier}" Hint="AdjacentToEndsWith:Prickle Pig" />
+      <object Number="6-9" Blueprint="Garbage" Hint="AdjacentToEndsWith:Prickle Pig" />
+      <table Chance="50,10" Number="1" Name="Gemstones" />
+    </group>
+  </population>
+  
+  <population Name="UD Fighting Prickle Pigs">
+    <group Name="Contents" Style="pickeach">
+      <table Number="1" Name="UD Prickle Pig Leader" />
+      <object Number="1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Number="1-2" Blueprint="UD Prickle Pig" />
+      <table Number="1" Name="UD Prickle Pig Villain" />
+      <object Number="6-9" Blueprint="Garbage" Hint="AdjacentToEndsWith:Prickle Pig" />
+      <table Chance="10" Number="1" Name="DynamicObjectsTable:Corpses:Tier{zonetier}" Hint="AdjacentToEndsWith:Dark Prickle Pig" />
+      <object Chance="50" Number="1-3" Blueprint="Bloodsplatter" Hint="AdjacentToEndsWith:Dark Prickle Pig" />
+    </group>
+  </population>
+  
+  <population Name="UD Metal Prickle Pig Slaughter">
+    <group Name="Contents" Style="pickeach">
+      <table Number="1" Name="UD Prickle Pig Villain Tough" />
+      <table Number="1" Name="UD Prickle Pig Leader" />
+      <object Number="0-1" Blueprint="UD Burrowing Prickle Pig" />
+      <object Number="1-3" Blueprint="UD Prickle Pig" />
+      <object Number="6-9" Blueprint="Garbage" Hint="AdjacentToEndsWith:Prickle Pig" />
+      <object Number="2-5" Name="UD Prickle Pig Corpse"  Hint="AdjacentToEndsWith:Metal Prickle Pig" />
+      <object Number="1-3" Blueprint="Bloodsplatter" Hint="AdjacentToEndsWith:Corpse" />
+    </group>
+  </population>
+
+  <!--
+
+    Templar Bloodhounds
+  
+  -->
+  <population Name="UD Templar Bloodhound Equipment Pool">
+    <group Name="Items" Style="pickone">
+      <group Name="Explosives" Style="pickeach" Weight="50">
+        <table Name="Explosives 3" Number="1-3" />
+        <table Name="Explosives 1" Number="3-5" />
+      </group>
+      <group Name="Tonics" Style="pickone" Weight="50">
+        <group Name="TonicsWithUbernostrum" Style="pickeach">
+          <object Blueprint="UbernostrumTonic" />
+          <table Name="DynamicObjectsTable:Tonics_NonRare" Number="0-2" />
+        </group>
+        <table Name="DynamicObjectsTable:Tonics_NonRare" Number="1-3" />
+      </group>
+      <table Name="UD Templar Bloodhound Equipment Pool" Number="2" Weight="1" />
+    </group>
+  </population>
+
+  <population Name="UD Templar Squire Bloodhound Extra Gear">
+    <group Name="Items" Style="pickeach">
+      <group Name="Armor" Style="pickone">
+        <object Blueprint="Carbide Gauntlets" Weight="5" />
+        <object Blueprint="Steel Helmet" Weight="5" />
+      </group>
+      <table Name="UD Templar Bloodhound Equipment Pool" />
+    </group>
+  </population>
+
+  <population Name="UD Templar Bloodhound Extra Gear">
+    <group Name="Items" Style="pickeach">
+      <group Name="Armor" Style="pickone">
+        <object Blueprint="Fullerite Gauntlets" Weight="5" />
+        <object Blueprint="Fullerite Armet" Weight="5" />
+      </group>
+      <table Name="UD Templar Bloodhound Equipment Pool" />
+    </group>
+  </population>
+
+  <population Name="UD Bloodhound Commander Extra Gear">
+    <group Name="Items" Style="pickeach">
+      <group Name="Armor" Style="pickone">
+        <object Blueprint="Crysteel Gauntlets" Weight="5" />
+        <object Blueprint="Crysteel Coronet" Weight="5" />
+      </group>
+      <table Name="UD Templar Bloodhound Equipment Pool" />
+      <object Blueprint="UbernostrumTonic" Chance="25" />
+    </group>
+  </population>
+
+  <!-- 
+  
+  Templar encounter changes
+  
+  -->
+  <population Name="Grit Gate Templar Scouts" Load="Merge">
+    <group Name="Contents" Style="pickeach" Load="Merge">
+      <object Number="1" Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="OmonporchBattle_Major" Load="Merge">
+    <group Name="Options" Style="pickeach" Load="Merge">
+      <object Blueprint="UD Templar Bloodhound" />
+      <object Blueprint="UD Templar Squire Bloodhound" />
+    </group>
+  </population>
+
+  <population Name="Templar" Load="Merge">
+    <group Name="Creatures" Style="pickone" Load="Merge">
+      <object Blueprint="UD Templar Bloodhound" />
+      <object Blueprint="UD Bloodhound Commander" />
+    </group>
+  </population>
+
+  <population Name="Templar War Party Major" Load="Merge">
+    <group Name="Contents" Style="pickeach" Load="Merge">
+      <group Name="Types" Style="pickone" Load="Merge" >
+        <group Name="GunnerOrKnight"></group>
+        <group Name="UD Bloodhound" Style="pickeach">
+          <table Number="6" Name="UD Templar Weighted Toward Bloodhound" />
+          <group Name="Bloodhound Leader" Style="pickone">
+            <object Blueprint="UD Templar Bloodhound" />
+          </group>
+        </group>
+      </group>
+    </group>
+  </population>
+
+  <population Name="OmonporchBattle_Minor" Load="Merge">
+    <group Name="Options" Style="pickeach" Load="Merge">
+      <group Name="Boss" Style="pickone" Load="Merge">
+        <object Blueprint="UD Bloodhound Commander" />
+      </group>
+    </group>
+  </population>
+  
+  <!-- 
+  
+  Encounter additions
+  
+  -->
+  <population Name="UD Templar Weighted Toward Bloodhound">
+    <group Name="Creatures" Style="pickone">
+      <object Weight="85" Blueprint="UD Templar Bloodhound" />
+      <table Weight="15" Name="Templar" />
+    </group>
+  </population>
+
+  <population Name="UD Templar Weighted Toward Bloodhound Commander">
+    <group Name="Creatures" Style="pickone">
+      <object Weight="85" Blueprint="UD Bloodhound Commander" />
+      <table Weight="15" Name="Templar" />
+    </group>
+  </population>
+
+  <population Name="UD Templar Leaders Weighted Toward Templar Bloodhound">
+    <group Name="Creatures" Style="pickone">
+      <object Weight="80" Blueprint="UD Templar Bloodhound" />
+      <object Weight="10" Blueprint="Gunner-Knight Templar" />
+      <object Weight="10" Blueprint="Knight Templar" />
+    </group>
+  </population>
+
+  <population Name="UD Templar Bloodhound Party Major">
+    <group Name="Contents" Style="pickeach">
+      <group Name="Boss" Style="pickone" >
+        <object Weight="95" Number="1" Blueprint="Uplifted Bloodhound Commander" />
+      </group>
+      <group Name="Types" Style="pickone">
+        <group Name="UD Bloodhound" Style="pickeach">
+          <table Number="6" Name="UD Templar Weighted Toward Bloodhound" />
+          <group Name="Bloodhound Leader" Style="pickone">
+            <object Blueprint="UD Templar Bloodhound" />
+            <object Blueprint="Banner-Knight Templar" />
+          </group>
+        </group>
+        <group Name="Gunner" Style="pickeach">
+          <table Number="6" Name="UD Templar Weighted Toward Bloodhound" />
+          <group Name="Gunner Leader" Style="pickone">
+            <object Blueprint="UD Templar Bloodhound" />
+            <object Blueprint="Gunner-Knight Templar" />
+          </group>
+        </group>
+        <group Name="GunnerKnightBloodhound" Style="pickeach">
+          <table Number="2" Name="Templar Weighted Toward Gunner" />
+          <table Number="2" Name="Templar Weighted Toward Knight" />
+          <table Number="2" Name="UD Templar Weighted Toward Bloodhound" />
+          <group Name="GunnerOrKnight Leader" Style="pickeach">
+            <table Number="1" Name="UD Templar Leaders Weighted Toward Templar Bloodhound" />
+          </group>
+        </group>
+      </group>
+    </group>
+  </population>
+
+  <population Name="UD Templar Bloodhound Party Minor">
+    <group Name="Contents" Style="pickeach">
+      <group Name="Group1" Style="pickone">
+        <table Weight="80" Name="UD Templar Weighted Toward Bloodhound" />
+        <object Weight="20" Number="4" Blueprint="UD Templar Squire Bloodhound" />
+      </group>
+      <group Name="Group2" Style="pickone">
+        <table Weight="80" Name="UD Templar Weighted Toward Bloodhound" />
+        <object Weight="20" Number="4" Blueprint="UD Templar Squire Bloodhound" />
+      </group>
+      <group Name="Group3" Style="pickone">
+        <table Weight="80" Name="UD Templar Weighted Toward Bloodhound" />
+        <object Weight="20" Number="4" Blueprint="UD Templar Squire Bloodhound" />
+      </group>
+    </group>
+  </population>
+
+  <population Name="UD Templar Bloodhound Party">
+    <group Name="Contents" Style="pickone">
+      <table Weight="1" Number="1" Name="UD Templar Bloodhound Party Major" />
+      <table Weight="9" Number="1" Name="UD Templar Bloodhound Party Minor" />
+    </group>
+  </population>
+  
+</populations>
