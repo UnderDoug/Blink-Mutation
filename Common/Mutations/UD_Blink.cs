@@ -80,7 +80,7 @@ namespace XRL.World.Parts.Mutation
         public const int BASE_TILE_COLOR_PRIORITY = 82;
         public const string BASE_TILE_COLOR = "&m";
 
-        public const string BASE_SHOUT = "psssh...nothin personnel...kid...";
+        public const string BASE_SHOUT = "psssh...nothin personnel...sib...";
         public const string BASE_SHOUT_COLOR = "m";
 
         public const string BASE_NANI = "Nani!?";
@@ -2662,100 +2662,6 @@ namespace XRL.World.Parts.Mutation
                 ?? The.PlayerCell.getClosestEmptyCell();
 
             pickedCell.AddObject(Blinker);
-        }
-
-        [WishCommand(Command = "gimme coldsteel dealt")]
-        // gimme coldsteel dealt count level
-        public static void GimmeColdSteelDealt_WishHandler(string Parameters)
-        {
-            int level = 0;
-            int count = 0;
-
-            if (The.Player.TryGetPart(out UD_Blink playerBlink))
-                level = playerBlink.Level;
-
-            if (!Parameters.IsNullOrEmpty())
-            {
-                if (Parameters.Contains(" "))
-                {
-                    string[] param = Parameters.Split(' ');
-                    if (!int.TryParse(param[0], out count))
-                        count = 100;
-
-                    if (!int.TryParse(param[1], out level))
-                        level = 16;
-                }
-                else
-                {
-                    if (!int.TryParse(Parameters, out count))
-                    {
-                        count = 100;
-                        level = 16;
-                    }
-                }
-            }
-            Debug.Entry(4, $"{count} Cold Steel ({GetColdSteelDamage(level).Quote()}) at level {level} comin' right up!", Indent: 0);
-
-            bool allowSecondPerson = Grammar.AllowSecondPerson;
-            Grammar.AllowSecondPerson = false;
-            string message = GameText.VariableReplace("=subject.t= =verb:emit= {{m|%D}} {{coldsteel|Cold Steel}} damage!", Subject: The.Player);
-            Grammar.AllowSecondPerson = allowSecondPerson;
-            int total = 0;
-            var damageDie = new DieRoll(GetColdSteelDamage(level));
-            for (int i = 0; i < count; i++)
-            {
-                int damage = damageDie.Resolve();
-                total += damage;
-                Debug.Entry(4, message.Replace("%D", $"{damage}"), Indent: 1);
-            }
-            Debug.Entry(4, $"Total Cold Steel damage: {total} | {damageDie.Min()}, {total / count}, {damageDie.Max()}",
-                Indent: 0, Toggle: getDoDebug());
-        }
-
-        [WishCommand(Command = "gimme coldsteel damage")]
-        // gimme coldsteel damage maxLevel
-        public static void GimmeColdSteelDamage_WishHandler(string Parameters)
-        {
-            int maxLevel = 0;
-
-            if (!Parameters.IsNullOrEmpty() && !int.TryParse(Parameters, out maxLevel))
-            {
-                maxLevel = 45;
-            }
-            Debug.Entry(4, $"Cold Steel damage die up to level {maxLevel} comin' right up!",
-                Indent: 0, Toggle: getDoDebug());
-
-            int levelPadding = maxLevel.ToString().Length;
-
-            var damageDie = new DieRoll(GetColdSteelDamage(maxLevel));
-
-            int minPadding = damageDie.Min().ToString().Length;
-            int avgPadding = ((int)damageDie.Average()).ToString().Length;
-            int maxPadding = damageDie.Max().ToString().Length;
-
-            int dieCountPaddingLeft = 0;
-            if (damageDie.ToString().Contains('d'))
-                dieCountPaddingLeft = damageDie.ToString().Length + damageDie.ToString().IndexOf('d');
-
-            int dieCountPaddingRight = 0;
-            if (damageDie.ToString().Contains('+'))
-                dieCountPaddingRight = 1 + dieCountPaddingLeft + (damageDie.ToString().Length - damageDie.ToString().IndexOf('+'));
-
-            for (int i = 0; i < maxLevel; i++)
-            {
-                damageDie = new(GetColdSteelDamage(i + 1));
-                string level = $"{i + 1}".PadLeft(levelPadding, ' ');
-                string damage = damageDie.ToString()
-                    .PadLeft(dieCountPaddingLeft, ' ')
-                    .PadRight(dieCountPaddingRight, ' ');
-
-                string minString = damageDie.Min().ToString().PadLeft(minPadding, ' ');
-                string avgString = ((int)damageDie.Average()).ToString().PadLeft(avgPadding, ' ');
-                string maxString = damageDie.Max().ToString().PadLeft(maxPadding, ' ');
-
-                Debug.Entry(4, $"Level {level}: {damage} ({minString}, {avgString}, {maxString})",
-                    Indent: 1, Toggle: getDoDebug());
-            }
         }
 
         [WishCommand(Command = "gotta go fast")]

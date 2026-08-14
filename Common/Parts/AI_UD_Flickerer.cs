@@ -229,6 +229,7 @@ namespace XRL.World.Parts
             stats.Set(nameof(MaxFlickerCharges), MaxFlickerCharges);
             stats.Set(nameof(FlickerChargeRechargeTurns), FlickerChargeRechargeTurns);
             stats.Set(nameof(FlickerRadius), FlickerRadius);
+            stats.Set("PowerUse", $"less than 1%");
         }
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
