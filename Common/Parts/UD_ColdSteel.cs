@@ -160,67 +160,69 @@ namespace XRL.World.Parts
         public override bool HandleEvent(BeforeMeleeAttackEvent E)
         {
             if (E.Weapon == ParentObject
-                && !Shouted
                 && IsReady(IgnoreEMP: true, IgnoreRealityStabilization: true)
                 && E.Actor is GameObject blinker
                 && E.Target is GameObject kid)
             {
-                Shouted = true;
-                int indent = Debug.LastIndent;
-
-                if (The.CurrentTurn - LastShoutTurn > ShoutCooldown)
+                if (!Shouted)
                 {
-                    LastShoutTurn = The.CurrentTurn + Stat.RandomCosmetic(-3, 3);
+                    Shouted = true;
+                    int indent = Debug.LastIndent;
 
-                    string shoutColor = ShoutColor?.Replace("&", "") ?? "m";
-                    float floatLength = 8.0f;
-
-                    bool allowSecondPerson = Grammar.AllowSecondPerson;
-                    Grammar.AllowSecondPerson = !ShoutsAreThirdPerson;
-
-                    string message = ShoutMessage
-                        ?.StartReplace()
-                        ?.AddObject(blinker)
-                        ?.AddObject(kid)
-                        ?.ToString();
-
-                    Grammar.AllowSecondPerson = allowSecondPerson;
-
-                    if (!message.IsNullOrEmpty())
+                    if (The.CurrentTurn - LastShoutTurn > ShoutCooldown)
                     {
-                        Debug.CheckYeh(3, $"Emitting {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor.Quote()}...",
-                            Indent: indent + 1, Toggle: getDoDebug());
-                        blinker.EmitMessage(message, null, shoutColor);
-                    }
-                    else
-                        Debug.CheckNah(3, $"No {nameof(ShoutMessage)}",
-                            Indent: indent + 2, Toggle: getDoDebug());
+                        LastShoutTurn = The.CurrentTurn + Stat.RandomCosmetic(-3, 3);
 
-                    if (ObnoxiousYelling
-                        && !message.IsNullOrEmpty())
-                    {
-                        Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling}",
-                            Indent: indent + 2, Toggle: getDoDebug());
-                        Debug.CheckYeh(3, $"Particle Text {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor[0].ToString().Quote()}...",
-                            Indent: indent + 1, Toggle: getDoDebug());
+                        string shoutColor = ShoutColor?.Replace("&", "") ?? "m";
+                        float floatLength = 8.0f;
 
-                        if (blinker.IsVisible())
-                            blinker.ParticleText(
-                                Text: message,
-                                Color: shoutColor[0],
-                                juiceDuration: 1.5f,
-                                floatLength: floatLength);
+                        bool allowSecondPerson = Grammar.AllowSecondPerson;
+                        Grammar.AllowSecondPerson = !ShoutsAreThirdPerson;
+
+                        string message = ShoutMessage
+                            ?.StartReplace()
+                            ?.AddObject(blinker)
+                            ?.AddObject(kid)
+                            ?.ToString();
+
+                        Grammar.AllowSecondPerson = allowSecondPerson;
+
+                        if (!message.IsNullOrEmpty())
+                        {
+                            Debug.CheckYeh(3, $"Emitting {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor.Quote()}...",
+                                Indent: indent + 1, Toggle: getDoDebug());
+                            blinker.EmitMessage(message, null, shoutColor);
+                        }
+                        else
+                            Debug.CheckNah(3, $"No {nameof(ShoutMessage)}",
+                                Indent: indent + 2, Toggle: getDoDebug());
+
+                        if (ObnoxiousYelling
+                            && !message.IsNullOrEmpty())
+                        {
+                            Debug.CheckYeh(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling}",
+                                Indent: indent + 2, Toggle: getDoDebug());
+                            Debug.CheckYeh(3, $"Particle Text {nameof(ShoutMessage)}: {ShoutMessage.Quote()} in color {shoutColor[0].ToString().Quote()}...",
+                                Indent: indent + 1, Toggle: getDoDebug());
+
+                            if (blinker.IsVisible())
+                                blinker.ParticleText(
+                                    Text: message,
+                                    Color: shoutColor[0],
+                                    juiceDuration: 1.5f,
+                                    floatLength: floatLength);
+                        }
+                        else
+                            Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} or no {nameof(ShoutMessage)}",
+                                Indent: indent + 2, Toggle: getDoDebug());
                     }
-                    else
-                        Debug.CheckNah(3, $"{nameof(ObnoxiousYelling)}: {ObnoxiousYelling} or no {nameof(ShoutMessage)}",
-                            Indent: indent + 2, Toggle: getDoDebug());
+                    Debug.LastIndent = indent;
                 }
                 
                 // "Sounds/Interact/sfx_interact_timeCube_activate"
                 // "Sounds/Abilities/sfx_ability_sunderMind_final"
                 // "Sounds/Abilities/sfx_ability_sunderMind_final"
                 kid.PlayWorldSound("Sounds/Melee/shortBlades/sfx_melee_foldedCarbide_wristblade_swing", Combat: true);
-                Debug.LastIndent = indent;
             }
             return base.HandleEvent(E);
         }
@@ -236,7 +238,7 @@ namespace XRL.World.Parts
                 int powerLoadLevel = MyPowerLoadLevel();
                 if (IsReady(UseCharge: true, IgnoreEMP: true, IgnoreRealityStabilization: true, PowerLoadLevel: powerLoadLevel))
                 {
-                    string damageDie = $"{penetrations}x{BaseDamage}+{PowerLoadBonus(powerLoadLevel)}";
+                    string damageDie = $"{Math.Max(1, penetrations)}x{BaseDamage}+{PowerLoadBonus(powerLoadLevel)}";
                     int amount = damageDie.RollCached();
 
                     var describeAsFrom = !TerseMessages ? weapon : null;
@@ -247,12 +249,12 @@ namespace XRL.World.Parts
                     string attackOrType = describeAsFrom == null ? "attack" : DamageType;
                     string damageMessage = $"from %t {attackOrType}!";
 
-                    string replaceMessage = $"psssh...={nameof(kid)}.t= took ={nameof(blinker)}.t's= {DamageType} personnely...";
-                    var rB = GameText.StartReplace(replaceMessage)
+                    string deathReason = $"psssh...={nameof(kid)}.t= took ={nameof(blinker)}.t's= {DamageType} personnely..."
+                        .StartReplace()
                         .AddObject(kid, nameof(kid))
-                        .AddObject(blinker, nameof(blinker));
+                        .AddObject(blinker, nameof(blinker))
+                        .ToString();
 
-                    string deathReason = rB.ToString();
                     string thirdPersonDeathReason = deathReason;
 
                     if (kid.TakeDamage(

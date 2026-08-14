@@ -13,7 +13,7 @@
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
-      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{m|unblockable}} damage.</p>
+      <p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{m|unblockable}}, {{K|unavoidable}} damage.</p>
       <br />
       <statline Name="BlinkRange" DisplayName="Range" />
       <statline Name="CellsPerRange" DisplayName="Cells per range" />
@@ -28,7 +28,8 @@
     <description>
       <p>You were turned to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
       <br />
-			<p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage which cannot be blocked.</p>
+			<p>
+        While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage per penetration (min. 1), which cannot be avoided or blocked.</p>
       <br />
       <p>Damaging an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
@@ -58,7 +59,7 @@
   </ability>
   <ability Command="Command_AI_UD_ColdSteel_Ability">
     <description>
-      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available and expends a charge.</p>
+      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available, and expends a charge.</p>
       <br />
       <p>Damaging an enemy with your {{W|Cold}} {{Y|Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
@@ -90,7 +91,7 @@
   </ability>
   <ability Command="Command_UD_ColdSteel_Cyber_Ability">
     <description>
-      <p>While {{C|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available and expends a charge.</p>
+      <p>While {{C|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available, and expends a charge.</p>
       <br />
       <p>Damaging an enemy with your {{C|Cold}} {{Y|Steel}} keeps your {{rules|Blink}} off its cooldown.</p>
       <br />
@@ -106,7 +107,7 @@
       <br />
       <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
       <br />
-      <p>After flicker strike is finished, you return to your original cell.</p>
+      <p>After flicker strike is finished, you return to your original location.</p>
       <br />
       <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
       <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
@@ -124,7 +125,7 @@
       <br />
       <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
       <br />
-      <p>After flicker strike is finished, you return to your original cell.</p>
+      <p>After flicker strike is finished, you return to your original location.</p>
       <br />
       <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
       <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
