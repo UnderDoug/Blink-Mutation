@@ -1331,6 +1331,7 @@ namespace XRL.World.Parts
             AddActivatedAbilityColdSteel(E.Implantee);
             AddActivatedAbilityFlicker(E.Implantee);
             ImplanteeRegisterEvent();
+            LastShoutTurn = The.CurrentTurn + (Stat.RandomCosmetic(-3, 3) - (ParentObject.BaseID % GetShoutCooldown()));
             return base.HandleEvent(E);
         }
 

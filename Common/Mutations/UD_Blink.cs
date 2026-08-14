@@ -226,7 +226,7 @@ namespace XRL.World.Parts.Mutation
             ColorChange = true;
             TileColor = BASE_TILE_COLOR;
             TileColorPriority = BASE_TILE_COLOR_PRIORITY;
-		}
+        }
 
 		public override void Write(GameObject Basis, SerializationWriter Writer)
 		{
@@ -242,6 +242,12 @@ namespace XRL.World.Parts.Mutation
         {
             base.FinalizeRead(Reader);
 		}
+
+        public override void Initialize()
+        {
+            base.Initialize();
+            LastShoutTurn = The.CurrentTurn + (Stat.RandomCosmetic(-3, 3) - (ParentObject.BaseID % GetShoutCooldown()));
+        }
 
         public static AnimatedMaterialGeneric NewPrickleBallAnimationPart(AnimatedMaterialGeneric Source = null, int? FrameOffset = null)
         {
