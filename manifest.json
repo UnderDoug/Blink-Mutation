@@ -17,7 +17,7 @@
             }
         },
         {
-            "Paths": [ "/CavesOfQudModJam2025/" ],
+            "Paths": [ "/UD_FleshGolems/" ],
             "Dependencies": {
                 "CavesOfQudModJam2025": "*"
             }
