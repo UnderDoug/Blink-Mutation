@@ -8,4 +8,9 @@
     <OutputPath>.dotnet\obj\</OutputPath>
   </PropertyGroup>
   <Import Project="../Mods.csproj" />
+  <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
 </Project>
