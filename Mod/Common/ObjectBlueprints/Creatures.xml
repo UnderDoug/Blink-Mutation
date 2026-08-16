@@ -68,7 +68,7 @@
     <tag Name="SecretAdjectives" Value="prickle pig" />
     <tag Name="LairName" Value="base of operations" />
     <tag Name="LairNameContext" Value="%p base of operations" />
-    <tag Name="LairPulldownMessage" Value="You discover a hidden %l. Do you want to investigate?" />
+    <tag Name="LairPulldownMessage" Value="You discover a hidden base of operations. Do you want to investigate?" />
     <tag Name="LairDiscoveredMessage" Value="You discover %p relic hunting %l." />
     <tag Name="LairAmbientBed" Value="Sounds/Ambiences/amb_creature_pig" />
     <tag Name="DeathSounds" Value="Sounds/Creatures/VO/sfx_creature_animal_swine_vo_die" />
@@ -264,7 +264,7 @@
     <tag Name="SecretAdjectives" Value="dark prickle pig" />
     <tag Name="LairName" Value="hideout" />
     <tag Name="LairNameContext" Value="%p hidden hideout" />
-    <tag Name="LairPulldownMessage" Value="You discover a hidden %l. Do you want to investigate?" />
+    <tag Name="LairPulldownMessage" Value="You discover a hidden hideout. Do you want to investigate?" />
     <tag Name="LairDiscoveredMessage" Value="You discover %p hidden %l." />
     <xtagTextFragments
       PoeticFeatures="odd hue,prickly fur,needle-point quills,ball-like shape,unlimited power,air of edginess"
