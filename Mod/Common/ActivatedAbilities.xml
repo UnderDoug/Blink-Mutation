@@ -103,11 +103,11 @@
   </ability>
   <ability Command="Command_UD_Flicker_Ability">
     <description>
-      <p>You may expend all of your remaining {{rules|flicker charges}} to teleport to random enemies with a radius of half your {{rules|blink range}}, performing a free attack against said enemy each time you do.</p>
+      <p>Blink back and forth between a targeted creature that is within half your {{rules|blink range}}, and your original location, performing an attack each time you blink.</p>
       <br />
-      <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
+      <p>Each attack will expend 1 {{rules|flicker charge}}, and you'll expend them until you run out or the creature dies, whichever is first.</p>
       <br />
-      <p>After flicker strike is finished, you return to your original location.</p>
+      <p>Each attack within a flicker strike takes only 1/5th of the energy required to perform a regular attack.</p>
       <br />
       <statline Name="FlickerCharges" DisplayName="Current flicker charges" />
       <statline Name="MaxFlickerCharges" DisplayName="Maximum flicker charges" />
@@ -121,9 +121,11 @@
   
   <ability Command="Command_AI_UD_Flicker_Ability">
     <description>
-      <p>You may expend all of your remaining {{rules|flicker charges}} to teleport to random enemies with a radius of half your {{rules|blink range}}, performing a free attack against said enemy each time you do.</p>
+      <p>You may expend all of your remaining {{rules|flicker charges}} to blink to random hostile creatures with a radius of half your {{rules|blink range}}, performing an attack against each one as you do.</p>
       <br />
       <p>Enemies are {{rules|selected at random}} and the same enemy can be attacked multiple times.</p>
+      <br />
+      <p>Each attack within a flicker strike takes only 1/5th of the energy required to perform a regular attack.</p>
       <br />
       <p>After flicker strike is finished, you return to your original location.</p>
       <br />

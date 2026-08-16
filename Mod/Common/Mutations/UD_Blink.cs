@@ -38,6 +38,7 @@ namespace XRL.World.Parts.Mutation
     [Serializable]
     public class UD_Blink
         : BaseMutation
+        //, IBlinkSource
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
     {
@@ -811,8 +812,9 @@ namespace XRL.World.Parts.Mutation
             BlinkPaths = null;
             SuppressMessageOnFail = false;
 
-            if (Blinker?.GetPart<UD_Blink>() is not UD_Blink blinkMutation)
-                return false;
+            // swap this to checking for IBlinkSource
+            /*if (Blinker?.GetPart<UD_Blink>() is not UD_Blink blinkMutation)
+                return false;*/
 
             var origin = Blinker?.CurrentCell;
 
@@ -924,7 +926,9 @@ namespace XRL.World.Parts.Mutation
                 Good: KidDestination != null, Indent: indent + 1, Toggle: getDoDebug());
 
             Debug.LastIndent = indent;
-            return Destination != null || (Kid != null && KidDestination != null);
+            return Destination != null
+                || (Kid != null && KidDestination != null)
+                ;
         }
 
         public static bool TryGetBlinkDestination(
@@ -1273,7 +1277,8 @@ namespace XRL.World.Parts.Mutation
             }
 
             Debug.Entry(3, $"Checking {nameof(Destination)} for a value...", Indent: indent + 1, Toggle: getDoDebug());
-            if (Destination != null && Kid.IsHolographicDistractionOf(Blinker))
+            if (Destination != null
+                && Kid.IsHolographicDistractionOf(Blinker))
             {
                 BlinkPaths = new(origin, Direction)
                 {

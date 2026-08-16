@@ -20,6 +20,7 @@ namespace XRL.World.Parts
     [Serializable]
     public class AI_UD_Blinker
         : AIBehaviorPart
+        //, IBlinkSource
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
     {

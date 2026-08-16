@@ -28,6 +28,7 @@ namespace XRL.World.Parts
     [Serializable]
     public class UD_CyberneticsOverclockedCentralNervousSystem
         : IActivePart
+        //, IBlinkSource
         , IModEventHandler<BeforeBlinkEvent>
         , IModEventHandler<AfterBlinkEvent>
     {

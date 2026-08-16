@@ -415,7 +415,7 @@
   </object>
 
   <!-- 
-      Putus Templar: Giant-Slayers
+      Putus Templar: Bloodhounds
   -->
   <object Name="UD_TemplarBloodhoundBase" Inherits="Templar">
     <part Name="Render" DisplayName="Templar Bloodhound"
