@@ -201,12 +201,13 @@ namespace XRL.World.Parts
             => RemoveActivatedAbilityColdSteel(ParentObject, Force)
             ;
 
-        public virtual void CollectStats(Templates.StatCollector stats)
+        public virtual void CollectBlinkStats(Templates.StatCollector stats)
         {
             stats.Set("BlinkRange", BlinkRange);
             stats.Set(nameof(CellsPerRange), CellsPerRange.ToString());
             stats.Set(nameof(EffectiveRange), EffectiveRange);
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), BlunkTurnThreshold);
+            stats.Set("PowerUse", $"less than 1%");
         }
 
         public override void Register(GameObject Object, IEventRegistrar Registrar)
@@ -322,8 +323,7 @@ namespace XRL.World.Parts
 
         public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
         {
-            DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectStats, ParentObject);
-            DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectStats, ParentObject);
+            DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectBlinkStats, ParentObject);
             return base.HandleEvent(E);
         }
 

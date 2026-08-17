@@ -394,15 +394,19 @@ namespace XRL.World.Parts.Mutation
             return Event.FinalizeString(sB);
         }
 
-        public override void CollectStats(Templates.StatCollector stats, int Level)
+        public virtual void CollectBlinkStats(Templates.StatCollector stats)
         {
             stats.Set("BornWith", MutationDescBornWithString, changes: false);
             stats.Set("BlinkRange", GetBlinkRange(ParentObject, Level, BaseRange, nameof(CollectStats)));
             stats.Set(nameof(CellsPerRange), CellsPerRange.ToString());
             stats.Set(nameof(EffectiveRange), EffectiveRange);
-            stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
             stats.CollectCooldownTurns(MyActivatedAbility(BlinkActivatedAbilityID, ParentObject), GetCooldownTurns(Level));
             stats.Set("PowerUse", $"less than 1%");
+        }
+
+        public virtual void CollectColdSteelStats(Templates.StatCollector stats)
+        {
+            stats.Set("ColdSteelDamage", GetColdSteelDamage(Level));
         }
 
         public override string GetLevelText(int Level)
@@ -2261,8 +2265,8 @@ namespace XRL.World.Parts.Mutation
 
         public override bool HandleEvent(BeforeAbilityManagerOpenEvent E)
         {
-            DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectStats, ParentObject);
-            DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectStats, ParentObject);
+            DescribeMyActivatedAbility(BlinkActivatedAbilityID, CollectBlinkStats, ParentObject);
+            DescribeMyActivatedAbility(ColdSteelActivatedAbilityID, CollectColdSteelStats, ParentObject);
             return base.HandleEvent(E);
         }
 

@@ -28,8 +28,7 @@
     <description>
       <p>You were turned to the darkness and lost part of your ear in a battle, that's why it's missing.</p>
       <br />
-			<p>
-        While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage per penetration (min. 1), which cannot be avoided or blocked.</p>
+			<p>While {{coldsteel|Cold Steel}} is active, blinking through a hostile creature teleports you behind them and deals {{rules|<stat Name="ColdSteelDamage" />}} {{coldsteel|Cold Steel}} damage per penetration (min. 1), which cannot be avoided or blocked.</p>
       <br />
       <p>Damaging an enemy with your {{coldsteel|Cold Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
@@ -59,7 +58,9 @@
   </ability>
   <ability Command="Command_AI_UD_ColdSteel_Ability">
     <description>
-      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack. This attack is performed at no action cost while you have {{rules|flicker charges}} available, and expends a charge.</p>
+      <p>While {{W|Cold}} {{Y|Steel}} is active, blinking through a hostile creature teleports you behind them and performs an attack.</p>
+      <br />
+      <p>This attack is performed at no action cost if you have {{rules|flicker charges}} available, and expends a charge.</p>
       <br />
       <p>Damaging an enemy with your {{W|Cold}} {{Y|Steel}} damage keeps your {{rules|Blink}} off its cooldown.</p>
     </description>
