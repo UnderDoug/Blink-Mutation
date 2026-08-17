@@ -41,7 +41,7 @@
     <description>
       <p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
       <br />
-      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" /> tiles}} in a direction of your choosing.</p>
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
@@ -75,7 +75,7 @@
     <description>
       <p>Possessed of great speed, you can {{rules|move faster than perceptible}}.</p>
       <br />
-      <p>You may blink up to {{rules|<stat Name="BlinkRange" />}} in a direction of your choosing.</p>
+      <p>You may blink up to {{rules|<stat Name="BlinkRange" /> tiles}} in a direction of your choosing.</p>
       <br />
       <p>Your blink can only take you to destinations you could reach via normal means in the same number of turns as your blink range.</p>
       <br />
