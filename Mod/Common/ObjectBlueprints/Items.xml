@@ -39,7 +39,6 @@
     <part Name="Examiner" Complexity="3" Difficulty="1" />
     <stag Name="Movement" />
     <stag Name="Travel" />
-    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="RYRW" />
   </object>
   
@@ -60,7 +59,6 @@
     <part Name="ModSpiked" />
     <stag Name="Movement" />
     <stag Name="Travel" />
-    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="gRWR" />
   </object>
   
@@ -87,7 +85,6 @@
     <removepart Name="LeakWhenBroken" />
     <stag Name="Movement" />
     <stag Name="Travel" />
-    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="RYRK" />
   </object>
 
@@ -108,7 +105,6 @@
     <tag Name="Tier" Value="5" />
     <part Name="ModSpiked" />
     <part Name="Mod_UD_ImprovedBurrowingClaws" Tier="5" />
-    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YyYy" />
     <stag Name="Movement" />
   </object>
@@ -155,7 +151,6 @@
     <part Name="Metal" />
     <tag Name="EquipSound" Value="sfx_equip_material_coin" />
     <tag Name="Tier" Value="5" />
-    <property Name="ShowAsPhysicalFeature" Value="I'm cool! Look at me!" />
     <tag Name="EquipmentFrameColors" Value="YWYW" />
     <stag Name="Precious" />
   </object>
@@ -210,7 +205,6 @@ Compute power on the local lattice increases this implant's effectiveness." />
     <part Name="Capacitor" Charge="2000" MaxCharge="2000" ChargeRate="100" IsEMPSensitive="false" />
     <part Name="ComputeNode" ChargeUse="0" Power="15" WorksOnSelf="false" WorksOnEquipper="true" IsEMPSensitive="false" />
     <part Name="ChaosEmeraldSetPiece" />
-    <property Name="ShowAsPhysicalFeature" Value="Noice!" />
     <tag Name="EquipmentFrameColors" Value="yGYg" />
     <tag Name="EquipSound" Value="sfx_equip_material_generic_gemstone" />
     <xtagGrammar Proper="true" />

@@ -50,6 +50,7 @@
     <skill Name="ShortBlades_Expertise" />
     <tag Name="Prickle Pig" />
     <tag Name="Species" Value="prickle pig" />
+    <tag Name="SpeciesOverride" Value="ud prickle pig" />
     <tag Name="Genotype" Value="Prickle Pig" />
     <tag Name="Class" Value="prickle pig" />
     <tag Name="Culture" Value="Prickle Pig" />
@@ -410,8 +411,9 @@
 
   <object Name="UD Prickle Pig Golem" Inherits="Base_UD_PricklePig">
     <mixin Name="BaseVehicleGolem" />
-    <part Name="Render" DisplayName="prickle pig golem" RenderString="x" Tile="Creatures/sw_golem_swine.png" />
+    <part Name="Render" DisplayName="prickle pig golem" RenderString="x" Tile="Creatures/golem_prickle_pig.png" />
     <mutation Name="UD_Blink" ColorChange="false" Shouts="true" />
+    <tag Name="SpeciesOverride" Value="ud prickle pig" />
   </object>
 
   <!-- 
