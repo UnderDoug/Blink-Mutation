@@ -2276,7 +2276,8 @@ namespace XRL.World.Parts.Mutation
             {
                 if (PhysicalFeatures
                     || (BornThisWay
-                        && ParentObject.IsPlayer()))
+                        && ParentObject.IsPlayer()
+                        && !ParentObject.HasTag("Golem")))
                 {
                     if (ParentObject.Body.HasPart("Face", EvenIfDismembered: false))
                         E.Features.Add("a part missing from one ear");
