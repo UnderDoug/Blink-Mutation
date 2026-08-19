@@ -535,15 +535,19 @@ namespace XRL.World.Parts
             GameObject ExcludeTarget = null
             )
         {
-            if (Flickerer != null
-                && !CellsInFlickerRadius.IsNullOrEmpty())
-                foreach (var flickerRadiusCell in CellsInFlickerRadius)
-                    foreach (var gameObject in flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer)))
-                        if (gameObject != ExcludeTarget)
-                            yield return gameObject;
+            if (Flickerer == null)
+                yield break;
+
+            if (CellsInFlickerRadius.IsNullOrEmpty())
+                yield break;
+
+            foreach (var flickerRadiusCell in CellsInFlickerRadius)
+                foreach (var gameObject in flickerRadiusCell.GetObjects(GO => GO.IsHostileTowards(Flickerer) && GO.PhaseAndFlightMatches(Flickerer)))
+                    if (gameObject != ExcludeTarget)
+                        yield return gameObject;
         }
 
-        public static bool CellIsInvalidFlickerDestination(Cell Cell, GameObject Actor)
+        public static bool IsCellInvalidFlickerDestination(Cell Cell, GameObject Actor)
             => Cell.IsSolidFor(Actor)
             || Cell.HasVisibleCombatObject()
             || !Cell.IsSolidGround()
@@ -744,7 +748,7 @@ namespace XRL.World.Parts
                     Debug.Entry(3, $"{nameof(flickerTargetOverrideAdjacentCells)}.Count: {flickerTargetOverrideAdjacentCells.Count} (before)", Indent: indent + 3, Toggle: getDoDebug());
                     flickerTargetOverrideAdjacentCells.RemoveAll(
                         c => !cellsInFlickerRadius.Contains(c)
-                        || CellIsInvalidFlickerDestination(c, Flickerer));
+                        || IsCellInvalidFlickerDestination(c, Flickerer));
                     Debug.Entry(3, $"{nameof(flickerTargetOverrideAdjacentCells)}.Count: {flickerTargetOverrideAdjacentCells.Count} (after)", Indent: indent + 3, Toggle: getDoDebug());
 
                     if (flickerTargetOverrideAdjacentCells.IsNullOrEmpty()
@@ -865,7 +869,7 @@ namespace XRL.World.Parts
 
                         flickerTargetAdjacentCells.RemoveAll(
                             c => !cellsInFlickerRadius.Contains(c)
-                            || CellIsInvalidFlickerDestination(c, Flickerer));
+                            || IsCellInvalidFlickerDestination(c, Flickerer));
 
                         Debug.Entry(3, $"{nameof(flickerTargetAdjacentCells)}.Count: {flickerTargetAdjacentCells.Count} (after)", Indent: indent + 4, Toggle: getDoDebug());
 
@@ -1137,7 +1141,8 @@ namespace XRL.World.Parts
             if (GO == null
                 || Flickerer == null
                 || !GO.IsCombatObject()
-                || !GO.IsVisible())
+                || !GO.IsVisible()
+                || !GO.PhaseAndFlightMatches(Flickerer))
                 return false;
 
             foreach (var targetAdjacentCell in GO.CurrentCell.GetAdjacentCells())
@@ -1165,7 +1170,7 @@ namespace XRL.World.Parts
                 EnforceRange: true,
                 Label: "Pick flicker target");
 
-            var pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && !GO.IsHolographicDistractionOf(Flickerer));
+            var pickedTarget = pickedCell?.GetFirstObject(GO => GO.IsCombatObject() && GO.PhaseAndFlightMatches(Flickerer) && !GO.IsHolographicDistractionOf(Flickerer));
 
             if (pickedCell != null
                 && pickedTarget == null
@@ -1694,7 +1699,7 @@ namespace XRL.World.Parts
 
                     var flickerTarget = E.Target;
                     using var flickerTargetAdjacentCells = ScopeDisposedList<Cell>.GetFromPoolFilledWith(flickerTarget.CurrentCell.GetAdjacentCells());
-                    flickerTargetAdjacentCells.RemoveAll(c => !cellsInFlickerRadius.Contains(c) || CellIsInvalidFlickerDestination(c, E.Actor));
+                    flickerTargetAdjacentCells.RemoveAll(c => !cellsInFlickerRadius.Contains(c) || IsCellInvalidFlickerDestination(c, E.Actor));
                     if (!flickerTargetAdjacentCells.IsNullOrEmpty())
                     {
                         foreach (var possibleDestination in flickerTargetAdjacentCells)

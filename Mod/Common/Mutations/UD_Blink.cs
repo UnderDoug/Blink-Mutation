@@ -1003,6 +1003,9 @@ namespace XRL.World.Parts.Mutation
 
             foreach (var combatObject in Cell.GetObjectsWithPart(nameof(Combat)))
             {
+                if (!combatObject.FlightMatches(Blinker))
+                    continue;
+
                 if (combatObject == Blinker.Target)
                 {
                     KidIsNonHostileTarget = !combatObject.IsHostileTowards(Blinker);

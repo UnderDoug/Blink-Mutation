@@ -487,7 +487,7 @@ namespace XRL.World.Parts
                             var originCell = E.Actor.CurrentCell;
 
                             using var cellsInFlickerRadius = ScopeDisposedList<Cell>.GetFromPoolFilledWith(originCell.GetAdjacentCells(FlickerRadius));
-                            cellsInFlickerRadius.RemoveAll(c => CellIsInvalidFlickerDestination(c, E.Actor));
+                            cellsInFlickerRadius.RemoveAll(c => IsCellInvalidFlickerDestination(c, E.Actor));
 
                             if (!cellsInFlickerRadius.IsNullOrEmpty())
                             {
